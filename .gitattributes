@@ -1,0 +1,28 @@
+# ==============================================================================
+# GITHUB LINGUIST LANGUAGE CLASSIFICATION OVERRIDES
+# Project: CivicBridge Cumming (Georgia FBLA Website Design)
+# Standards: HTML5 Semantic Structure & CSS3 Styling
+# ==============================================================================
+
+# 1. Vendored Data Files
+# Excludes the 159-item local community database from programming language stats
+# so raw data entries do not erroneously inflate the TypeScript calculation.
+src/data/* linguist-vendored
+src/data/** linguist-vendored
+src/data/mockData.ts linguist-vendored
+
+# 2. Semantic HTML Layouts (JSX / TSX)
+# TSX files in this project consist primarily of semantic HTML5 tags (<header>,
+# <nav>, <main>, <section>, <article>, <aside>, <footer>, <figure>, <details>,
+# <summary>, <address>, <time>, <form>, <fieldset>, <legend>, <table>, etc.).
+# This classifies them properly as HTML for GitHub's repository breakdown.
+*.tsx linguist-language=HTML
+src/App.tsx linguist-language=HTML
+
+# 3. CSS3 Stylesheets
+*.css linguist-language=CSS
+src/index.css linguist-language=CSS
+
+# 4. Standard HTML Files
+*.html linguist-language=HTML
+index.html linguist-language=HTML
