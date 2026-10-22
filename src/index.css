@@ -1,0 +1,101 @@
+/* ==============================================================================
+   CIVICBRIDGE CUMMING - ADVANCED CSS3 STYLESHEET
+   Georgia FBLA Website Design Competitive Event 2026-2027
+   Standard: CSS3 & HTML5 Standards
+   ============================================================================== */
+
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------------------
+   1. CSS3 CUSTOM PROPERTIES (DESIGN TOKENS)
+   ------------------------------------------------------------------------------ */
+:root {
+  --primary-brand: #92400e;        /* Warm civic amber/rust */
+  --primary-hover: #78350f;
+  --bg-page: #fafaf9;              /* Neutral stone-50 background */
+  --text-main: #1c1917;            /* High-contrast stone-900 */
+  --border-subtle: #e7e5e4;        /* Hairline stone-200 border */
+  --card-radius: 0.75rem;          /* 12px border radius */
+  --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* ------------------------------------------------------------------------------
+   2. TYPOGRAPHIC HIERARCHY & ACCESSIBLE BODY
+   ------------------------------------------------------------------------------ */
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-page);
+  color: var(--text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* ------------------------------------------------------------------------------
+   3. WCAG 2.2 KEYBOARD FOCUS VISIBILITY
+   ------------------------------------------------------------------------------ */
+a:focus-visible, 
+button:focus-visible, 
+input:focus-visible, 
+select:focus-visible {
+  outline: 2px solid var(--primary-brand);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------------------------
+   4. CSS3 MEDIA QUERIES (MULTI-PLATFORM COMPATIBILITY)
+   Ensures flawless rendering across Desktop, Tablet, and Mobile
+   ------------------------------------------------------------------------------ */
+
+/* Mobile Phones (up to 640px) */
+@media screen and (max-width: 640px) {
+  h1 {
+    font-size: 1.65rem;
+    line-height: 1.25;
+  }
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Tablets (641px to 1024px) */
+@media screen and (min-width: 641px) and (max-width: 1024px) {
+  h1 {
+    font-size: 2.1rem;
+  }
+}
+
+/* Desktop Displays (1025px and up) */
+@media screen and (min-width: 1025px) {
+  .max-w-5xl {
+    max-width: 64rem;
+  }
+}
+
+/* ------------------------------------------------------------------------------
+   5. PRINT STYLESHEET (CSS3 PRINT MEDIA)
+   Allows residents or caseworkers to cleanly print resource listings
+   ------------------------------------------------------------------------------ */
+@media print {
+  header, footer, nav, button, input {
+    display: none !important;
+  }
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  article {
+    border: 1px solid #cccccc !important;
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}

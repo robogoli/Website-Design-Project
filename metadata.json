@@ -1,0 +1,8 @@
+{
+  "name": "Cumming Community Connect",
+  "description": "Verified local community resources, emergency food pantries, healthcare clinics, housing assistance, and family programs in Cumming and Forsyth County, Georgia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
