@@ -3,9 +3,12 @@ export type CategoryType =
   | 'food'
   | 'housing'
   | 'healthcare'
+  | 'childcare'
   | 'youth-family'
   | 'seniors'
   | 'workforce'
+  | 'sports'
+  | 'dining'
   | 'legal-crisis';
 
 export type DistrictType =
@@ -30,7 +33,7 @@ export interface ResourceItem {
   website: string;
   hours: string;
   eligibility: string;
-  cost: 'Free' | 'Sliding Scale' | 'Medicaid/Insurance' | 'Subsidized';
+  cost: 'Free' | 'Sliding Scale' | 'Medicaid/Insurance' | 'Subsidized' | 'Affordable / Paid';
   languages: string[];
   wheelchairAccessible: boolean;
   transitAccessible: boolean;

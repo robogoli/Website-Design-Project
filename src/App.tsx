@@ -3,8 +3,7 @@ import {
   COMMUNITY_RESOURCES, 
   COMMUNITY_EVENTS, 
   RESEARCH_CITATIONS, 
-  CATEGORIES, 
-  HERO_IMAGE 
+  CATEGORIES 
 } from './data/mockData';
 import { ResourceItem, CommunityEvent } from './types';
 import { 
@@ -19,7 +18,6 @@ import {
   ShieldCheck,
   BarChart3,
   Smartphone,
-  Heart,
   User
 } from 'lucide-react';
 
@@ -45,24 +43,29 @@ export default function App() {
 
   const handleSaveName = (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanName = tempName.trim() || 'Neighbor';
+    // Character limit of 20 to prevent spamming
+    const cleanName = tempName.trim().slice(0, 20) || 'Neighbor';
     setUserName(cleanName);
     localStorage.setItem('cumming_user_name', cleanName);
     setShowWelcomeModal(false);
   };
 
-  // Filter resources by category and search keyword
+  // Filter resources by category and search keyword (searches name, description, services, address, etc.)
   const filteredResources = COMMUNITY_RESOURCES.filter((item) => {
     const categoryMatches = selectedCategory === 'all' || item.category === selectedCategory;
     const query = searchQuery.toLowerCase().trim();
-    const searchMatches = 
-      query === '' ||
+    if (!categoryMatches) return false;
+    if (query === '') return true;
+
+    return (
       item.name.toLowerCase().includes(query) ||
       item.description.toLowerCase().includes(query) ||
-      item.keyServices.some(s => s.toLowerCase().includes(query)) ||
-      item.address.toLowerCase().includes(query);
-
-    return categoryMatches && searchMatches;
+      item.tagline.toLowerCase().includes(query) ||
+      item.categoryLabel.toLowerCase().includes(query) ||
+      item.eligibility.toLowerCase().includes(query) ||
+      item.address.toLowerCase().includes(query) ||
+      item.keyServices.some((s) => s.toLowerCase().includes(query))
+    );
   });
 
   return (
@@ -106,7 +109,7 @@ export default function App() {
                   : 'text-stone-600 hover:text-stone-900'
               }`}
             >
-              Resources
+              Resources & Places
             </button>
             <button
               onClick={() => setCurrentTab('events')}
@@ -139,20 +142,23 @@ export default function App() {
         {currentTab === 'resources' && (
           <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
             
-            {/* Personalized Hero Welcome Banner */}
-            <section className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 shadow-xs">
-              <div className="space-y-3 flex-1">
+            {/* Personalized Hero Banner (Picture removed per request) */}
+            <section className="bg-white border border-stone-200 rounded-2xl p-6 sm:p-8 shadow-xs">
+              <div className="space-y-3 max-w-2xl">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider font-mono">
                     Cumming Community Care
                   </span>
                   {userName && (
                     <button
-                      onClick={() => setShowWelcomeModal(true)}
+                      onClick={() => {
+                        setTempName(userName === 'Neighbor' ? '' : userName);
+                        setShowWelcomeModal(true);
+                      }}
                       className="text-[11px] text-stone-500 hover:text-amber-800 underline cursor-pointer flex items-center gap-1"
                     >
                       <User className="w-3 h-3" />
-                      <span>(Not {userName}?)</span>
+                      <span>(Not {userName}? Change)</span>
                     </button>
                   )}
                 </div>
@@ -162,37 +168,24 @@ export default function App() {
                 </h1>
                 
                 <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-                  {userName 
-                    ? `We are glad you are here, ${userName}. Search verified free food pantries, clinic healthcare, housing grants, and senior support in Cumming, GA.`
-                    : 'We are glad you are here. Search verified free food pantries, clinic healthcare, housing grants, and senior support in Cumming, GA.'
-                  }
+                  Search verified food pantries, free clinics, childcare & daycare, sports recreation, and local restaurants in Cumming, GA.
                 </p>
 
                 {/* Primary Search Bar */}
                 <div className="pt-2">
-                  <div className="relative max-w-lg">
+                  <div className="relative">
                     <Search className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="search"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Search food, rent, clinic, library, senior, jobs..."
+                      placeholder="Search food, rent, clinic, childcare, parks, soccer, restaurants, BBQ, library..."
                       className="w-full pl-10 pr-4 py-3 text-sm bg-stone-50 border border-stone-300 rounded-xl focus:outline-hidden focus:border-amber-700 focus:bg-white shadow-xs"
                       aria-label="Search resources"
                     />
                   </div>
                 </div>
               </div>
-
-              {/* Photo */}
-              <figure className="w-full md:w-64 h-44 rounded-xl overflow-hidden border border-stone-200 shrink-0 bg-stone-100">
-                <img
-                  src={HERO_IMAGE}
-                  alt="Cumming Community Resource Commons"
-                  className="w-full h-full object-cover"
-                  referrerPolicy="no-referrer"
-                />
-              </figure>
             </section>
 
             {/* Category Filter Buttons */}
@@ -262,7 +255,7 @@ export default function App() {
 
                     <div className="pt-2 text-xs text-stone-700">
                       <strong className="block text-stone-800 text-[11px] uppercase font-mono mb-1">
-                        Services:
+                        Offerings:
                       </strong>
                       <ul className="grid grid-cols-2 gap-1 text-[11px]">
                         {res.keyServices.slice(0, 4).map((svc, i) => (
@@ -280,7 +273,7 @@ export default function App() {
                       onClick={() => setActiveResource(res)}
                       className="text-xs font-bold text-amber-800 hover:underline cursor-pointer"
                     >
-                      View Details & Checklist →
+                      View Details & Hours →
                     </button>
                     <a
                       href={`tel:${res.phone}`}
@@ -295,7 +288,7 @@ export default function App() {
 
             {filteredResources.length === 0 && (
               <div className="bg-white border border-stone-200 rounded-xl p-8 text-center space-y-2">
-                <p className="text-sm font-semibold text-stone-800">No resources matched your search.</p>
+                <p className="text-sm font-semibold text-stone-800">No resources found matching your search.</p>
                 <button
                   onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
                   className="px-4 py-2 bg-stone-900 text-white rounded-md text-xs font-medium cursor-pointer"
@@ -315,7 +308,7 @@ export default function App() {
                 Community Events in Cumming, GA
               </h1>
               <p className="text-xs sm:text-sm text-stone-600 mt-1">
-                Free health fairs, food drives, and workshops for local families.
+                Free health fairs, food drives, and sports activities for local families.
               </p>
             </div>
 
@@ -374,7 +367,7 @@ export default function App() {
                 <span>1. Planning and Implementation Rationale</span>
               </h2>
               <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                U.S. Census Bureau data shows a 16.4% poverty rate in the City of Cumming. We designed CivicBridge to bring together verified local non-profits—such as <em>The Place of Forsyth County</em> and <em>Good Shepherd Clinic</em>—into one easy-to-use directory so residents can quickly find food, medical care, and rent relief.
+                U.S. Census Bureau data shows a 16.4% poverty rate in the City of Cumming. We designed CivicBridge to bring together verified local non-profits—such as <em>The Place of Forsyth County</em> and <em>Good Shepherd Clinic</em>—as well as community sports recreation and family restaurants into one easy-to-use directory so residents can quickly find community support.
               </p>
             </section>
 
@@ -478,7 +471,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* PERSONALIZED WELCOME POPUP MODAL */}
+      {/* PERSONALIZED WELCOME POPUP MODAL (With character limit) */}
       {showWelcomeModal && (
         <div
           role="dialog"
@@ -494,28 +487,31 @@ export default function App() {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="text-center space-y-2">
-              <div className="w-12 h-12 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto">
-                <Heart className="w-6 h-6 fill-amber-700 text-amber-700" />
-              </div>
+            <div className="text-center space-y-1.5 pt-1">
               <h3 className="text-xl font-bold font-serif text-stone-900">
                 Welcome to Cumming Connect!
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed max-w-sm mx-auto">
-                We are glad you are here. Whether you need grocery assistance, low-cost healthcare, or rental help, our local community is here to support you.
+                We are glad you are here. Whether you need grocery assistance, healthcare, childcare, fun sports activities, or local dining, our community is here for you.
               </p>
             </div>
 
             <form onSubmit={handleSaveName} className="space-y-3 pt-2">
               <div>
-                <label htmlFor="welcome-name" className="block text-xs font-semibold text-stone-700 mb-1">
-                  What is your name? (Optional)
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label htmlFor="welcome-name" className="text-xs font-semibold text-stone-700">
+                    What is your first name?
+                  </label>
+                  <span className="text-[11px] text-stone-400 font-mono">
+                    {tempName.length}/20 chars
+                  </span>
+                </div>
                 <input
                   type="text"
                   id="welcome-name"
+                  maxLength={20}
                   value={tempName}
-                  onChange={(e) => setTempName(e.target.value)}
+                  onChange={(e) => setTempName(e.target.value.slice(0, 20))}
                   placeholder="e.g. Alex"
                   className="w-full px-3 py-2 text-xs sm:text-sm border border-stone-300 rounded-lg focus:outline-hidden focus:border-amber-700"
                   autoFocus
@@ -535,7 +531,7 @@ export default function App() {
                     setUserName('Neighbor');
                     setShowWelcomeModal(false);
                   }}
-                  className="w-full py-1.5 text-stone-500 hover:text-stone-800 text-xs"
+                  className="w-full py-1.5 text-stone-500 hover:text-stone-800 text-xs cursor-pointer"
                 >
                   Continue as Guest
                 </button>
@@ -589,14 +585,14 @@ export default function App() {
                 <span>{activeResource.address}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-stone-400 shrink-0" />
+                <Clock className="w-4 h-4 text-stone-400" />
                 <span>{activeResource.hours}</span>
               </div>
             </div>
 
             <div>
               <h4 className="text-xs font-bold text-stone-900 font-mono uppercase mb-1">
-                Eligibility Guidelines
+                Information & Eligibility
               </h4>
               <p className="text-xs text-stone-600 leading-relaxed">
                 {activeResource.eligibility}
@@ -605,13 +601,13 @@ export default function App() {
 
             <div>
               <h4 className="text-xs font-bold text-stone-900 font-mono uppercase mb-1">
-                Intake Checklist (What to bring)
+                Key Offerings & Checklist
               </h4>
               <ul className="text-xs text-stone-600 space-y-1">
-                {activeResource.intakeRequirements.map((req, i) => (
+                {activeResource.keyServices.map((svc, i) => (
                   <li key={i} className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>{req}</span>
+                    <span>{svc}</span>
                   </li>
                 ))}
               </ul>
