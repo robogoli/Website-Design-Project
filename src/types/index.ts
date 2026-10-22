@@ -33,7 +33,7 @@ export interface ResourceItem {
   website: string;
   hours: string;
   eligibility: string;
-  cost: 'Free' | 'Sliding Scale' | 'Medicaid/Insurance' | 'Subsidized' | 'Affordable / Paid';
+  cost: 'Free' | 'Sliding Scale' | 'Medicaid/Insurance' | 'Subsidized' | 'Subsidized / Sliding Scale' | 'Affordable / Paid';
   languages: string[];
   wheelchairAccessible: boolean;
   transitAccessible: boolean;
