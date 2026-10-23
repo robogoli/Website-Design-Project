@@ -99,3 +99,15 @@ export interface ResearchCitation {
   keyFinding: string;
   implementationInSite: string;
 }
+
+export interface UserFeedback {
+  id: string;
+  userName: string;
+  category: 'Accuracy & Updates' | 'Suggest New Resource' | 'Website Accessibility' | 'General Suggestion';
+  resourceName?: string;
+  rating: 'Very Helpful' | 'Helpful' | 'Needs Improvement';
+  message: string;
+  submittedAt: string;
+  status: 'Received & Logged' | 'Under Review' | 'Verified & Applied';
+  adminResponseNote?: string;
+}
