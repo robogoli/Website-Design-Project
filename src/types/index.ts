@@ -9,6 +9,8 @@ export type CategoryType =
   | 'workforce'
   | 'sports'
   | 'dining'
+  | 'schools'
+  | 'repairs'
   | 'legal-crisis';
 
 export type DistrictType =
@@ -103,6 +105,7 @@ export interface ResearchCitation {
 export interface UserFeedback {
   id: string;
   userName: string;
+  isAnonymous?: boolean;
   category: 'Accuracy & Updates' | 'Suggest New Resource' | 'Website Accessibility' | 'General Suggestion';
   resourceName?: string;
   rating: 'Very Helpful' | 'Helpful' | 'Needs Improvement';
@@ -110,4 +113,5 @@ export interface UserFeedback {
   submittedAt: string;
   status: 'Received & Logged' | 'Under Review' | 'Verified & Applied';
   adminResponseNote?: string;
+  likesCount?: number;
 }

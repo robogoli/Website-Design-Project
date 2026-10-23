@@ -3,7 +3,8 @@ import {
   COMMUNITY_RESOURCES, 
   COMMUNITY_EVENTS, 
   RESEARCH_CITATIONS, 
-  CATEGORIES 
+  CATEGORIES,
+  INITIAL_COMMUNITY_FEEDBACKS
 } from './data/mockData';
 import { ResourceItem, UserFeedback } from './types';
 import { 
@@ -22,7 +23,10 @@ import {
   Send,
   ThumbsUp,
   ThumbsDown,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Users
 } from 'lucide-react';
 
 export default function App() {
@@ -41,12 +45,29 @@ export default function App() {
 
   // Feedback Form State
   const [feedbackName, setFeedbackName] = useState('');
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [feedbackCategory, setFeedbackCategory] = useState<UserFeedback['category']>('Accuracy & Updates');
   const [feedbackResource, setFeedbackResource] = useState('');
   const [feedbackRating, setFeedbackRating] = useState<UserFeedback['rating']>('Helpful');
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackError, setFeedbackError] = useState('');
   const [recentReceipt, setRecentReceipt] = useState<UserFeedback | null>(null);
+
+  // Community Feedback Board State (Persisted in localStorage with default verified logs)
+  const [feedbacks, setFeedbacks] = useState<UserFeedback[]>(() => {
+    try {
+      const saved = localStorage.getItem('cumming_community_feedbacks');
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Failed to parse saved community feedbacks:', e);
+    }
+    return INITIAL_COMMUNITY_FEEDBACKS;
+  });
+
+  const [feedbackSideFilter, setFeedbackSideFilter] = useState<'all' | 'public' | 'anonymous'>('all');
+  const [likedFeedbackIds, setLikedFeedbackIds] = useState<Record<string, boolean>>({});
 
   // Quick resource response checks map (id -> true)
   const [quickCheckedMap, setQuickCheckedMap] = useState<Record<string, boolean>>({});
@@ -72,16 +93,53 @@ export default function App() {
     setShowWelcomeModal(false);
   };
 
-  // Handle Feedback Submission with Validation Checks
+  // Toggle helpful / like on community feedback
+  const handleToggleLikeFeedback = (feedbackId: string) => {
+    setFeedbacks(prev => {
+      const updated = prev.map(item => {
+        if (item.id === feedbackId) {
+          const isLiked = likedFeedbackIds[feedbackId];
+          const currentLikes = item.likesCount || 0;
+          const newLikes = isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+          return { ...item, likesCount: newLikes };
+        }
+        return item;
+      });
+      try {
+        localStorage.setItem('cumming_community_feedbacks', JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to store community feedbacks:', err);
+      }
+      return updated;
+    });
+
+    setLikedFeedbackIds(prev => ({
+      ...prev,
+      [feedbackId]: !prev[feedbackId]
+    }));
+  };
+
+  // Filter feedbacks for side display
+  const displayedFeedbacks = feedbacks.filter((item) => {
+    if (feedbackSideFilter === 'public') return !item.isAnonymous;
+    if (feedbackSideFilter === 'anonymous') return item.isAnonymous;
+    return true;
+  });
+
+  // Handle Feedback Submission with Validation Checks & Anonymity
   const handleFeedbackSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFeedbackError('');
 
-    // Field Checks
-    const trimmedName = feedbackName.trim() || userName || 'Neighbor';
-    if (trimmedName.length < 2) {
-      setFeedbackError('Please enter your name (at least 2 characters).');
-      return;
+    // Check display name based on anonymity preference
+    let finalDisplayName = 'Anonymous Resident';
+    if (!isAnonymous) {
+      const trimmedName = feedbackName.trim() || userName;
+      if (!trimmedName || trimmedName.length < 2) {
+        setFeedbackError('Please enter your name or initials (at least 2 characters) or select the anonymous option below.');
+        return;
+      }
+      finalDisplayName = trimmedName;
     }
 
     const trimmedMsg = feedbackMessage.trim();
@@ -108,15 +166,28 @@ export default function App() {
 
     const newFeedback: UserFeedback = {
       id: newId,
-      userName: trimmedName,
+      userName: finalDisplayName,
+      isAnonymous: isAnonymous,
       category: feedbackCategory,
       resourceName: feedbackResource.trim() || undefined,
       rating: feedbackRating,
       message: trimmedMsg,
       submittedAt: nowFormatted,
       status: 'Received & Logged',
-      adminResponseNote: 'Automated receipt logged. Queued for community editorial check.'
+      adminResponseNote: isAnonymous
+        ? 'Anonymous submission verified & logged. Queued for community editorial check.'
+        : 'Automated receipt verified & logged. Queued for community editorial check.',
+      likesCount: 0
     };
+
+    // Prepend to community feedback feed and persist to localStorage
+    const updatedFeedbacks = [newFeedback, ...feedbacks];
+    setFeedbacks(updatedFeedbacks);
+    try {
+      localStorage.setItem('cumming_community_feedbacks', JSON.stringify(updatedFeedbacks));
+    } catch (err) {
+      console.error('Failed to store community feedbacks:', err);
+    }
 
     // Show instant verification receipt
     setRecentReceipt(newFeedback);
@@ -201,7 +272,7 @@ export default function App() {
               className={`civic-nav-link ${currentTab === 'feedback' ? 'civic-nav-link--active' : ''}`}
               aria-current={currentTab === 'feedback' ? 'page' : undefined}
             >
-              Feedback &amp; Check
+              Feedback
             </button>
             <button
               type="button"
@@ -266,7 +337,7 @@ export default function App() {
                     list="cumming-search-suggestions"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search food, rent, clinic, childcare, parks, soccer, restaurants, BBQ, library..."
+                    placeholder="Search food, clinic, schools, repairs, colleges, childcare, parks, handyman..."
                     className="search-input"
                     aria-label="Search resources"
                   />
@@ -283,16 +354,16 @@ export default function App() {
 
                   {/* HTML5 Datalist for autocomplete hints */}
                   <datalist id="cumming-search-suggestions">
+                    <option value="Forsyth Central High School" />
+                    <option value="Lanier Technical College" />
+                    <option value="University of North Georgia" />
+                    <option value="Cumming Elementary School" />
+                    <option value="Auto Repair & Brakes" />
+                    <option value="Home & Handyman Repairs" />
+                    <option value="Plumbing & HVAC Repair" />
                     <option value="The Place of Forsyth" />
                     <option value="Good Shepherd Clinic" />
-                    <option value="Meals on Wheels" />
-                    <option value="Forsyth County Parks & Recreation" />
                     <option value="Childcare & Daycare" />
-                    <option value="Local Restaurants" />
-                    <option value="Barbecue" />
-                    <option value="Youth Soccer" />
-                    <option value="Emergency Shelter" />
-                    <option value="Free Dental" />
                   </datalist>
                 </form>
               </div>
@@ -411,7 +482,7 @@ export default function App() {
                   No resources found matching your search.
                 </p>
                 <p className="text-xs text-stone-500">
-                  Try searching for general terms like &quot;food&quot;, &quot;clinic&quot;, &quot;park&quot;, or &quot;childcare&quot;.
+                  Try searching for general terms like &quot;schools&quot;, &quot;repairs&quot;, &quot;food&quot;, &quot;clinic&quot;, or &quot;childcare&quot;.
                 </p>
                 <button
                   type="button"
@@ -473,214 +544,426 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 3: COMMUNITY FEEDBACK & RESPONSE CHECK */}
+        {/* TAB 3: COMMUNITY FEEDBACK & PUBLIC BOARD */}
         {currentTab === 'feedback' && (
           <div className="civic-container space-y-6">
             <header className="border-b border-stone-200 pb-3">
               <span className="hero-tagline">
-                Community Verification &amp; Quality Assurance
+                Community Voice &amp; Public Suggestions
               </span>
               <h1 className="hero-title mt-1">
-                Feedback &amp; Response Check
+                Community Feedback &amp; Public Board
               </h1>
               <p className="hero-desc mb-0">
-                Submit updates, report inaccuracies, or suggest new resources in Cumming, GA. Every submission receives a verified tracking check code.
+                Share updates, suggest new resources, or provide feedback for Cumming, GA. All feedback is displayed openly on the community board—you can choose to show your name or remain completely anonymous.
               </p>
             </header>
 
-            <div className="max-w-2xl mx-auto space-y-6">
-              {/* Instant Verification Receipt (Appears after submission) */}
-              {recentReceipt && (
-                <section 
-                  role="status" 
-                  aria-live="polite" 
-                  className="response-check-receipt space-y-3"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle2 className="w-6 h-6 text-emerald-700 shrink-0" aria-hidden="true" />
+            {/* SIDE-BY-SIDE RESPONSIVE GRID (Form on left, Community Feedback Board on the side) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              {/* LEFT COLUMN: Submit Feedback Form & Confirmation Receipt */}
+              <div className="lg:col-span-5 space-y-6">
+                
+                {/* Submission Confirmation Receipt (Appears after submission) */}
+                {recentReceipt && (
+                  <section 
+                    role="status" 
+                    aria-live="polite" 
+                    className="response-check-receipt space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-6 h-6 text-emerald-700 shrink-0" aria-hidden="true" />
+                        <div>
+                          <h2 className="text-base font-bold text-emerald-950 font-serif">
+                            Feedback Posted Successfully!
+                          </h2>
+                          <p className="text-xs text-emerald-800">
+                            {recentReceipt.isAnonymous ? (
+                              <span>Your feedback was submitted <strong>anonymously</strong> and is now live on the community board.</span>
+                            ) : (
+                              <span>Thank you, <strong>{recentReceipt.userName}</strong>. Your feedback is now live on the community board.</span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setRecentReceipt(null)}
+                        className="text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
+                        aria-label="Dismiss receipt"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="bg-white p-3 rounded-xl border border-emerald-200 grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
                       <div>
-                        <h2 className="text-base font-bold text-emerald-950 font-serif">
-                          Feedback Response Check Verified!
-                        </h2>
-                        <p className="text-xs text-emerald-800">
-                          Thank you, <strong>{recentReceipt.userName}</strong>. Your feedback has been registered and assigned an audit check reference.
-                        </p>
+                        <span className="text-stone-500 block font-mono text-[11px] uppercase">Privacy:</span>
+                        <span className="font-semibold text-stone-800">
+                          {recentReceipt.isAnonymous ? 'Anonymous' : 'Public Name'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-stone-500 block font-mono text-[11px] uppercase">Category:</span>
+                        <span className="font-semibold text-stone-800">
+                          {recentReceipt.category}
+                        </span>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setRecentReceipt(null)}
-                      className="text-stone-400 hover:text-stone-700 p-1"
-                      aria-label="Dismiss receipt"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                  </section>
+                )}
 
-                  <div className="bg-white p-3.5 rounded-xl border border-emerald-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div>
-                      <span className="text-stone-500 block font-mono text-[11px] uppercase">Tracking Check ID:</span>
-                      <strong className="text-amber-900 font-mono text-sm">{recentReceipt.id}</strong>
+                {/* FEEDBACK FORM */}
+                <section className="feedback-card" aria-labelledby="form-heading">
+                  <h2 id="form-heading" className="text-lg font-bold font-serif text-stone-900 mb-1 flex items-center gap-2">
+                    <MessageSquare className="w-5 h-5 text-amber-800" aria-hidden="true" />
+                    <span>Submit Community Feedback</span>
+                  </h2>
+                  <p className="text-xs text-stone-600 mb-4">
+                    Share your thoughts with the community. You can choose whether your name is shown publicly or kept completely anonymous.
+                  </p>
+
+                  {feedbackError && (
+                    <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                      <span>{feedbackError}</span>
                     </div>
-                    <div>
-                      <span className="text-stone-500 block font-mono text-[11px] uppercase">Timestamp:</span>
-                      <span className="text-stone-800">{recentReceipt.submittedAt}</span>
+                  )}
+
+                  <form onSubmit={handleFeedbackSubmit} noValidate className="space-y-3.5">
+                    
+                    {/* ASK IF THEY WANT TO BE ANONYMOUS */}
+                    <fieldset className="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-2">
+                      <legend className="text-xs font-bold text-stone-900 flex items-center justify-between w-full pb-1">
+                        <span className="flex items-center gap-1.5">
+                          {isAnonymous ? <EyeOff className="w-4 h-4 text-stone-600" /> : <Eye className="w-4 h-4 text-amber-800" />}
+                          <span>Do you want this feedback to be anonymous?</span>
+                        </span>
+                        <span className={`text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-full ${
+                          isAnonymous ? 'bg-stone-200 text-stone-800' : 'bg-amber-100 text-amber-900'
+                        }`}>
+                          {isAnonymous ? 'Anonymous' : 'Public Name'}
+                        </span>
+                      </legend>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
+                        <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                          !isAnonymous 
+                            ? 'border-amber-800 bg-amber-50/70 text-amber-950 font-medium shadow-xs' 
+                            : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
+                        }`}>
+                          <input 
+                            type="radio" 
+                            name="anonymity-preference" 
+                            checked={!isAnonymous} 
+                            onChange={() => setIsAnonymous(false)} 
+                            className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-bold block">No, show my name</span>
+                            <span className="text-[11px] text-stone-500 block leading-tight mt-0.5">
+                              Displays your name publicly on the feedback feed
+                            </span>
+                          </div>
+                        </label>
+
+                        <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
+                          isAnonymous 
+                            ? 'border-amber-800 bg-amber-50/70 text-amber-950 font-medium shadow-xs' 
+                            : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
+                        }`}>
+                          <input 
+                            type="radio" 
+                            name="anonymity-preference" 
+                            checked={isAnonymous} 
+                            onChange={() => setIsAnonymous(true)} 
+                            className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
+                          />
+                          <div>
+                            <span className="font-bold block">Yes, make it anonymous</span>
+                            <span className="text-[11px] text-stone-500 block leading-tight mt-0.5">
+                              Hides your name; displays as &ldquo;Anonymous Resident&rdquo;
+                            </span>
+                          </div>
+                        </label>
+                      </div>
+                    </fieldset>
+
+                    {/* Resident Name Field */}
+                    <div className="form-group">
+                      <label htmlFor="fb-name" className="form-label">
+                        <span>{isAnonymous ? 'Your Name / Initials (Private):' : 'Your Name / Initials:'}</span>
+                        <span className="text-[11px] text-stone-400 font-mono">
+                          {isAnonymous ? 'Hidden from public feed' : 'Required'}
+                        </span>
+                      </label>
+                      <input
+                        id="fb-name"
+                        type="text"
+                        maxLength={30}
+                        value={isAnonymous ? '' : feedbackName}
+                        onChange={(e) => setFeedbackName(e.target.value)}
+                        placeholder={isAnonymous ? 'Anonymity enabled (name will not be shown)' : 'e.g. Alex M. or Forsyth Resident'}
+                        className={`form-control ${isAnonymous ? 'bg-stone-100 text-stone-400 cursor-not-allowed' : ''}`}
+                        disabled={isAnonymous}
+                        required={!isAnonymous}
+                      />
+                      {isAnonymous && (
+                        <p className="text-[11px] text-stone-500 flex items-center gap-1.5 pt-1">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>Your identity is protected. This post will be shown to everyone as <strong>&ldquo;Anonymous Resident&rdquo;</strong>.</span>
+                        </p>
+                      )}
                     </div>
+
+                    {/* Feedback Category */}
+                    <div className="form-group">
+                      <label htmlFor="fb-category" className="form-label">
+                        <span>Feedback Category:</span>
+                        <span className="text-[11px] text-stone-400 font-mono">Select one</span>
+                      </label>
+                      <select
+                        id="fb-category"
+                        value={feedbackCategory}
+                        onChange={(e) => setFeedbackCategory(e.target.value as UserFeedback['category'])}
+                        className="form-control"
+                      >
+                        <option value="Accuracy & Updates">Accuracy &amp; Updates (Phone, hours, address change)</option>
+                        <option value="Suggest New Resource">Suggest New Resource (New pantry, clinic, park, restaurant)</option>
+                        <option value="Website Accessibility">Website Accessibility (Readability, contrast, keyboard focus)</option>
+                        <option value="General Suggestion">General Suggestion (General feedback for Cumming team)</option>
+                      </select>
+                    </div>
+
+                    {/* Specific Resource or Place */}
+                    <div className="form-group">
+                      <label htmlFor="fb-resource" className="form-label">
+                        <span>Specific Resource or Place (Optional):</span>
+                        <span className="text-[11px] text-stone-400 font-mono">Optional</span>
+                      </label>
+                      <input
+                        id="fb-resource"
+                        type="text"
+                        list="cumming-search-suggestions"
+                        value={feedbackResource}
+                        onChange={(e) => setFeedbackResource(e.target.value)}
+                        placeholder="e.g. Good Shepherd Clinic, Mary Alice Park..."
+                        className="form-control"
+                      />
+                    </div>
+
+                    {/* Helpfulness Rating */}
+                    <div className="form-group">
+                      <span className="form-label">
+                        <span>Experience / Helpfulness Rating:</span>
+                      </span>
+                      <div className="grid grid-cols-3 gap-2 pt-0.5">
+                        {(['Very Helpful', 'Helpful', 'Needs Improvement'] as const).map((r) => (
+                          <button
+                            key={r}
+                            type="button"
+                            onClick={() => setFeedbackRating(r)}
+                            className={`py-2 px-2 text-xs font-semibold rounded-lg border cursor-pointer transition-colors ${
+                              feedbackRating === r
+                                ? 'bg-amber-800 text-white border-amber-800 shadow-xs'
+                                : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
+                            }`}
+                          >
+                            {r}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Feedback Message */}
+                    <div className="form-group">
+                      <label htmlFor="fb-message" className="form-label">
+                        <span>Feedback Details &amp; Notes:</span>
+                        <output htmlFor="fb-message" className="text-[11px] text-stone-400 font-mono">
+                          {feedbackMessage.length}/500 chars (min 10)
+                        </output>
+                      </label>
+                      <textarea
+                        id="fb-message"
+                        rows={4}
+                        maxLength={500}
+                        value={feedbackMessage}
+                        onChange={(e) => setFeedbackMessage(e.target.value)}
+                        placeholder="Describe what you noticed or what you would like to suggest for Cumming community members..."
+                        className="form-control resize-y"
+                        required
+                      ></textarea>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        className="btn btn-primary w-full py-2.5 text-xs font-semibold shadow-xs flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Send className="w-4 h-4" />
+                        <span>Publish Feedback</span>
+                      </button>
+                    </div>
+
+                  </form>
+                </section>
+              </div>
+
+              {/* RIGHT COLUMN (ON THE SIDE): Live Community Feedback Feed */}
+              <aside className="lg:col-span-7 space-y-4" aria-label="Community Feedback Board">
+                <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-xs space-y-4">
+                  
+                  {/* Board Header with counts */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-3">
                     <div>
-                      <span className="text-stone-500 block font-mono text-[11px] uppercase">Initial Status:</span>
-                      <span className="status-badge status-badge--received">
-                        <Clock className="w-3 h-3" /> {recentReceipt.status}
+                      <div className="flex items-center gap-2">
+                        <Users className="w-5 h-5 text-amber-800" aria-hidden="true" />
+                        <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900">
+                          Community Feedback Board
+                        </h2>
+                      </div>
+                      <p className="text-xs text-stone-600 mt-0.5">
+                        Displaying community feedback and suggestions shared by Cumming residents.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 self-start sm:self-auto">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
+                        <span>{feedbacks.length} Submissions</span>
                       </span>
                     </div>
                   </div>
 
-                  <div className="text-xs text-emerald-900 space-y-1">
-                    <strong className="block font-semibold">Response Verification Checklist:</strong>
-                    <ul className="space-y-0.5 text-[11px]">
-                      <li className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Form fields and character constraints verified
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Reference code generated and saved to browser audit log
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-amber-700" /> CivicBridge volunteer review queued (est. 24–48 hours)
-                      </li>
-                    </ul>
-                  </div>
-                </section>
-              )}
-
-              {/* FEEDBACK FORM */}
-              <section className="feedback-card" aria-labelledby="form-heading">
-                <h2 id="form-heading" className="text-lg font-bold font-serif text-stone-900 mb-1 flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5 text-amber-800" aria-hidden="true" />
-                  <span>Submit Community Feedback</span>
-                </h2>
-                <p className="text-xs text-stone-600 mb-4">
-                  All inputs are validated in real-time. Please provide clear details so our team can verify listings.
-                </p>
-
-                {feedbackError && (
-                  <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                    <span>{feedbackError}</span>
-                  </div>
-                )}
-
-                <form onSubmit={handleFeedbackSubmit} noValidate>
-                  
-                  {/* Fieldset 1: Resident Name */}
-                  <div className="form-group">
-                    <label htmlFor="fb-name" className="form-label">
-                      <span>Your Name / Initials:</span>
-                      <span className="text-[11px] text-stone-400 font-mono">Required</span>
-                    </label>
-                    <input
-                      id="fb-name"
-                      type="text"
-                      maxLength={30}
-                      value={feedbackName}
-                      onChange={(e) => setFeedbackName(e.target.value)}
-                      placeholder="e.g. Alex M. or Forsyth Resident"
-                      className="form-control"
-                      required
-                    />
-                  </div>
-
-                  {/* Fieldset 2: Feedback Category */}
-                  <div className="form-group">
-                    <label htmlFor="fb-category" className="form-label">
-                      <span>Feedback Category:</span>
-                      <span className="text-[11px] text-stone-400 font-mono">Select one</span>
-                    </label>
-                    <select
-                      id="fb-category"
-                      value={feedbackCategory}
-                      onChange={(e) => setFeedbackCategory(e.target.value as UserFeedback['category'])}
-                      className="form-control"
-                    >
-                      <option value="Accuracy & Updates">Accuracy &amp; Updates (Phone, hours, address change)</option>
-                      <option value="Suggest New Resource">Suggest New Resource (New pantry, clinic, park, restaurant)</option>
-                      <option value="Website Accessibility">Website Accessibility (Readability, contrast, keyboard focus)</option>
-                      <option value="General Suggestion">General Suggestion (General feedback for Cumming team)</option>
-                    </select>
-                  </div>
-
-                  {/* Optional Resource Name */}
-                  <div className="form-group">
-                    <label htmlFor="fb-resource" className="form-label">
-                      <span>Specific Resource or Place (Optional):</span>
-                      <span className="text-[11px] text-stone-400 font-mono">Optional</span>
-                    </label>
-                    <input
-                      id="fb-resource"
-                      type="text"
-                      list="cumming-search-suggestions"
-                      value={feedbackResource}
-                      onChange={(e) => setFeedbackResource(e.target.value)}
-                      placeholder="e.g. Good Shepherd Clinic, Mary Alice Park..."
-                      className="form-control"
-                    />
-                  </div>
-
-                  {/* Helpfulness Check / Rating */}
-                  <div className="form-group">
-                    <span className="form-label">
-                      <span>Experience / Helpfulness Check:</span>
-                    </span>
-                    <div className="grid grid-cols-3 gap-2 pt-0.5">
-                      {(['Very Helpful', 'Helpful', 'Needs Improvement'] as const).map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => setFeedbackRating(r)}
-                          className={`py-2 px-2 text-xs font-semibold rounded-lg border cursor-pointer transition-colors ${
-                            feedbackRating === r
-                              ? 'bg-amber-800 text-white border-amber-800 shadow-xs'
-                              : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
-                          }`}
-                        >
-                          {r}
-                        </button>
-                      ))}
+                  {/* Filter tabs: All, Public, Anonymous */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+                    <div className="inline-flex rounded-lg border border-stone-200 bg-stone-50 p-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setFeedbackSideFilter('all')}
+                        className={`px-3 py-1 font-semibold rounded-md transition-colors cursor-pointer ${
+                          feedbackSideFilter === 'all'
+                            ? 'bg-amber-800 text-white shadow-xs'
+                            : 'text-stone-600 hover:text-stone-900'
+                        }`}
+                      >
+                        All ({feedbacks.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFeedbackSideFilter('public')}
+                        className={`px-3 py-1 font-semibold rounded-md transition-colors cursor-pointer ${
+                          feedbackSideFilter === 'public'
+                            ? 'bg-amber-800 text-white shadow-xs'
+                            : 'text-stone-600 hover:text-stone-900'
+                        }`}
+                      >
+                        Public ({feedbacks.filter(f => !f.isAnonymous).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFeedbackSideFilter('anonymous')}
+                        className={`px-3 py-1 font-semibold rounded-md transition-colors cursor-pointer ${
+                          feedbackSideFilter === 'anonymous'
+                            ? 'bg-amber-800 text-white shadow-xs'
+                            : 'text-stone-600 hover:text-stone-900'
+                        }`}
+                      >
+                        Anonymous ({feedbacks.filter(f => f.isAnonymous).length})
+                      </button>
                     </div>
+
+                    <span className="text-[11px] text-stone-500 font-mono">
+                      Showing {displayedFeedbacks.length} records
+                    </span>
                   </div>
 
-                  {/* Feedback Message */}
-                  <div className="form-group">
-                    <label htmlFor="fb-message" className="form-label">
-                      <span>Feedback Details &amp; Notes:</span>
-                      <output htmlFor="fb-message" className="text-[11px] text-stone-400 font-mono">
-                        {feedbackMessage.length}/500 chars (min 10)
-                      </output>
-                    </label>
-                    <textarea
-                      id="fb-message"
-                      rows={4}
-                      maxLength={500}
-                      value={feedbackMessage}
-                      onChange={(e) => setFeedbackMessage(e.target.value)}
-                      placeholder="Describe what you noticed or what you would like to suggest for Cumming community members..."
-                      className="form-control resize-y"
-                      required
-                    ></textarea>
-                  </div>
+                  {/* Feedback Cards List */}
+                  <div className="space-y-3.5 max-h-[780px] overflow-y-auto pr-1">
+                    {displayedFeedbacks.length === 0 ? (
+                      <div className="text-center py-10 px-4 bg-stone-50 rounded-xl border border-dashed border-stone-200 text-xs text-stone-500">
+                        No feedback found in this filter category.
+                      </div>
+                    ) : (
+                      displayedFeedbacks.map((item) => (
+                        <article 
+                          key={item.id}
+                          className="p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-300 transition-all space-y-2.5 shadow-2xs"
+                        >
+                          {/* Top row: Resident Identity, Privacy status, Category & Timestamp */}
+                          <div className="flex items-start justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {item.isAnonymous ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 border border-stone-300">
+                                  <EyeOff className="w-3.5 h-3.5 text-stone-500" />
+                                  <span>Anonymous Resident</span>
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">
+                                  <User className="w-3.5 h-3.5 text-amber-700" />
+                                  <span>{item.userName}</span>
+                                </span>
+                              )}
 
-                  {/* Submit Button */}
-                  <div className="pt-2">
-                    <button
-                      type="submit"
-                      className="btn btn-primary w-full py-2.5 text-xs font-semibold shadow-xs flex items-center justify-center gap-2"
-                    >
-                      <Send className="w-4 h-4" />
-                      <span>Submit &amp; Generate Response Check Code</span>
-                    </button>
-                  </div>
+                              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-stone-100 text-stone-600 border border-stone-200/60">
+                                {item.category}
+                              </span>
 
-                </form>
-              </section>
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                                item.rating === 'Very Helpful'
+                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                                  : item.rating === 'Helpful'
+                                  ? 'bg-sky-50 text-sky-800 border border-sky-200'
+                                  : 'bg-amber-50 text-amber-800 border border-amber-200'
+                              }`}>
+                                {item.rating}
+                              </span>
+                            </div>
+
+                            <time className="text-[11px] text-stone-400 font-mono shrink-0">
+                              {item.submittedAt}
+                            </time>
+                          </div>
+
+                          {/* Resource Name if applicable */}
+                          {item.resourceName && (
+                            <div className="flex items-center gap-1.5 text-xs text-stone-700">
+                              <MapPin className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                              <span>Place: <strong className="text-stone-900">{item.resourceName}</strong></span>
+                            </div>
+                          )}
+
+                          {/* Message Quote */}
+                          <blockquote className="text-xs sm:text-sm text-stone-800 leading-relaxed bg-stone-50 p-3 rounded-lg border border-stone-200/70">
+                            &ldquo;{item.message}&rdquo;
+                          </blockquote>
+
+                          {/* Bottom Row: Helpful Vote Button */}
+                          <div className="flex items-center justify-between pt-1 border-t border-stone-100 text-[11px]">
+                            <span className="text-stone-400 text-[11px]">Community Voice</span>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleLikeFeedback(item.id)}
+                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
+                                likedFeedbackIds[item.id]
+                                  ? 'bg-amber-100 text-amber-900 border-amber-300'
+                                  : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 hover:text-stone-900'
+                              }`}
+                              aria-label={`Mark feedback as helpful, currently ${item.likesCount || 0} votes`}
+                            >
+                              <ThumbsUp className={`w-3.5 h-3.5 ${likedFeedbackIds[item.id] ? 'text-amber-800 fill-amber-800' : 'text-stone-500'}`} />
+                              <span>Helpful ({item.likesCount || 0})</span>
+                            </button>
+                          </div>
+                        </article>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </aside>
+
             </div>
           </div>
         )}
@@ -748,11 +1031,11 @@ export default function App() {
 
                 <details className="civic-details">
                   <summary className="civic-summary">
-                    <span>User Feedback Response Verification</span>
+                    <span>Community Feedback &amp; Anonymity Options</span>
                     <span aria-hidden="true">&darr;</span>
                   </summary>
                   <div className="civic-details-content">
-                    The integrated feedback response check validates inputs client-side, generates audit tracking codes (e.g. CFB-2026-XXXX), and displays verification lifecycle status checks for community trust.
+                    The integrated community feedback system allows residents to submit suggestions openly or anonymously, empowering local voices while protecting user privacy.
                   </div>
                 </details>
               </div>
@@ -876,7 +1159,7 @@ export default function App() {
                 Welcome to CivicBridge!
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed max-w-sm mx-auto">
-                We are glad you are here. Whether you need grocery assistance, healthcare, childcare, fun sports activities, or local dining, our community is here for you.
+                We are glad you are here. Whether you need grocery assistance, healthcare, schools &amp; education, home or auto repairs, childcare, sports activities, or local dining, our community is here for you.
               </p>
             </div>
 
@@ -907,7 +1190,7 @@ export default function App() {
                   type="submit"
                   className="btn btn-primary w-full py-2.5 text-xs font-semibold"
                 >
-                  {tempName.trim() ? `Welcome Me, ${tempName.trim()}` : 'Personalize My Home Screen'}
+                  {tempName.trim() ? `Welcome Me, ${tempName.trim()}` : 'Type in your name'}
                 </button>
                 <button
                   type="button"
@@ -925,7 +1208,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 6. RESOURCE DETAILS MODAL WITH QUICK RESPONSE CHECK */}
+      {/* 6. RESOURCE DETAILS MODAL WITH QUICK FEEDBACK */}
       {activeResource && (
         <div
           role="dialog"
@@ -999,11 +1282,11 @@ export default function App() {
               </ul>
             </div>
 
-            {/* Quick Listing Feedback Response Check */}
+            {/* Quick Listing Feedback */}
             <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 flex items-center justify-between text-xs">
               <div>
                 <span className="font-semibold text-stone-800 block">Was this information accurate &amp; helpful?</span>
-                <span className="text-[11px] text-stone-500">Your response check helps keep Cumming listings verified</span>
+                <span className="text-[11px] text-stone-500">Your feedback helps keep Cumming listings accurate and up-to-date</span>
               </div>
               {quickCheckedMap[activeResource.id] ? (
                 <span className="text-emerald-700 font-bold flex items-center gap-1 text-xs">
