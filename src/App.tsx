@@ -22,34 +22,8 @@ import {
   Send,
   ThumbsUp,
   ThumbsDown,
-  ClipboardCheck,
   AlertCircle
 } from 'lucide-react';
-
-const INITIAL_FEEDBACK_RECORDS: UserFeedback[] = [
-  {
-    id: 'CFB-2026-8941',
-    userName: 'Elena R.',
-    category: 'Accuracy & Updates',
-    resourceName: 'Good Shepherd Free Clinic',
-    rating: 'Helpful',
-    message: 'Confirmed that Saturday clinic check-in begins at 8:30 AM rather than 9:00 AM.',
-    submittedAt: 'Oct 20, 2026, 11:15 AM',
-    status: 'Verified & Applied',
-    adminResponseNote: 'Verified with clinic staff. Hours updated in Cumming directory.'
-  },
-  {
-    id: 'CFB-2026-7214',
-    userName: 'Marcus T.',
-    category: 'Suggest New Resource',
-    resourceName: 'Mary Alice Park & Beach',
-    rating: 'Very Helpful',
-    message: 'Requested adding senior parking waiver information for Forsyth County residents.',
-    submittedAt: 'Oct 21, 2026, 2:40 PM',
-    status: 'Verified & Applied',
-    adminResponseNote: 'Verified with Forsyth County Parks & Rec. Senior waiver note added.'
-  }
-];
 
 export default function App() {
   // Navigation tab state
@@ -73,20 +47,6 @@ export default function App() {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [feedbackError, setFeedbackError] = useState('');
   const [recentReceipt, setRecentReceipt] = useState<UserFeedback | null>(null);
-
-  // Feedback Tracker & History State
-  const [feedbackList, setFeedbackList] = useState<UserFeedback[]>(() => {
-    const saved = localStorage.getItem('cumming_feedback_history');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch {
-        return INITIAL_FEEDBACK_RECORDS;
-      }
-    }
-    return INITIAL_FEEDBACK_RECORDS;
-  });
-  const [lookupId, setLookupId] = useState('');
 
   // Quick resource response checks map (id -> true)
   const [quickCheckedMap, setQuickCheckedMap] = useState<Record<string, boolean>>({});
@@ -158,15 +118,10 @@ export default function App() {
       adminResponseNote: 'Automated receipt logged. Queued for community editorial check.'
     };
 
-    const updatedList = [newFeedback, ...feedbackList];
-    setFeedbackList(updatedList);
-    localStorage.setItem('cumming_feedback_history', JSON.stringify(updatedList));
-
     // Show instant verification receipt
     setRecentReceipt(newFeedback);
     setFeedbackMessage('');
     setFeedbackResource('');
-    setLookupId(newId);
   };
 
   // Quick resource helpfulness check
@@ -191,11 +146,6 @@ export default function App() {
       item.keyServices.some((svc) => svc.toLowerCase().includes(query))
     );
   });
-
-  // Lookup filtered feedback items
-  const displayFeedback = lookupId.trim()
-    ? feedbackList.filter(f => f.id.toLowerCase().includes(lookupId.toLowerCase().trim()))
-    : feedbackList;
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900 font-sans">
@@ -293,7 +243,7 @@ export default function App() {
                 </div>
 
                 <h1 id="welcome-heading" className="hero-title">
-                  {userName ? `Welcome, ${userName}!` : 'Welcome to Cumming Connect!'}
+                  {userName ? `Welcome, ${userName}!` : 'Welcome to CivicBridge!'}
                 </h1>
 
                 <p className="hero-desc">
@@ -538,71 +488,70 @@ export default function App() {
               </p>
             </header>
 
-            {/* Instant Verification Receipt (Appears after submission) */}
-            {recentReceipt && (
-              <section 
-                role="status" 
-                aria-live="polite" 
-                className="response-check-receipt space-y-3"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-700 shrink-0" aria-hidden="true" />
+            <div className="max-w-2xl mx-auto space-y-6">
+              {/* Instant Verification Receipt (Appears after submission) */}
+              {recentReceipt && (
+                <section 
+                  role="status" 
+                  aria-live="polite" 
+                  className="response-check-receipt space-y-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-700 shrink-0" aria-hidden="true" />
+                      <div>
+                        <h2 className="text-base font-bold text-emerald-950 font-serif">
+                          Feedback Response Check Verified!
+                        </h2>
+                        <p className="text-xs text-emerald-800">
+                          Thank you, <strong>{recentReceipt.userName}</strong>. Your feedback has been registered and assigned an audit check reference.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setRecentReceipt(null)}
+                      className="text-stone-400 hover:text-stone-700 p-1"
+                      aria-label="Dismiss receipt"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="bg-white p-3.5 rounded-xl border border-emerald-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                     <div>
-                      <h2 className="text-base font-bold text-emerald-950 font-serif">
-                        Feedback Response Check Verified!
-                      </h2>
-                      <p className="text-xs text-emerald-800">
-                        Thank you, <strong>{recentReceipt.userName}</strong>. Your feedback has been registered and assigned an audit check reference.
-                      </p>
+                      <span className="text-stone-500 block font-mono text-[11px] uppercase">Tracking Check ID:</span>
+                      <strong className="text-amber-900 font-mono text-sm">{recentReceipt.id}</strong>
+                    </div>
+                    <div>
+                      <span className="text-stone-500 block font-mono text-[11px] uppercase">Timestamp:</span>
+                      <span className="text-stone-800">{recentReceipt.submittedAt}</span>
+                    </div>
+                    <div>
+                      <span className="text-stone-500 block font-mono text-[11px] uppercase">Initial Status:</span>
+                      <span className="status-badge status-badge--received">
+                        <Clock className="w-3 h-3" /> {recentReceipt.status}
+                      </span>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setRecentReceipt(null)}
-                    className="text-stone-400 hover:text-stone-700 p-1"
-                    aria-label="Dismiss receipt"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
 
-                <div className="bg-white p-3.5 rounded-xl border border-emerald-200 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                  <div>
-                    <span className="text-stone-500 block font-mono text-[11px] uppercase">Tracking Check ID:</span>
-                    <strong className="text-amber-900 font-mono text-sm">{recentReceipt.id}</strong>
+                  <div className="text-xs text-emerald-900 space-y-1">
+                    <strong className="block font-semibold">Response Verification Checklist:</strong>
+                    <ul className="space-y-0.5 text-[11px]">
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Form fields and character constraints verified
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Reference code generated and saved to browser audit log
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-amber-700" /> CivicBridge volunteer review queued (est. 24–48 hours)
+                      </li>
+                    </ul>
                   </div>
-                  <div>
-                    <span className="text-stone-500 block font-mono text-[11px] uppercase">Timestamp:</span>
-                    <span className="text-stone-800">{recentReceipt.submittedAt}</span>
-                  </div>
-                  <div>
-                    <span className="text-stone-500 block font-mono text-[11px] uppercase">Initial Status:</span>
-                    <span className="status-badge status-badge--received">
-                      <Clock className="w-3 h-3" /> {recentReceipt.status}
-                    </span>
-                  </div>
-                </div>
+                </section>
+              )}
 
-                <div className="text-xs text-emerald-900 space-y-1">
-                  <strong className="block font-semibold">Response Verification Checklist:</strong>
-                  <ul className="space-y-0.5 text-[11px]">
-                    <li className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Form fields and character constraints verified
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Reference code generated and saved to browser audit log
-                    </li>
-                    <li className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-amber-700" /> CivicBridge volunteer review queued (est. 24–48 hours)
-                    </li>
-                  </ul>
-                </div>
-              </section>
-            )}
-
-            <div className="feedback-grid">
-              
               {/* FEEDBACK FORM */}
               <section className="feedback-card" aria-labelledby="form-heading">
                 <h2 id="form-heading" className="text-lg font-bold font-serif text-stone-900 mb-1 flex items-center gap-2">
@@ -732,102 +681,7 @@ export default function App() {
 
                 </form>
               </section>
-
-              {/* RESPONSE STATUS CHECK & TRACKER */}
-              <section className="space-y-4">
-                <div className="feedback-card">
-                  <h2 className="text-base font-bold font-serif text-stone-900 mb-1 flex items-center gap-2">
-                    <ClipboardCheck className="w-5 h-5 text-amber-800" aria-hidden="true" />
-                    <span>Response Status Lookup</span>
-                  </h2>
-                  <p className="text-xs text-stone-600 mb-3">
-                    Check the review and verification status of any community feedback code.
-                  </p>
-
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <input
-                        type="search"
-                        value={lookupId}
-                        onChange={(e) => setLookupId(e.target.value)}
-                        placeholder="Search Check ID (e.g. CFB-2026-8941)"
-                        className="form-control font-mono text-xs pr-8"
-                      />
-                      {lookupId && (
-                        <button
-                          type="button"
-                          onClick={() => setLookupId('')}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
-                          aria-label="Clear lookup"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Response Log Cards */}
-                <div className="space-y-3" role="region" aria-label="Feedback Log">
-                  <div className="flex items-center justify-between text-xs text-stone-500 px-1">
-                    <span className="font-semibold text-stone-700">Verified Community Log:</span>
-                    <span>{displayFeedback.length} records</span>
-                  </div>
-
-                  {displayFeedback.map((fb) => (
-                    <article 
-                      key={fb.id}
-                      className="bg-white border border-stone-200 rounded-xl p-4 space-y-2 shadow-xs"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-xs font-bold text-amber-900">{fb.id}</span>
-                        <span className={`status-badge ${
-                          fb.status === 'Verified & Applied' 
-                            ? 'status-badge--verified' 
-                            : fb.status === 'Under Review' 
-                            ? 'status-badge--review' 
-                            : 'status-badge--received'
-                        }`}>
-                          {fb.status === 'Verified & Applied' && <CheckCircle2 className="w-3 h-3" />}
-                          {fb.status === 'Received & Logged' && <Clock className="w-3 h-3" />}
-                          {fb.status}
-                        </span>
-                      </div>
-
-                      <div className="text-xs text-stone-800 font-medium">
-                        {fb.resourceName && (
-                          <span className="text-amber-800 font-bold block">{fb.resourceName}</span>
-                        )}
-                        <p className="text-stone-600 mt-0.5">{fb.message}</p>
-                      </div>
-
-                      {fb.adminResponseNote && (
-                        <div className="p-2 bg-stone-50 rounded-lg border border-stone-200 text-[11px] text-stone-600">
-                          <strong className="text-stone-800 font-mono uppercase block text-[10px]">
-                            CivicBridge Response Check:
-                          </strong>
-                          <span>{fb.adminResponseNote}</span>
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between text-[11px] text-stone-400 pt-1 border-t border-stone-100">
-                        <span>Submitted by {fb.userName}</span>
-                        <time>{fb.submittedAt}</time>
-                      </div>
-                    </article>
-                  ))}
-
-                  {displayFeedback.length === 0 && (
-                    <div className="bg-white border border-stone-200 rounded-xl p-6 text-center text-xs text-stone-500">
-                      No response checks found matching &quot;{lookupId}&quot;.
-                    </div>
-                  )}
-                </div>
-
-              </section>
-
             </div>
-
           </div>
         )}
 
@@ -1019,7 +873,7 @@ export default function App() {
 
             <div className="text-center space-y-1.5 pt-1">
               <h3 id="modal-welcome-title" className="text-xl font-bold font-serif text-stone-900">
-                Welcome to Cumming Connect!
+                Welcome to CivicBridge!
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed max-w-sm mx-auto">
                 We are glad you are here. Whether you need grocery assistance, healthcare, childcare, fun sports activities, or local dining, our community is here for you.
