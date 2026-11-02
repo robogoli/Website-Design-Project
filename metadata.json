@@ -1,6 +1,6 @@
 {
   "name": "CivicBridge",
-  "description": "Verified community resources, food pantries, free clinics, schools, repair services, childcare, and civic programs in Cumming and Forsyth County, Georgia.",
+  "description": "Georgia FBLA 2026-2027 RLC Website Design: Verified Community Resource Website for Cumming and Forsyth County (Region 11), Georgia.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
