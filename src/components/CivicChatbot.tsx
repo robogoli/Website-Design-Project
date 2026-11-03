@@ -13,6 +13,7 @@ interface ChatMessage {
 
 interface CivicChatbotProps {
   onSelectResource: (resource: ResourceItem) => void;
+  onInitiateCall?: (phone: string, resourceName: string) => void;
 }
 
 const QUICK_PROMPTS = [
@@ -25,7 +26,7 @@ const QUICK_PROMPTS = [
   '🆘 Emergency hotlines'
 ];
 
-export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource }) => {
+export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, onInitiateCall }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -237,7 +238,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource }) 
                 </h2>
                 <span className="text-[11px] text-amber-200/90 flex items-center gap-1 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Interactive Guide · Forsyth County
+                  Online · 220 Verified Resources (Region 11)
                 </span>
               </div>
             </div>
@@ -309,8 +310,15 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource }) 
 
                           <div className="flex items-center justify-between gap-2 mt-2 pt-1 border-t border-stone-200/60">
                             <a
-                              href={`tel:${res.phone}`}
-                              className="text-[11px] text-stone-600 hover:text-amber-800 flex items-center gap-1 font-mono"
+                              href={`tel:${res.phone.replace(/[^\d+]/g, '')}`}
+                              onClick={(e) => {
+                                if (onInitiateCall) {
+                                  e.preventDefault();
+                                  onInitiateCall(res.phone, res.name);
+                                }
+                              }}
+                              className="text-[11px] text-stone-600 hover:text-amber-800 flex items-center gap-1 font-mono font-medium hover:underline"
+                              title={`Call ${res.name} at ${res.phone}`}
                             >
                               <Phone className="w-3 h-3 text-stone-400" />
                               <span>{res.phone}</span>

@@ -35,7 +35,10 @@ import {
   Award,
   Layers,
   FileCode,
-  FileText
+  FileText,
+  Copy,
+  Check,
+  PhoneCall
 } from 'lucide-react';
 
 export default function App() {
@@ -96,6 +99,57 @@ export default function App() {
     setFeedbackName(cleanName);
     localStorage.setItem('civicbridge_user_name', cleanName);
     setShowWelcomeModal(false);
+  };
+
+  // Telephone call dispatch & desktop capability feedback state
+  const [callPrompt, setCallPrompt] = useState<{
+    isOpen: boolean;
+    phone: string;
+    cleanedPhone: string;
+    resourceName: string;
+    isMobile: boolean;
+    copied: boolean;
+  }>({
+    isOpen: false,
+    phone: '',
+    cleanedPhone: '',
+    resourceName: '',
+    isMobile: false,
+    copied: false,
+  });
+
+  const handleInitiateCall = (e: React.MouseEvent | undefined, phone: string, resourceName: string) => {
+    if (e) {
+      e.preventDefault();
+    }
+    const cleaned = phone.replace(/[^\d+]/g, '');
+    const isMobileDevice = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    let copyTriggered = false;
+    if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(phone).then(() => {
+        setCallPrompt(prev => ({ ...prev, copied: true }));
+      }).catch(() => {});
+      copyTriggered = true;
+    }
+
+    setCallPrompt({
+      isOpen: true,
+      phone,
+      cleanedPhone: cleaned,
+      resourceName,
+      isMobile: isMobileDevice,
+      copied: copyTriggered,
+    });
+
+    // Attempt to invoke the native dialer
+    // On mobile devices, window.location.href triggers the device telephone prompt
+    // On desktop, it triggers registered telephony handlers (FaceTime/Skype) if present
+    try {
+      window.location.href = `tel:${cleaned}`;
+    } catch {
+      // In case protocol handler is restricted
+    }
   };
 
   // Toggle helpful like count on feedback cards
@@ -219,11 +273,11 @@ export default function App() {
       <aside className="crisis-banner" aria-label="Crisis Hotlines">
         <div className="crisis-banner-inner">
           <span className="font-bold">CivicBridge Crisis Hotlines:</span>
-          <span>Suicide &amp; Crisis: <a href="tel:988">988</a></span>
+          <span>Suicide &amp; Crisis: <a href="tel:988" onClick={(e) => handleInitiateCall(e, '988', 'Suicide & Crisis Lifeline')}>988</a></span>
           <span aria-hidden="true">·</span>
-          <span>Forsyth County 2-1-1: <a href="tel:211">Dial 211</a></span>
+          <span>Forsyth County 2-1-1: <a href="tel:211" onClick={(e) => handleInitiateCall(e, '211', 'Forsyth County 2-1-1 Helpline')}>Dial 211</a></span>
           <span aria-hidden="true">·</span>
-          <span>The Place of Forsyth: <a href="tel:7708871098">(770) 887-1098</a></span>
+          <span>The Place of Forsyth: <a href="tel:7708871098" onClick={(e) => handleInitiateCall(e, '(770) 887-1098', 'The Place of Forsyth County')}>(770) 887-1098</a></span>
         </div>
       </aside>
 
@@ -239,7 +293,7 @@ export default function App() {
             <span className="civic-brand-icon" aria-hidden="true">C</span>
             <div>
               <span className="civic-brand-title">CivicBridge</span>
-              <span className="civic-brand-sub">Cumming &amp; Forsyth County, GA (FBLA Region 11)</span>
+              <span className="civic-brand-sub">Georgia FBLA Website Design · Forsyth County (Region 11)</span>
             </div>
           </button>
 
@@ -255,7 +309,7 @@ export default function App() {
                 {tab === 'resources' && 'Resources & Places'}
                 {tab === 'events' && 'Events'}
                 {tab === 'feedback' && 'Feedback'}
-                {tab === 'about' && 'About & Documentation'}
+                {tab === 'about' && 'FBLA Website Design & Docs'}
               </button>
             ))}
           </nav>
@@ -425,7 +479,12 @@ export default function App() {
                     <address className="resource-contact-block">
                       <div className="resource-contact-row">
                         <Phone className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
-                        <a href={`tel:${res.phone}`} className="resource-contact-link">
+                        <a 
+                          href={`tel:${res.phone.replace(/[^\d+]/g, '')}`} 
+                          onClick={(e) => handleInitiateCall(e, res.phone, res.name)}
+                          className="resource-contact-link"
+                          title={`Call ${res.name} at ${res.phone}`}
+                        >
                           {res.phone}
                         </a>
                       </div>
@@ -463,11 +522,13 @@ export default function App() {
                       View Details
                     </button>
                     <a
-                      href={`tel:${res.phone}`}
-                      className="btn btn-primary text-xs"
+                      href={`tel:${res.phone.replace(/[^\d+]/g, '')}`}
+                      onClick={(e) => handleInitiateCall(e, res.phone, res.name)}
+                      className="btn btn-primary text-xs inline-flex items-center gap-1.5 cursor-pointer"
                       aria-label={`Call ${res.name} at ${res.phone}`}
                     >
-                      Call
+                      <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>Call</span>
                     </a>
                   </footer>
                 </article>
@@ -529,9 +590,11 @@ export default function App() {
 
                     <a
                       href="tel:7708871098"
-                      className="btn btn-primary text-xs whitespace-nowrap self-start sm:self-center"
+                      onClick={(e) => handleInitiateCall(e, '(770) 887-1098', evt.title)}
+                      className="btn btn-primary text-xs whitespace-nowrap self-start sm:self-center inline-flex items-center gap-1.5 cursor-pointer"
                     >
-                      Call for Info
+                      <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
+                      <span>Call for Info</span>
                     </a>
                   </div>
                 </article>
@@ -949,7 +1012,7 @@ export default function App() {
                 </cite>
               </blockquote>
               <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                <strong>Project Implementation:</strong> CivicBridge unifies 36 verified community resources across 11 core categories for residents of <strong>Cumming and Forsyth County, Georgia (Georgia FBLA Region 11)</strong>. From emergency food distribution and free medical care to schools (Pre-K through university) and residential repair services, CivicBridge solves community fragmented wayfinding in a single, intuitive hub.
+                <strong>Project Implementation:</strong> CivicBridge unifies 220 verified community resources across 11 core categories (at least 20 per category) for residents of <strong>Cumming and Forsyth County, Georgia (Georgia FBLA Region 11)</strong>. From emergency food distribution and free medical care to schools (Pre-K through university) and residential repair services, CivicBridge solves community fragmented wayfinding in a single, intuitive hub.
               </p>
             </section>
 
@@ -987,9 +1050,9 @@ export default function App() {
                 {/* 3. Fully Address Topic */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">3. Topic Fulfillment (10 pts)</span>
-                  <strong className="text-stone-900 block font-serif">36 Verified Local Resources</strong>
+                  <strong className="text-stone-900 block font-serif">220 Verified Local Resources</strong>
                   <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Authentic addresses, direct mobile phone links, operating hours, eligibility checklists, and offerings across all 11 community domains in Cumming and Forsyth County.
+                    Authentic addresses, direct mobile phone links, operating hours, eligibility checklists, and offerings across all 11 community domains in Cumming and Forsyth County (20+ per category).
                   </p>
                 </div>
 
@@ -1231,7 +1294,7 @@ export default function App() {
                 </div>
 
                 <a
-                  href="https://github.com/robogoli/TSAWebmaster/tree/main"
+                  href="https://github.com/robogoli/Website-Design-Project"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="btn btn-primary text-xs inline-flex items-center gap-2 self-start sm:self-auto shadow-xs"
@@ -1250,12 +1313,12 @@ export default function App() {
                 <div>
                   <span className="font-bold text-stone-900 block font-mono">Repository URL:</span>
                   <a 
-                    href="https://github.com/robogoli/TSAWebmaster/tree/main"
+                    href="https://github.com/robogoli/Website-Design-Project"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-amber-800 hover:text-amber-950 underline font-mono text-xs break-all font-medium"
                   >
-                    https://github.com/robogoli/TSAWebmaster/tree/main
+                    https://github.com/robogoli/Website-Design-Project
                   </a>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -1341,7 +1404,7 @@ export default function App() {
           <div className="civic-footer-inner">
             <div>
               <strong className="text-white font-serif text-base block">CivicBridge</strong>
-              <span className="text-xs text-stone-300">Cumming &amp; Forsyth County Community Resource Directory · Region 11</span>
+              <span className="text-xs text-stone-300">Georgia FBLA 2026–2027 Website Design · Region 11 (Forsyth County)</span>
             </div>
 
             {/* Device Compatibility Badges with Icons */}
@@ -1364,13 +1427,13 @@ export default function App() {
             {/* GitHub Repository Link */}
             <div>
               <a
-                href="https://github.com/robogoli/TSAWebmaster/tree/main"
+                href="https://github.com/robogoli/Website-Design-Project"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-100 hover:text-white rounded-lg text-xs font-mono font-medium transition-colors border border-stone-700 shadow-xs"
               >
                 <Github className="w-4 h-4 text-stone-300" />
-                <span>GitHub Repository: robogoli/TSAWebmaster</span>
+                <span>GitHub Repository: robogoli/Website-Design-Project</span>
                 <ExternalLink className="w-3.5 h-3.5 text-stone-400" />
               </a>
             </div>
@@ -1496,7 +1559,12 @@ export default function App() {
             <address className="resource-contact-block bg-stone-50 p-3.5 rounded-xl border border-stone-200">
               <div className="resource-contact-row">
                 <Phone className="w-4 h-4 text-stone-400" aria-hidden="true" />
-                <a href={`tel:${activeResource.phone}`} className="resource-contact-link text-stone-900">
+                <a 
+                  href={`tel:${activeResource.phone.replace(/[^\d+]/g, '')}`} 
+                  onClick={(e) => handleInitiateCall(e, activeResource.phone, activeResource.name)}
+                  className="resource-contact-link text-stone-900"
+                  title={`Call ${activeResource.name} at ${activeResource.phone}`}
+                >
                   {activeResource.phone}
                 </a>
               </div>
@@ -1578,10 +1646,12 @@ export default function App() {
                 Close
               </button>
               <a
-                href={`tel:${activeResource.phone}`}
-                className="btn btn-primary text-xs"
+                href={`tel:${activeResource.phone.replace(/[^\d+]/g, '')}`}
+                onClick={(e) => handleInitiateCall(e, activeResource.phone, activeResource.name)}
+                className="btn btn-primary text-xs inline-flex items-center gap-1.5 cursor-pointer"
               >
-                Call {activeResource.phone}
+                <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>Call {activeResource.phone}</span>
               </a>
             </footer>
           </div>
@@ -1589,7 +1659,119 @@ export default function App() {
       )}
 
       {/* 7. INTERACTIVE CHATBOT (CivicBridge Assistant) */}
-      <CivicChatbot onSelectResource={(res) => setActiveResource(res)} />
+      <CivicChatbot 
+        onSelectResource={(res) => setActiveResource(res)} 
+        onInitiateCall={(phone, name) => handleInitiateCall(undefined, phone, name)}
+      />
+
+      {/* 8. CALL ASSISTANCE & HARDWARE CAPABILITY DIALOG */}
+      {callPrompt.isOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="call-prompt-title"
+          className="fixed inset-0 z-70 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
+          <div className="bg-white rounded-2xl max-w-md w-full border border-stone-200 shadow-2xl p-6 space-y-4 relative">
+            <button
+              type="button"
+              onClick={() => setCallPrompt(prev => ({ ...prev, isOpen: false }))}
+              className="absolute top-4 right-4 p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg cursor-pointer"
+              aria-label="Close call status dialog"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header with Call Icon */}
+            <div className="flex items-start gap-3">
+              <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl shrink-0">
+                <PhoneCall className="w-6 h-6 text-amber-800 animate-pulse" />
+              </div>
+              <div className="space-y-0.5 pr-6">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-amber-800 font-bold block">
+                  Telephone Dispatch Status
+                </span>
+                <h2 id="call-prompt-title" className="text-base sm:text-lg font-bold font-serif text-stone-900 leading-tight">
+                  Calling {callPrompt.resourceName}
+                </h2>
+                <div className="text-sm font-mono font-bold text-amber-900 flex items-center gap-1.5 pt-0.5">
+                  <span>{callPrompt.phone}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Device-Specific Status & Explanation */}
+            <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50 space-y-2.5 text-xs text-stone-700">
+              {callPrompt.isMobile ? (
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+                    <span>Mobile Telephone Dialer Dispatched</span>
+                  </div>
+                  <p className="text-stone-600 leading-relaxed">
+                    Your smartphone's native telephone dialer was dispatched to dial <strong>{callPrompt.phone}</strong>. If your phone dialer app did not open automatically, tap the <em>Launch Dialer Again</em> button below.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-700" />
+                    <span>Desktop Browser Call Notice</span>
+                  </div>
+                  <p className="text-stone-700 leading-relaxed">
+                    <strong>Why you might not hear a ring right now:</strong> Web browsers running on laptops and desktop PCs do not have built-in cellular phone hardware or an active telephone carrier line, so standard web code cannot place direct cellular phone calls by itself.
+                  </p>
+                  <p className="text-stone-600 leading-relaxed text-[11.5px]">
+                    If your computer has a connected telephony application (such as <em>FaceTime, Windows Phone Link, Skype, or Zoom Phone</em>), your system will prompt you to connect. Otherwise, please dial <strong>{callPrompt.phone}</strong> directly from your mobile phone.
+                  </p>
+                </div>
+              )}
+
+              {/* Clipboard auto-copy notification */}
+              <div className="pt-2 border-t border-stone-200/80 flex items-center justify-between gap-2 text-[11px] text-stone-500 font-mono">
+                <span className="flex items-center gap-1 text-emerald-700 font-semibold">
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Number copied to clipboard!</span>
+                </span>
+                <span>Ready to paste</span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <a
+                href={`tel:${callPrompt.cleanedPhone}`}
+                className="btn btn-primary text-xs flex-1 justify-center py-2.5 inline-flex items-center gap-1.5 font-bold"
+              >
+                <Phone className="w-4 h-4" />
+                <span>Launch Dialer ({callPrompt.phone})</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                    navigator.clipboard.writeText(callPrompt.phone);
+                    setCallPrompt(prev => ({ ...prev, copied: true }));
+                  }
+                }}
+                className="btn btn-outline text-xs justify-center py-2.5 inline-flex items-center gap-1.5 cursor-pointer"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>{callPrompt.copied ? 'Copied!' : 'Copy Number'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCallPrompt(prev => ({ ...prev, isOpen: false }))}
+                className="btn btn-ghost text-xs justify-center py-2.5 text-stone-500 hover:text-stone-800 cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
