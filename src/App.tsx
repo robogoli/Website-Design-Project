@@ -45,19 +45,19 @@ import {
   Sparkles
 } from 'lucide-react';
 
-// Discovery cards for initial category explorer view (when no search/filter is active)
+// Warm discovery cards for initial category explorer view
 const CATEGORY_DISCOVERY_ITEMS = [
-  { id: 'schools', label: 'Schools & Education', count: '20 Verified', desc: 'Pre-K, Elementary, Middle, High Schools, Technical College & Universities', icon: '🎓' },
-  { id: 'repairs', label: 'Repairs & Maintenance', count: '20 Verified', desc: 'Auto body, brakes, HVAC, plumbing, roofing, appliances & handyman repairs', icon: '🔧' },
-  { id: 'food', label: 'Food & Meals', count: '20 Verified', desc: 'Emergency food pantries, home grocery delivery & free meal distributions', icon: '🥫' },
-  { id: 'housing', label: 'Housing & Utilities', count: '20 Verified', desc: 'Emergency rent relief, shelter beds, energy grants & home repairs', icon: '🏠' },
-  { id: 'healthcare', label: 'Health & Dental', count: '20 Verified', desc: 'Free medical clinics, sliding-scale dental, vision care & mental health crisis line', icon: '🩺' },
-  { id: 'childcare', label: 'Childcare & Daycare', count: '20 Verified', desc: 'Head Start preschool, early learning centers, special needs care & after-school', icon: '👶' },
-  { id: 'sports', label: 'Sports & Parks', count: '20 Verified', desc: 'Sawnee Mountain Preserve, Big Creek Greenway, recreation centers & public pools', icon: '🌳' },
-  { id: 'dining', label: 'Local Restaurants', count: '20 Verified', desc: 'Cumming family diners, slow-smoked BBQ, scratch bakeries & community cafes', icon: '🍽️' },
-  { id: 'workforce', label: 'Workforce & Library', count: '20 Verified', desc: 'Forsyth County Public Library branches, career counseling & resume coaching', icon: '💼' },
-  { id: 'seniors', label: 'Senior Services', count: '20 Verified', desc: 'Senior enrichment centers, Meals on Wheels, case management & transit', icon: '👵' },
-  { id: 'youth-family', label: 'Youth & Family', count: '20 Verified', desc: 'CASA child advocacy, youth mentoring, crisis relief grants & family coaching', icon: '👨‍👩‍👧' },
+  { id: 'schools', label: 'Schools & Education', count: '20 Places', desc: 'Pre-K, elementary, middle, high schools, Lanier Tech & UNG college programs', icon: '🎓' },
+  { id: 'repairs', label: 'Repairs & Maintenance', count: '20 Places', desc: 'Friendly mechanics, 24/7 plumbers, HVAC technicians & neighborhood handymen', icon: '🔧' },
+  { id: 'food', label: 'Food & Groceries', count: '20 Places', desc: 'Free grocery pantries, hot community lunches & food boxes for local families', icon: '🥫' },
+  { id: 'housing', label: 'Housing & Utilities', count: '20 Places', desc: 'Rent relief grants, utility bill assistance, shelter beds & weatherization help', icon: '🏠' },
+  { id: 'healthcare', label: 'Health & Dental Care', count: '20 Places', desc: 'Free doctor visits, sliding-scale dental care, mental wellness & prescriptions', icon: '🩺' },
+  { id: 'childcare', label: 'Childcare & Daycare', count: '20 Places', desc: 'Early learning preschools, loving daycare centers & Georgia CAPS subsidy providers', icon: '👶' },
+  { id: 'sports', label: 'Parks & Recreation', count: '20 Places', desc: 'Sawnee Mountain hiking trails, Lake Lanier swimming, greenways & playgrounds', icon: '🌳' },
+  { id: 'dining', label: 'Local Family Dining', count: '20 Places', desc: 'Cozy Cumming diners, authentic delis, slow-smoked BBQ & neighborhood cafes', icon: '🍽️' },
+  { id: 'workforce', label: 'Library & Job Help', count: '20 Places', desc: 'Quiet library spaces, free resume help, job training & public computer access', icon: '💼' },
+  { id: 'seniors', label: 'Senior Living & Care', count: '20 Places', desc: 'Senior community centers, Meals on Wheels, social clubs & ride assistance', icon: '👵' },
+  { id: 'youth-family', label: 'Youth & Family Support', count: '20 Places', desc: 'Youth mentoring programs, parenting workshops, counseling & family support', icon: '👨‍👩‍👧' },
 ];
 
 export default function App() {
@@ -231,7 +231,7 @@ export default function App() {
     e.preventDefault();
     setFeedbackError('');
 
-    let finalDisplayName = 'Anonymous Resident';
+    let finalDisplayName = 'A Friendly Neighbor';
     if (!isAnonymous) {
       const trimmedName = feedbackName.trim() || userName;
       if (!trimmedName || trimmedName.length < 2) {
@@ -321,8 +321,8 @@ export default function App() {
       {/* 1. EMERGENCY CRISIS HOTLINE RIBBON */}
       <aside className="crisis-banner" aria-label="Crisis Hotlines">
         <div className="crisis-banner-inner">
-          <span className="font-bold">CivicBridge Crisis Hotlines:</span>
-          <span>Suicide &amp; Crisis: <a href="tel:988" onClick={(e) => handleInitiateCall(e, '988', 'Suicide & Crisis Lifeline')}>988</a></span>
+          <span className="font-bold">Need a helping hand or someone to talk to?</span>
+          <span>Suicide &amp; Crisis Lifeline: <a href="tel:988" onClick={(e) => handleInitiateCall(e, '988', 'Suicide & Crisis Lifeline')}>988 (24/7)</a></span>
           <span aria-hidden="true">·</span>
           <span>Forsyth County 2-1-1: <a href="tel:211" onClick={(e) => handleInitiateCall(e, '211', 'Forsyth County 2-1-1 Helpline')}>Dial 211</a></span>
           <span aria-hidden="true">·</span>
@@ -355,9 +355,9 @@ export default function App() {
                 className={`civic-nav-link ${currentTab === tab ? 'civic-nav-link--active' : ''}`}
                 aria-current={currentTab === tab ? 'page' : undefined}
               >
-                {tab === 'resources' && 'Resources & Places'}
-                {tab === 'events' && 'Events'}
-                {tab === 'feedback' && 'Feedback'}
+                {tab === 'resources' && 'Find Resources'}
+                {tab === 'events' && 'Local Events'}
+                {tab === 'feedback' && 'Neighbor Notes'}
                 {tab === 'about' && 'FBLA Website Design & Docs'}
               </button>
             ))}
@@ -388,14 +388,14 @@ export default function App() {
                         className="text-xs text-stone-500 hover:text-amber-800 underline cursor-pointer flex items-center gap-1"
                       >
                         <User className="w-3.5 h-3.5 text-stone-400" />
-                        <span>(Not {userName}? Change)</span>
+                        <span>(Not {userName}? Change name)</span>
                       </button>
                     )}
                   </div>
 
                   {/* Multi-Platform Device Compatibility Badges with Icons */}
                   <div className="inline-flex items-center gap-2 bg-stone-100/90 border border-stone-200/80 px-2.5 py-1 rounded-full text-[11px] text-stone-600 font-medium">
-                    <span className="font-mono text-stone-500 uppercase text-[10px]">Multi-Platform:</span>
+                    <span className="font-mono text-stone-500 uppercase text-[10px]">Friendly on:</span>
                     <span className="inline-flex items-center gap-1 text-stone-800" title="iPhone iOS Safari & Chrome Compatible">
                       <Smartphone className="w-3.5 h-3.5 text-amber-800" />
                       <span>iPhone</span>
@@ -403,12 +403,12 @@ export default function App() {
                     <span className="text-stone-300">·</span>
                     <span className="inline-flex items-center gap-1 text-stone-800" title="PC Desktop Browsers Compatible">
                       <Monitor className="w-3.5 h-3.5 text-amber-800" />
-                      <span>PC Browser</span>
+                      <span>PC / Laptop</span>
                     </span>
                     <span className="text-stone-300">·</span>
                     <span className="inline-flex items-center gap-1 text-stone-800" title="Android & Mobile Phone Compatible">
                       <Smartphone className="w-3.5 h-3.5 text-amber-800" />
-                      <span>Phone</span>
+                      <span>Any Phone</span>
                     </span>
                   </div>
                 </div>
@@ -418,7 +418,7 @@ export default function App() {
                 </h1>
 
                 <p className="hero-desc">
-                  Explore verified food pantries, free clinics, schools, home &amp; auto repairs, childcare, sports recreation, and local dining in Cumming and Forsyth County, GA.
+                  A friendly, neighbor-to-neighbor guide to finding local food pantries, free clinics, neighborhood schools, reliable repairs, childcare, and parks right here in Cumming &amp; Forsyth County.
                 </p>
 
                 {/* SEARCH FORM */}
@@ -437,7 +437,7 @@ export default function App() {
                     list="civic-search-suggestions"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search schools, auto repair, food pantries, clinics, colleges, childcare, handyman..."
+                    placeholder="Search by name, service, or need (e.g. food pantries, clinic, elementary schools, car repairs, daycare)..."
                     className="search-input"
                     aria-label="Search resources"
                   />
@@ -481,7 +481,7 @@ export default function App() {
                     className={`category-pill ${selectedCategory === 'all' ? 'category-pill--active' : ''}`}
                     aria-pressed={selectedCategory === 'all'}
                   >
-                    All Resources (220)
+                    All Places (220)
                   </button>
                   {CATEGORIES.filter(c => c.id !== 'all').map((cat) => {
                     const isActive = selectedCategory === cat.id;
@@ -504,7 +504,7 @@ export default function App() {
                 <span>
                   {hasActiveQueryOrFilter ? (
                     <>
-                      Found <strong>{filteredResources.length}</strong> resources
+                      Found <strong>{filteredResources.length}</strong> friendly places
                       {selectedCategory && selectedCategory !== 'all' && (
                         <span> in <strong>{CATEGORIES.find(c => c.id === selectedCategory)?.label}</strong></span>
                       )}
@@ -514,7 +514,7 @@ export default function App() {
                     </>
                   ) : (
                     <span>
-                      Choose a category or type in search above to view listings (220 verified local resources)
+                      Pick a category below or type in the search bar above to view listings (220 verified places across Forsyth County)
                     </span>
                   )}
                 </span>
@@ -541,18 +541,18 @@ export default function App() {
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-amber-800" />
-                      <span>Select a Category to View Verified Resources</span>
+                      <span>What can we help you find today?</span>
                     </h2>
                     <button
                       type="button"
                       onClick={() => setSelectedCategory('all')}
                       className="btn btn-outline text-xs cursor-pointer font-semibold"
                     >
-                      View All 220 Resources at Once
+                      Show All 220 Places
                     </button>
                   </div>
                   <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-                    To keep navigation fast and easy to scroll, choose any category below or enter a keyword above to view listings. Every category contains at least 20 verified local organizations in Cumming &amp; Forsyth County.
+                    Take a look through our 11 community categories or search above to find caring local spots ready to help you and your family. Every category contains at least 20 verified local resources right here in Cumming &amp; Forsyth County.
                   </p>
                 </div>
 
@@ -580,7 +580,7 @@ export default function App() {
                           {item.desc}
                         </p>
                         <span className="text-[11px] font-semibold text-amber-800 group-hover:underline inline-flex items-center gap-0.5 pt-0.5">
-                          Browse 20 Places &rarr;
+                          See 20 Places &rarr;
                         </span>
                       </div>
                     </button>
@@ -630,7 +630,7 @@ export default function App() {
 
                         {/* Offerings list */}
                         <section className="offerings-section" aria-label="Offerings">
-                          <strong className="offerings-heading">Offerings:</strong>
+                          <strong className="offerings-heading">What they help with:</strong>
                           <ul className="offerings-grid">
                             {res.keyServices.slice(0, 4).map((svc, i) => (
                               <li key={i} className="offering-item" title={svc}>
@@ -649,7 +649,7 @@ export default function App() {
                           className="btn btn-outline text-xs"
                           aria-haspopup="dialog"
                         >
-                          View Details
+                          More details
                         </button>
                         <a
                           href={`tel:${res.phone.replace(/[^\d+]/g, '')}`}
@@ -658,7 +658,7 @@ export default function App() {
                           aria-label={`Call ${res.name} at ${res.phone}`}
                         >
                           <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
-                          <span>Call</span>
+                          <span>Call now</span>
                         </a>
                       </footer>
                     </article>
@@ -669,17 +669,17 @@ export default function App() {
                 {filteredResources.length === 0 && (
                   <section className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
                     <p className="text-base font-semibold text-stone-800">
-                      No resources found matching &ldquo;{searchQuery}&rdquo;.
+                      We couldn&apos;t find any places matching &ldquo;{searchQuery}&rdquo;.
                     </p>
                     <p className="text-xs text-stone-500">
-                      Try searching for terms like &quot;schools&quot;, &quot;repairs&quot;, &quot;food&quot;, &quot;clinic&quot;, or &quot;childcare&quot;.
+                      Try searching for everyday words like &ldquo;schools&rdquo;, &ldquo;repairs&rdquo;, &ldquo;food&rdquo;, &ldquo;clinic&rdquo;, or &ldquo;childcare&rdquo;.
                     </p>
                     <button
                       type="button"
                       onClick={() => { setSearchQuery(''); setSelectedCategory(''); }}
                       className="btn btn-primary text-xs"
                     >
-                      Return to Categories
+                      Back to All Categories
                     </button>
                   </section>
                 )}
@@ -694,10 +694,10 @@ export default function App() {
           <div className="civic-container space-y-6">
             <header>
               <h1 className="hero-title">
-                Community Events in Cumming &amp; Forsyth County
+                Community Gatherings &amp; Local Events
               </h1>
               <p className="hero-desc">
-                Free resource fairs, food drives, and family activities for local residents.
+                Free grocery distributions, family fun days, health checkups, and neighbor gatherings across Cumming and Forsyth County.
               </p>
             </header>
 
@@ -726,7 +726,7 @@ export default function App() {
                       className="btn btn-primary text-xs whitespace-nowrap self-start sm:self-center inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>Call for Info</span>
+                      <span>Call organizer</span>
                     </a>
                   </div>
                 </article>
@@ -740,13 +740,13 @@ export default function App() {
           <div className="civic-container space-y-6">
             <header className="border-b border-stone-200 pb-3">
               <span className="hero-tagline">
-                Community Voice &amp; Public Suggestions
+                Community Voices &amp; Neighbor Notes
               </span>
               <h1 className="hero-title mt-1">
-                Community Feedback &amp; Public Board
+                Neighbor Notes &amp; Community Board
               </h1>
               <p className="hero-desc mb-0">
-                Share updates, suggest new resources, or provide feedback for CivicBridge. All feedback is displayed openly on the community board—you can choose to show your name or remain completely anonymous.
+                Have you stopped by one of these places? Share a friendly tip, suggest a new local spot, or leave an update for your neighbors. You&apos;re welcome to share your name or post completely anonymously.
               </p>
             </header>
 
@@ -760,17 +760,17 @@ export default function App() {
                 {submissionSuccess && (
                   <div role="status" aria-live="polite" className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>Feedback published successfully to the community board!</span>
+                    <span>Your note has been posted to the community board! Thank you for helping neighbors.</span>
                   </div>
                 )}
 
                 <section className="feedback-card" aria-labelledby="form-heading">
                   <h2 id="form-heading" className="text-lg font-bold font-serif text-stone-900 mb-1 flex items-center gap-2">
                     <MessageSquare className="w-5 h-5 text-amber-800" aria-hidden="true" />
-                    <span>Submit Community Feedback</span>
+                    <span>Leave a Note or Suggest an Update</span>
                   </h2>
                   <p className="text-xs text-stone-600 mb-4">
-                    Share your thoughts with the community. You can choose whether your name is shown publicly or kept completely anonymous.
+                    Share your experience or help us keep hours and contact details fresh for everyone in Forsyth County.
                   </p>
 
                   {feedbackError && (
@@ -787,7 +787,7 @@ export default function App() {
                       <legend className="text-xs font-bold text-stone-900 flex items-center justify-between w-full pb-1">
                         <span className="flex items-center gap-1.5">
                           {isAnonymous ? <EyeOff className="w-4 h-4 text-stone-600" /> : <Eye className="w-4 h-4 text-amber-800" />}
-                          <span>Do you want this feedback to be anonymous?</span>
+                          <span>Would you like your name shown?</span>
                         </span>
                         <span className={`text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-full ${
                           isAnonymous ? 'bg-stone-200 text-stone-800' : 'bg-amber-100 text-amber-900'
@@ -810,9 +810,9 @@ export default function App() {
                             className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
                           />
                           <div>
-                            <span className="font-bold block">No, show my name</span>
+                            <span className="font-bold block">Yes, show my name</span>
                             <span className="text-[11px] text-stone-500 block leading-tight mt-0.5">
-                              Displays your name publicly on the feedback feed
+                              Displays your name alongside your note
                             </span>
                           </div>
                         </label>
@@ -830,9 +830,9 @@ export default function App() {
                             className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
                           />
                           <div>
-                            <span className="font-bold block">Yes, make it anonymous</span>
+                            <span className="font-bold block">Keep me anonymous</span>
                             <span className="text-[11px] text-stone-500 block leading-tight mt-0.5">
-                              Hides your name; displays as &ldquo;Anonymous Resident&rdquo;
+                              Hides your name; displays as &ldquo;A Friendly Neighbor&rdquo;
                             </span>
                           </div>
                         </label>
@@ -842,9 +842,9 @@ export default function App() {
                     {/* Resident Name Field */}
                     <div className="form-group">
                       <label htmlFor="fb-name" className="form-label">
-                        <span>{isAnonymous ? 'Your Name / Initials (Private):' : 'Your Name / Initials:'}</span>
+                        <span>{isAnonymous ? 'Your Name or Nickname (Private):' : 'Your Name or Nickname:'}</span>
                         <span className="text-[11px] text-stone-400 font-mono">
-                          {isAnonymous ? 'Hidden from public feed' : 'Required'}
+                          {isAnonymous ? 'Hidden from feed' : 'Required'}
                         </span>
                       </label>
                       <input
@@ -853,7 +853,7 @@ export default function App() {
                         maxLength={30}
                         value={isAnonymous ? '' : feedbackName}
                         onChange={(e) => setFeedbackName(e.target.value)}
-                        placeholder={isAnonymous ? 'Anonymity enabled (name will not be shown)' : 'e.g. Alex M. or Forsyth Resident'}
+                        placeholder={isAnonymous ? 'Anonymous mode enabled (name will not be shown)' : 'e.g. Alex M. or Forsyth Neighbor'}
                         className={`form-control ${isAnonymous ? 'bg-stone-100 text-stone-400 cursor-not-allowed' : ''}`}
                         disabled={isAnonymous}
                         required={!isAnonymous}
@@ -861,7 +861,7 @@ export default function App() {
                       {isAnonymous && (
                         <p className="text-[11px] text-stone-500 flex items-center gap-1.5 pt-1">
                           <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Your identity is protected. Displays as <strong>&ldquo;Anonymous Resident&rdquo;</strong>.</span>
+                          <span>Your privacy is protected. Displays as <strong>&ldquo;A Friendly Neighbor&rdquo;</strong>.</span>
                         </p>
                       )}
                     </div>
@@ -869,7 +869,7 @@ export default function App() {
                     {/* Feedback Category */}
                     <div className="form-group">
                       <label htmlFor="fb-category" className="form-label">
-                        <span>Feedback Category:</span>
+                        <span>What kind of note is this?</span>
                       </label>
                       <select
                         id="fb-category"
@@ -877,17 +877,17 @@ export default function App() {
                         onChange={(e) => setFeedbackCategory(e.target.value as UserFeedback['category'])}
                         className="form-control"
                       >
-                        <option value="Accuracy & Updates">Accuracy &amp; Updates (Phone, hours, address change)</option>
-                        <option value="Suggest New Resource">Suggest New Resource (New pantry, clinic, park, repair shop)</option>
-                        <option value="Website Accessibility">Website Accessibility (Readability, contrast, keyboard focus)</option>
-                        <option value="General Suggestion">General Suggestion</option>
+                        <option value="Accuracy & Updates">Hours, phone, or address update</option>
+                        <option value="Suggest New Resource">Suggest a new local place or program</option>
+                        <option value="Website Accessibility">Website ease of use or accessibility</option>
+                        <option value="General Suggestion">General neighbor tip or suggestion</option>
                       </select>
                     </div>
 
                     {/* Specific Resource or Place */}
                     <div className="form-group">
                       <label htmlFor="fb-resource" className="form-label">
-                        <span>Specific Resource or Place (Optional):</span>
+                        <span>Which place is this about? (Optional):</span>
                       </label>
                       <input
                         id="fb-resource"
@@ -895,7 +895,7 @@ export default function App() {
                         list="civic-search-suggestions"
                         value={feedbackResource}
                         onChange={(e) => setFeedbackResource(e.target.value)}
-                        placeholder="e.g. Good Shepherd Clinic, Lanier Tech, Auto Repair..."
+                        placeholder="e.g. The Place, Good Shepherd Clinic, Lanier Tech, Auto Repair..."
                         className="form-control"
                       />
                     </div>
@@ -903,7 +903,7 @@ export default function App() {
                     {/* Helpfulness Rating */}
                     <div className="form-group">
                       <span className="form-label">
-                        <span>Experience / Rating:</span>
+                        <span>How was your experience?</span>
                       </span>
                       <div className="grid grid-cols-3 gap-2 pt-0.5">
                         {(['Very Helpful', 'Helpful', 'Needs Improvement'] as const).map((r) => (
@@ -917,7 +917,7 @@ export default function App() {
                                 : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
                             }`}
                           >
-                            {r}
+                            {r === 'Very Helpful' ? 'Wonderful' : r === 'Helpful' ? 'Helpful' : 'Could Be Better'}
                           </button>
                         ))}
                       </div>
@@ -926,7 +926,7 @@ export default function App() {
                     {/* Feedback Message */}
                     <div className="form-group">
                       <label htmlFor="fb-message" className="form-label">
-                        <span>Feedback Details:</span>
+                        <span>Your Note or Details:</span>
                         <output htmlFor="fb-message" className="text-[11px] text-stone-400 font-mono">
                           {feedbackMessage.length}/500 chars (min 10)
                         </output>
@@ -937,7 +937,7 @@ export default function App() {
                         maxLength={500}
                         value={feedbackMessage}
                         onChange={(e) => setFeedbackMessage(e.target.value)}
-                        placeholder="Describe what you noticed or would like to suggest..."
+                        placeholder="Share what you noticed, a tip for fellow families, or what needs updating..."
                         className="form-control resize-y"
                         required
                       ></textarea>
@@ -949,7 +949,7 @@ export default function App() {
                         className="btn btn-primary w-full py-2.5 text-xs font-semibold shadow-xs flex items-center justify-center gap-2 cursor-pointer"
                       >
                         <Send className="w-4 h-4" />
-                        <span>Publish Feedback</span>
+                        <span>Post to Community Board</span>
                       </button>
                     </div>
 
@@ -967,17 +967,17 @@ export default function App() {
                       <div className="flex items-center gap-2">
                         <Users className="w-5 h-5 text-amber-800" aria-hidden="true" />
                         <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900">
-                          Community Feedback Board
+                          Community Board &amp; Neighbor Notes
                         </h2>
                       </div>
                       <p className="text-xs text-stone-600 mt-0.5">
-                        Displaying feedback and suggestions shared by local residents.
+                        Real updates, experiences, and kind words shared by local Forsyth County residents.
                       </p>
                     </div>
 
                     <div className="flex items-center gap-1.5 self-start sm:self-auto">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
-                        <span>{feedbacks.length} Submissions</span>
+                        <span>{feedbacks.length} Neighbor Notes</span>
                       </span>
                     </div>
                   </div>
@@ -1005,7 +1005,7 @@ export default function App() {
                             : 'text-stone-600 hover:text-stone-900'
                         }`}
                       >
-                        Public ({feedbacks.filter(f => !f.isAnonymous).length})
+                        Signed ({feedbacks.filter(f => !f.isAnonymous).length})
                       </button>
                       <button
                         type="button"
@@ -1021,7 +1021,7 @@ export default function App() {
                     </div>
 
                     <span className="text-[11px] text-stone-500 font-mono">
-                      Showing {displayedFeedbacks.length} records
+                      Showing {displayedFeedbacks.length} notes
                     </span>
                   </div>
 
@@ -1029,7 +1029,7 @@ export default function App() {
                   <div className="space-y-3.5 max-h-[780px] overflow-y-auto pr-1">
                     {displayedFeedbacks.length === 0 ? (
                       <div className="text-center py-10 px-4 bg-stone-50 rounded-xl border border-dashed border-stone-200 text-xs text-stone-500">
-                        No feedback found in this filter category.
+                        No neighbor notes found in this filter yet.
                       </div>
                     ) : (
                       displayedFeedbacks.map((item) => (
@@ -1043,7 +1043,7 @@ export default function App() {
                               {item.isAnonymous ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 border border-stone-300">
                                   <EyeOff className="w-3.5 h-3.5 text-stone-500" />
-                                  <span>Anonymous Resident</span>
+                                  <span>A Friendly Neighbor</span>
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">
@@ -1063,7 +1063,7 @@ export default function App() {
                                   ? 'bg-sky-50 text-sky-800 border border-sky-200'
                                   : 'bg-amber-50 text-amber-800 border border-amber-200'
                               }`}>
-                                {item.rating}
+                                {item.rating === 'Very Helpful' ? 'Wonderful' : item.rating === 'Helpful' ? 'Helpful' : 'Could Be Better'}
                               </span>
                             </div>
 
@@ -1076,7 +1076,7 @@ export default function App() {
                           {item.resourceName && (
                             <div className="flex items-center gap-1.5 text-xs text-stone-700">
                               <MapPin className="w-3.5 h-3.5 text-amber-800 shrink-0" />
-                              <span>Place: <strong className="text-stone-900">{item.resourceName}</strong></span>
+                              <span>About: <strong className="text-stone-900">{item.resourceName}</strong></span>
                             </div>
                           )}
 
@@ -1087,7 +1087,7 @@ export default function App() {
 
                           {/* Bottom Row: Helpful Vote Button */}
                           <div className="flex items-center justify-between pt-1 border-t border-stone-100 text-[11px]">
-                            <span className="text-stone-400 text-[11px]">Community Voice</span>
+                            <span className="text-stone-400 text-[11px]">Neighbor Voice</span>
                             <button
                               type="button"
                               onClick={() => handleToggleLikeFeedback(item.id)}
@@ -1602,10 +1602,10 @@ export default function App() {
 
             <div className="text-center space-y-1.5 pt-1">
               <h3 id="modal-welcome-title" className="text-xl font-bold font-serif text-stone-900">
-                Welcome to CivicBridge!
+                Welcome, neighbor!
               </h3>
               <p className="text-xs text-stone-600 leading-relaxed max-w-sm mx-auto">
-                We are glad you are here. Whether you need grocery assistance, healthcare, schools &amp; education, home or auto repairs, childcare, sports activities, or local dining, our community is here for you.
+                We&apos;re glad you stopped by. CivicBridge is a warm, community-first guide connecting you with local food pantries, free clinics, neighborhood schools, reliable repairs, and family activities across Cumming and Forsyth County.
               </p>
             </div>
 
@@ -1613,7 +1613,7 @@ export default function App() {
               <fieldset>
                 <div className="flex justify-between items-center mb-1">
                   <label htmlFor="welcome-name" className="text-xs font-semibold text-stone-700">
-                    Type in your name
+                    What should we call you? (First name or nickname)
                   </label>
                   <output htmlFor="welcome-name" className="text-[11px] text-stone-400 font-mono">
                     {tempName.length}/20 chars
@@ -1636,7 +1636,7 @@ export default function App() {
                   type="submit"
                   className="btn btn-primary w-full py-2.5 text-xs font-semibold"
                 >
-                  {tempName.trim() ? `Welcome Me, ${tempName.trim()}` : 'Type in your name'}
+                  {tempName.trim() ? `Nice to meet you, ${tempName.trim()}!` : 'Start Exploring'}
                 </button>
                 <button
                   type="button"
@@ -1646,7 +1646,7 @@ export default function App() {
                   }}
                   className="w-full py-1.5 text-stone-500 hover:text-stone-800 text-xs cursor-pointer"
                 >
-                  Continue as Guest
+                  Browse as Guest
                 </button>
               </div>
             </form>
@@ -1712,7 +1712,7 @@ export default function App() {
 
             <div>
               <h4 className="text-xs font-bold text-stone-900 font-mono uppercase mb-1">
-                Information &amp; Eligibility
+                Who can receive help &amp; how to visit
               </h4>
               <p className="text-xs text-stone-600 leading-relaxed">
                 {activeResource.eligibility}
@@ -1721,7 +1721,7 @@ export default function App() {
 
             <div>
               <h4 className="text-xs font-bold text-stone-900 font-mono uppercase mb-1">
-                Key Offerings &amp; Checklist
+                What you can get here
               </h4>
               <ul className="text-xs text-stone-600 space-y-1">
                 {activeResource.keyServices.map((svc, i) => (
@@ -1736,12 +1736,12 @@ export default function App() {
             {/* Quick Listing Accuracy Check */}
             <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 flex items-center justify-between text-xs">
               <div>
-                <span className="font-semibold text-stone-800 block">Was this information accurate &amp; helpful?</span>
-                <span className="text-[11px] text-stone-500">Your feedback helps keep CivicBridge listings accurate and up-to-date</span>
+                <span className="font-semibold text-stone-800 block">Did you find this helpful?</span>
+                <span className="text-[11px] text-stone-500">Your feedback helps keep hours and details reliable for fellow Forsyth County families</span>
               </div>
               {quickCheckedMap[activeResource.id] ? (
                 <span className="text-emerald-700 font-bold flex items-center gap-1 text-xs">
-                  <CheckCircle2 className="w-4 h-4" /> Checked!
+                  <CheckCircle2 className="w-4 h-4" /> Thank you!
                 </span>
               ) : (
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -1750,7 +1750,7 @@ export default function App() {
                     onClick={() => handleQuickResourceCheck(activeResource.id)}
                     className="px-2.5 py-1 bg-white border border-stone-300 hover:bg-stone-100 rounded text-[11px] font-semibold text-stone-700 flex items-center gap-1 cursor-pointer"
                   >
-                    <ThumbsUp className="w-3 h-3 text-emerald-600" /> Yes
+                    <ThumbsUp className="w-3 h-3 text-emerald-600" /> Yes, looks good
                   </button>
                   <button
                     type="button"
@@ -1763,7 +1763,7 @@ export default function App() {
                     }}
                     className="px-2.5 py-1 bg-white border border-stone-300 hover:bg-stone-100 rounded text-[11px] font-semibold text-stone-700 flex items-center gap-1 cursor-pointer"
                   >
-                    <ThumbsDown className="w-3 h-3 text-amber-700" /> Report
+                    <ThumbsDown className="w-3 h-3 text-amber-700" /> Suggest update
                   </button>
                 </div>
               )}
@@ -1802,75 +1802,85 @@ export default function App() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="call-prompt-title"
-          className="fixed inset-0 z-70 bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          className="fixed inset-0 z-70 bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
         >
-          <div className="bg-white rounded-2xl max-w-md w-full border border-stone-200 shadow-2xl p-6 space-y-4 relative">
+          <div className="bg-white rounded-2xl max-w-lg w-full border-2 border-amber-600/40 shadow-2xl p-6 space-y-4 relative overflow-hidden">
+            {/* Top decorative accent bar */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900" />
+
             <button
               type="button"
               onClick={() => setCallPrompt(prev => ({ ...prev, isOpen: false }))}
-              className="absolute top-4 right-4 p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg cursor-pointer"
-              aria-label="Close call status dialog"
+              className="absolute top-4 right-4 p-2 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-full cursor-pointer transition-colors"
+              aria-label="Close dialog"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Header with Call Icon */}
-            <div className="flex items-start gap-3">
-              <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl shrink-0">
+            {/* Header with Call Icon & Resource Info */}
+            <div className="flex items-start gap-3.5 pt-1">
+              <div className="p-3 bg-amber-100 text-amber-900 rounded-2xl shrink-0 ring-4 ring-amber-50">
                 <PhoneCall className="w-6 h-6 text-amber-800 animate-pulse" />
               </div>
-              <div className="space-y-0.5 pr-6">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-amber-800 font-bold block">
-                  Telephone Dispatch Status
+              <div className="space-y-0.5 pr-8">
+                <span className="text-[11px] font-mono uppercase tracking-wider text-amber-800 font-bold block">
+                  {callPrompt.isMobile ? 'Mobile Phone Call' : 'Call from Computer'}
                 </span>
-                <h2 id="call-prompt-title" className="text-base sm:text-lg font-bold font-serif text-stone-900 leading-tight">
-                  Calling {callPrompt.resourceName}
+                <h2 id="call-prompt-title" className="text-lg sm:text-xl font-bold font-serif text-stone-900 leading-tight">
+                  {callPrompt.resourceName}
                 </h2>
-                <div className="text-sm font-mono font-bold text-amber-900 flex items-center gap-1.5 pt-0.5">
-                  <span>{callPrompt.phone}</span>
+                <div className="text-base font-mono font-bold text-amber-900 pt-0.5">
+                  {callPrompt.phone}
                 </div>
               </div>
             </div>
 
-            {/* Device-Specific Status & Explanation */}
-            <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50 space-y-2.5 text-xs text-stone-700">
+            {/* High-Noticeability Alert Card with Humanized Copy */}
+            <div className="p-4 rounded-xl border-2 border-amber-300 bg-amber-50/80 space-y-3 text-xs sm:text-sm text-stone-800 shadow-xs">
               {callPrompt.isMobile ? (
                 <div className="space-y-1.5">
-                  <div className="flex items-center gap-1.5 font-bold text-emerald-800">
+                  <div className="flex items-center gap-2 font-bold text-emerald-800 text-xs sm:text-sm">
                     <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-                    <span>Mobile Telephone Dialer Dispatched</span>
+                    <span>Launching your phone dialer</span>
                   </div>
-                  <p className="text-stone-600 leading-relaxed">
-                    Your smartphone's native telephone dialer was dispatched to dial <strong>{callPrompt.phone}</strong>. If your phone dialer app did not open automatically, tap the <em>Launch Dialer Again</em> button below.
+                  <p className="text-stone-700 leading-relaxed text-xs">
+                    We just opened your phone's dialer to call <strong>{callPrompt.phone}</strong>. If your phone didn't show the dial screen yet, simply tap <em>&ldquo;Launch Dialer&rdquo;</em> below to connect.
                   </p>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 font-bold text-stone-900">
-                    <AlertCircle className="w-4 h-4 shrink-0 text-amber-700" />
-                    <span>Do you have a calling application installed on this computer?</span>
+                <div className="space-y-2.5">
+                  <div className="flex items-center gap-2 font-bold text-amber-950 text-xs sm:text-sm">
+                    <AlertCircle className="w-5 h-5 shrink-0 text-amber-800" />
+                    <span>Quick check: Do you have a calling app on this computer?</span>
                   </div>
-                  <p className="text-stone-700 leading-relaxed">
-                    Opening a telephone link from a laptop requires an installed calling application such as <strong>FaceTime, Windows Phone Link, Skype, or Zoom Phone</strong>.
+                  
+                  <p className="text-stone-700 leading-relaxed text-xs">
+                    Computers don&apos;t have cell service, so clicking to call will try to launch an app like <strong>FaceTime, Skype, Zoom, or Windows Phone Link</strong> to place the call.
                   </p>
-                  <p className="text-stone-600 leading-relaxed text-[11.5px]">
-                    If you have an application ready, click <strong>&ldquo;Yes, Open Calling App&rdquo;</strong> below to place the call. Otherwise, click <strong>&ldquo;No, Copy Number for Phone&rdquo;</strong> to dial on your mobile phone without opening an application prompt.
-                  </p>
+
+                  <div className="p-2.5 bg-white/90 rounded-lg border border-amber-200 text-stone-700 text-xs space-y-1.5 leading-relaxed">
+                    <p>
+                      &bull; If you have a calling app set up, choose <strong>&ldquo;Yes, Open Calling App&rdquo;</strong> to start the call.
+                    </p>
+                    <p>
+                      &bull; If you&apos;d rather call from your phone, click <strong>&ldquo;No, Just Copy Number&rdquo;</strong> &mdash; we&apos;ve already copied it so you can dial it with no surprise app popups.
+                    </p>
+                  </div>
                 </div>
               )}
 
-              {/* Clipboard auto-copy notification */}
-              <div className="pt-2 border-t border-stone-200/80 flex items-center justify-between gap-2 text-[11px] text-stone-500 font-mono">
-                <span className="flex items-center gap-1 text-emerald-700 font-semibold">
-                  <Check className="w-3.5 h-3.5" />
+              {/* Automatic Clipboard Copy Status */}
+              <div className="pt-2 border-t border-amber-200/90 flex items-center justify-between gap-2 text-xs text-stone-600 font-mono">
+                <span className="flex items-center gap-1.5 text-emerald-800 font-semibold">
+                  <Check className="w-4 h-4 text-emerald-600" />
                   <span>Number copied to clipboard: {callPrompt.phone}</span>
                 </span>
-                <span>Ready to paste</span>
+                <span className="text-[11px] text-stone-500 hidden sm:inline">Ready to paste</span>
               </div>
             </div>
 
-            {/* Action Buttons: Only opens telephony app if user confirms */}
-            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+            {/* Action Buttons: Only triggers app opening when user explicitly clicks Option 1 */}
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
               <button
                 type="button"
                 onClick={() => {
@@ -1880,10 +1890,10 @@ export default function App() {
                     // Handled
                   }
                 }}
-                className="btn btn-primary text-xs flex-1 justify-center py-2.5 inline-flex items-center gap-1.5 font-bold cursor-pointer"
+                className="btn btn-primary text-xs sm:text-sm flex-1 justify-center py-3 inline-flex items-center gap-2 font-bold cursor-pointer shadow-sm hover:scale-[1.01] transition-transform"
               >
                 <PhoneCall className="w-4 h-4" />
-                <span>{callPrompt.isMobile ? `Launch Dialer (${callPrompt.phone})` : 'Yes, Open Calling App'}</span>
+                <span>{callPrompt.isMobile ? `Call ${callPrompt.phone}` : 'Yes, Open Calling App'}</span>
               </button>
 
               <button
@@ -1894,16 +1904,16 @@ export default function App() {
                     setCallPrompt(prev => ({ ...prev, copied: true }));
                   }
                 }}
-                className="btn btn-outline text-xs justify-center py-2.5 inline-flex items-center gap-1.5 cursor-pointer"
+                className="btn btn-outline text-xs sm:text-sm justify-center py-3 inline-flex items-center gap-2 cursor-pointer font-semibold bg-stone-50 hover:bg-stone-100"
               >
-                <Copy className="w-3.5 h-3.5" />
-                <span>{callPrompt.copied ? 'Copied!' : (callPrompt.isMobile ? 'Copy Number' : 'No, Copy Number for Phone')}</span>
+                <Copy className="w-4 h-4 text-stone-500" />
+                <span>{callPrompt.copied ? 'Copied to Clipboard!' : (callPrompt.isMobile ? 'Copy Number' : 'No, Just Copy Number')}</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setCallPrompt(prev => ({ ...prev, isOpen: false }))}
-                className="btn btn-ghost text-xs justify-center py-2.5 text-stone-500 hover:text-stone-800 cursor-pointer"
+                className="btn btn-ghost text-xs justify-center py-3 text-stone-500 hover:text-stone-800 cursor-pointer"
               >
                 Close
               </button>
