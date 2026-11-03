@@ -38,17 +38,57 @@ import {
   FileText,
   Copy,
   Check,
-  PhoneCall
+  PhoneCall,
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  Sparkles
 } from 'lucide-react';
+
+// Discovery cards for initial category explorer view (when no search/filter is active)
+const CATEGORY_DISCOVERY_ITEMS = [
+  { id: 'schools', label: 'Schools & Education', count: '20 Verified', desc: 'Pre-K, Elementary, Middle, High Schools, Technical College & Universities', icon: '🎓' },
+  { id: 'repairs', label: 'Repairs & Maintenance', count: '20 Verified', desc: 'Auto body, brakes, HVAC, plumbing, roofing, appliances & handyman repairs', icon: '🔧' },
+  { id: 'food', label: 'Food & Meals', count: '20 Verified', desc: 'Emergency food pantries, home grocery delivery & free meal distributions', icon: '🥫' },
+  { id: 'housing', label: 'Housing & Utilities', count: '20 Verified', desc: 'Emergency rent relief, shelter beds, energy grants & home repairs', icon: '🏠' },
+  { id: 'healthcare', label: 'Health & Dental', count: '20 Verified', desc: 'Free medical clinics, sliding-scale dental, vision care & mental health crisis line', icon: '🩺' },
+  { id: 'childcare', label: 'Childcare & Daycare', count: '20 Verified', desc: 'Head Start preschool, early learning centers, special needs care & after-school', icon: '👶' },
+  { id: 'sports', label: 'Sports & Parks', count: '20 Verified', desc: 'Sawnee Mountain Preserve, Big Creek Greenway, recreation centers & public pools', icon: '🌳' },
+  { id: 'dining', label: 'Local Restaurants', count: '20 Verified', desc: 'Cumming family diners, slow-smoked BBQ, scratch bakeries & community cafes', icon: '🍽️' },
+  { id: 'workforce', label: 'Workforce & Library', count: '20 Verified', desc: 'Forsyth County Public Library branches, career counseling & resume coaching', icon: '💼' },
+  { id: 'seniors', label: 'Senior Services', count: '20 Verified', desc: 'Senior enrichment centers, Meals on Wheels, case management & transit', icon: '👵' },
+  { id: 'youth-family', label: 'Youth & Family', count: '20 Verified', desc: 'CASA child advocacy, youth mentoring, crisis relief grants & family coaching', icon: '👨‍👩‍👧' },
+];
 
 export default function App() {
   // Navigation tabs
   const [currentTab, setCurrentTab] = useState<'resources' | 'events' | 'feedback' | 'about'>('resources');
   
-  // Search & filter state
+  // Search & filter state (starts empty so resources appear only when searched or a category is chosen)
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [activeResource, setActiveResource] = useState<ResourceItem | null>(null);
+
+  // Quick scroll to bottom / top detection
+  const [isNearBottom, setIsNearBottom] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollPos = window.scrollY + window.innerHeight;
+      const totalHeight = document.documentElement.scrollHeight;
+      setIsNearBottom(totalHeight - scrollPos < 350);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleScrollToggle = () => {
+    if (isNearBottom) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+    }
+  };
 
   // Personalized Welcome Popup State
   const [userName, setUserName] = useState('');
@@ -142,13 +182,15 @@ export default function App() {
       copied: copyTriggered,
     });
 
-    // Attempt to invoke the native dialer
-    // On mobile devices, window.location.href triggers the device telephone prompt
-    // On desktop, it triggers registered telephony handlers (FaceTime/Skype) if present
-    try {
-      window.location.href = `tel:${cleaned}`;
-    } catch {
-      // In case protocol handler is restricted
+    // On mobile devices with native cellular hardware, invoke the dialer immediately.
+    // On desktop/laptop computers, DO NOT invoke automatically to avoid the OS "Choose an application" prompt.
+    // The dialog asks the user first if they have a desktop calling application (FaceTime/Skype/Phone Link) before launching.
+    if (isMobileDevice) {
+      try {
+        window.location.href = `tel:${cleaned}`;
+      } catch {
+        // In case protocol handler is restricted
+      }
     }
   };
 
@@ -248,23 +290,30 @@ export default function App() {
     setQuickCheckedMap(prev => ({ ...prev, [resourceId]: true }));
   };
 
-  // Filter resources across category and search queries
-  const filteredResources = COMMUNITY_RESOURCES.filter((item) => {
-    const categoryMatches = selectedCategory === 'all' || item.category === selectedCategory;
-    const query = searchQuery.toLowerCase().trim();
-    if (!categoryMatches) return false;
-    if (query === '') return true;
+  // Check if a category filter or search query is active
+  const hasActiveFilter = selectedCategory !== '';
+  const hasActiveSearch = searchQuery.trim() !== '';
+  const hasActiveQueryOrFilter = hasActiveFilter || hasActiveSearch;
 
-    return (
-      item.name.toLowerCase().includes(query) ||
-      item.description.toLowerCase().includes(query) ||
-      item.tagline.toLowerCase().includes(query) ||
-      item.categoryLabel.toLowerCase().includes(query) ||
-      item.eligibility.toLowerCase().includes(query) ||
-      item.address.toLowerCase().includes(query) ||
-      item.keyServices.some((svc) => svc.toLowerCase().includes(query))
-    );
-  });
+  // Filter resources across category and search queries (resources only appear when searched or a filter is chosen)
+  const filteredResources = !hasActiveQueryOrFilter
+    ? []
+    : COMMUNITY_RESOURCES.filter((item) => {
+        const categoryMatches = selectedCategory === 'all' || item.category === selectedCategory;
+        const query = searchQuery.toLowerCase().trim();
+        if (selectedCategory !== '' && !categoryMatches) return false;
+        if (query === '') return true;
+
+        return (
+          item.name.toLowerCase().includes(query) ||
+          item.description.toLowerCase().includes(query) ||
+          item.tagline.toLowerCase().includes(query) ||
+          item.categoryLabel.toLowerCase().includes(query) ||
+          item.eligibility.toLowerCase().includes(query) ||
+          item.address.toLowerCase().includes(query) ||
+          item.keyServices.some((svc) => svc.toLowerCase().includes(query))
+        );
+      });
 
   return (
     <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900 font-sans">
@@ -422,11 +471,19 @@ export default function App() {
             </section>
 
             {/* CATEGORY FILTER TOOLBAR */}
-            <section aria-label="Category Filters" className="space-y-2">
+            <section aria-label="Category Filters" className="space-y-3">
               <fieldset>
                 <legend className="sr-only">Select a resource category</legend>
                 <div className="filter-toolbar" role="group">
-                  {CATEGORIES.map((cat) => {
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory('all')}
+                    className={`category-pill ${selectedCategory === 'all' ? 'category-pill--active' : ''}`}
+                    aria-pressed={selectedCategory === 'all'}
+                  >
+                    All Resources (220)
+                  </button>
+                  {CATEGORIES.filter(c => c.id !== 'all').map((cat) => {
                     const isActive = selectedCategory === cat.id;
                     return (
                       <button
@@ -443,115 +500,190 @@ export default function App() {
                 </div>
               </fieldset>
 
-              <div className="text-xs text-stone-500 pt-1 flex items-center justify-between">
+              <div className="text-xs text-stone-600 pt-1 flex items-center justify-between flex-wrap gap-2">
                 <span>
-                  Found <strong>{filteredResources.length}</strong> resources in Cumming &amp; Forsyth County (Region 11)
+                  {hasActiveQueryOrFilter ? (
+                    <>
+                      Found <strong>{filteredResources.length}</strong> resources
+                      {selectedCategory && selectedCategory !== 'all' && (
+                        <span> in <strong>{CATEGORIES.find(c => c.id === selectedCategory)?.label}</strong></span>
+                      )}
+                      {searchQuery && (
+                        <span> matching &ldquo;<strong>{searchQuery}</strong>&rdquo;</span>
+                      )}
+                    </>
+                  ) : (
+                    <span>
+                      Choose a category or type in search above to view listings (220 verified local resources)
+                    </span>
+                  )}
                 </span>
-                {selectedCategory !== 'all' && (
+                {hasActiveQueryOrFilter && (
                   <button
                     type="button"
-                    onClick={() => setSelectedCategory('all')}
-                    className="text-amber-800 hover:underline font-semibold cursor-pointer"
+                    onClick={() => {
+                      setSelectedCategory('');
+                      setSearchQuery('');
+                    }}
+                    className="text-amber-800 hover:text-amber-950 font-semibold underline cursor-pointer text-xs flex items-center gap-1"
                   >
-                    Reset Filter
+                    <X className="w-3.5 h-3.5" />
+                    <span>Clear &amp; Show Categories</span>
                   </button>
                 )}
               </div>
             </section>
 
-            {/* RESOURCE CARDS GRID */}
-            <div className="civic-grid-2col" role="region" aria-label="Resource Listings">
-              {filteredResources.map((res) => (
-                <article
-                  key={res.id}
-                  id={`res-${res.id}`}
-                  className="resource-card"
-                >
-                  <div>
-                    <header className="resource-header">
-                      <span className="resource-category-tag">{res.categoryLabel}</span>
-                      <span className="resource-cost-badge">{res.cost}</span>
-                    </header>
-
-                    <h2 className="resource-title">{res.name}</h2>
-                    <p className="resource-tagline">{res.tagline}</p>
-
-                    <address className="resource-contact-block">
-                      <div className="resource-contact-row">
-                        <Phone className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
-                        <a 
-                          href={`tel:${res.phone.replace(/[^\d+]/g, '')}`} 
-                          onClick={(e) => handleInitiateCall(e, res.phone, res.name)}
-                          className="resource-contact-link"
-                          title={`Call ${res.name} at ${res.phone}`}
-                        >
-                          {res.phone}
-                        </a>
-                      </div>
-                      <div className="resource-contact-row">
-                        <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
-                        <span className="truncate">{res.address}</span>
-                      </div>
-                      <div className="resource-contact-row">
-                        <Clock className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
-                        <time className="truncate">{res.hours}</time>
-                      </div>
-                    </address>
-
-                    {/* Offerings list */}
-                    <section className="offerings-section" aria-label="Offerings">
-                      <strong className="offerings-heading">Offerings:</strong>
-                      <ul className="offerings-grid">
-                        {res.keyServices.slice(0, 4).map((svc, i) => (
-                          <li key={i} className="offering-item" title={svc}>
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
-                            <span className="truncate">{svc}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </section>
-                  </div>
-
-                  <footer className="resource-footer">
+            {/* CONDITIONAL RENDERING: CATEGORY EXPLORER vs RESOURCE LISTINGS */}
+            {!hasActiveQueryOrFilter ? (
+              <section aria-label="Category Explorer" className="space-y-4">
+                <div className="p-5 bg-white border border-stone-200 rounded-2xl shadow-2xs space-y-2">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-amber-800" />
+                      <span>Select a Category to View Verified Resources</span>
+                    </h2>
                     <button
                       type="button"
-                      onClick={() => setActiveResource(res)}
-                      className="btn btn-outline text-xs"
-                      aria-haspopup="dialog"
+                      onClick={() => setSelectedCategory('all')}
+                      className="btn btn-outline text-xs cursor-pointer font-semibold"
                     >
-                      View Details
+                      View All 220 Resources at Once
                     </button>
-                    <a
-                      href={`tel:${res.phone.replace(/[^\d+]/g, '')}`}
-                      onClick={(e) => handleInitiateCall(e, res.phone, res.name)}
-                      className="btn btn-primary text-xs inline-flex items-center gap-1.5 cursor-pointer"
-                      aria-label={`Call ${res.name} at ${res.phone}`}
-                    >
-                      <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>Call</span>
-                    </a>
-                  </footer>
-                </article>
-              ))}
-            </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
+                    To keep navigation fast and easy to scroll, choose any category below or enter a keyword above to view listings. Every category contains at least 20 verified local organizations in Cumming &amp; Forsyth County.
+                  </p>
+                </div>
 
-            {/* Empty state */}
-            {filteredResources.length === 0 && (
-              <section className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
-                <p className="text-base font-semibold text-stone-800">
-                  No resources found matching your search.
-                </p>
-                <p className="text-xs text-stone-500">
-                  Try searching for terms like &quot;schools&quot;, &quot;repairs&quot;, &quot;food&quot;, &quot;clinic&quot;, or &quot;childcare&quot;.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
-                  className="btn btn-primary text-xs"
-                >
-                  Clear All Filters
-                </button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {CATEGORY_DISCOVERY_ITEMS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(item.id)}
+                      className="p-4 rounded-xl border border-stone-200 bg-white hover:border-amber-800 hover:shadow-md transition-all text-left flex items-start gap-3.5 cursor-pointer group shadow-2xs"
+                    >
+                      <span className="text-2xl p-2.5 bg-stone-100 rounded-xl group-hover:bg-amber-100 transition-colors shrink-0" aria-hidden="true">
+                        {item.icon}
+                      </span>
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1.5">
+                          <strong className="text-xs sm:text-sm font-bold font-serif text-stone-900 group-hover:text-amber-900 transition-colors">
+                            {item.label}
+                          </strong>
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0">
+                            {item.count}
+                          </span>
+                        </div>
+                        <p className="text-[11.5px] text-stone-600 leading-snug line-clamp-2">
+                          {item.desc}
+                        </p>
+                        <span className="text-[11px] font-semibold text-amber-800 group-hover:underline inline-flex items-center gap-0.5 pt-0.5">
+                          Browse 20 Places &rarr;
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </section>
+            ) : (
+              <>
+                {/* RESOURCE CARDS GRID */}
+                <div className="civic-grid-2col" role="region" aria-label="Resource Listings">
+                  {filteredResources.map((res) => (
+                    <article
+                      key={res.id}
+                      id={`res-${res.id}`}
+                      className="resource-card"
+                    >
+                      <div>
+                        <header className="resource-header">
+                          <span className="resource-category-tag">{res.categoryLabel}</span>
+                          <span className="resource-cost-badge">{res.cost}</span>
+                        </header>
+
+                        <h2 className="resource-title">{res.name}</h2>
+                        <p className="resource-tagline">{res.tagline}</p>
+
+                        <address className="resource-contact-block">
+                          <div className="resource-contact-row">
+                            <Phone className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
+                            <a 
+                              href={`tel:${res.phone.replace(/[^\d+]/g, '')}`} 
+                              onClick={(e) => handleInitiateCall(e, res.phone, res.name)}
+                              className="resource-contact-link"
+                              title={`Call ${res.name} at ${res.phone}`}
+                            >
+                              {res.phone}
+                            </a>
+                          </div>
+                          <div className="resource-contact-row">
+                            <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
+                            <span className="truncate">{res.address}</span>
+                          </div>
+                          <div className="resource-contact-row">
+                            <Clock className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
+                            <time className="truncate">{res.hours}</time>
+                          </div>
+                        </address>
+
+                        {/* Offerings list */}
+                        <section className="offerings-section" aria-label="Offerings">
+                          <strong className="offerings-heading">Offerings:</strong>
+                          <ul className="offerings-grid">
+                            {res.keyServices.slice(0, 4).map((svc, i) => (
+                              <li key={i} className="offering-item" title={svc}>
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
+                                <span className="truncate">{svc}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </section>
+                      </div>
+
+                      <footer className="resource-footer">
+                        <button
+                          type="button"
+                          onClick={() => setActiveResource(res)}
+                          className="btn btn-outline text-xs"
+                          aria-haspopup="dialog"
+                        >
+                          View Details
+                        </button>
+                        <a
+                          href={`tel:${res.phone.replace(/[^\d+]/g, '')}`}
+                          onClick={(e) => handleInitiateCall(e, res.phone, res.name)}
+                          className="btn btn-primary text-xs inline-flex items-center gap-1.5 cursor-pointer"
+                          aria-label={`Call ${res.name} at ${res.phone}`}
+                        >
+                          <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
+                          <span>Call</span>
+                        </a>
+                      </footer>
+                    </article>
+                  ))}
+                </div>
+
+                {/* Empty state */}
+                {filteredResources.length === 0 && (
+                  <section className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
+                    <p className="text-base font-semibold text-stone-800">
+                      No resources found matching &ldquo;{searchQuery}&rdquo;.
+                    </p>
+                    <p className="text-xs text-stone-500">
+                      Try searching for terms like &quot;schools&quot;, &quot;repairs&quot;, &quot;food&quot;, &quot;clinic&quot;, or &quot;childcare&quot;.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => { setSearchQuery(''); setSelectedCategory(''); }}
+                      className="btn btn-primary text-xs"
+                    >
+                      Return to Categories
+                    </button>
+                  </section>
+                )}
+              </>
             )}
 
           </div>
@@ -1714,15 +1846,15 @@ export default function App() {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 font-bold text-amber-900">
+                  <div className="flex items-center gap-1.5 font-bold text-stone-900">
                     <AlertCircle className="w-4 h-4 shrink-0 text-amber-700" />
-                    <span>Desktop Browser Call Notice</span>
+                    <span>Do you have a calling application installed on this computer?</span>
                   </div>
                   <p className="text-stone-700 leading-relaxed">
-                    <strong>Why you might not hear a ring right now:</strong> Web browsers running on laptops and desktop PCs do not have built-in cellular phone hardware or an active telephone carrier line, so standard web code cannot place direct cellular phone calls by itself.
+                    Opening a telephone link from a laptop requires an installed calling application such as <strong>FaceTime, Windows Phone Link, Skype, or Zoom Phone</strong>.
                   </p>
                   <p className="text-stone-600 leading-relaxed text-[11.5px]">
-                    If your computer has a connected telephony application (such as <em>FaceTime, Windows Phone Link, Skype, or Zoom Phone</em>), your system will prompt you to connect. Otherwise, please dial <strong>{callPrompt.phone}</strong> directly from your mobile phone.
+                    If you have an application ready, click <strong>&ldquo;Yes, Open Calling App&rdquo;</strong> below to place the call. Otherwise, click <strong>&ldquo;No, Copy Number for Phone&rdquo;</strong> to dial on your mobile phone without opening an application prompt.
                   </p>
                 </div>
               )}
@@ -1731,21 +1863,28 @@ export default function App() {
               <div className="pt-2 border-t border-stone-200/80 flex items-center justify-between gap-2 text-[11px] text-stone-500 font-mono">
                 <span className="flex items-center gap-1 text-emerald-700 font-semibold">
                   <Check className="w-3.5 h-3.5" />
-                  <span>Number copied to clipboard!</span>
+                  <span>Number copied to clipboard: {callPrompt.phone}</span>
                 </span>
                 <span>Ready to paste</span>
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Action Buttons: Only opens telephony app if user confirms */}
             <div className="flex flex-col sm:flex-row gap-2 pt-1">
-              <a
-                href={`tel:${callPrompt.cleanedPhone}`}
-                className="btn btn-primary text-xs flex-1 justify-center py-2.5 inline-flex items-center gap-1.5 font-bold"
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    window.location.href = `tel:${callPrompt.cleanedPhone}`;
+                  } catch {
+                    // Handled
+                  }
+                }}
+                className="btn btn-primary text-xs flex-1 justify-center py-2.5 inline-flex items-center gap-1.5 font-bold cursor-pointer"
               >
-                <Phone className="w-4 h-4" />
-                <span>Launch Dialer ({callPrompt.phone})</span>
-              </a>
+                <PhoneCall className="w-4 h-4" />
+                <span>{callPrompt.isMobile ? `Launch Dialer (${callPrompt.phone})` : 'Yes, Open Calling App'}</span>
+              </button>
 
               <button
                 type="button"
@@ -1758,7 +1897,7 @@ export default function App() {
                 className="btn btn-outline text-xs justify-center py-2.5 inline-flex items-center gap-1.5 cursor-pointer"
               >
                 <Copy className="w-3.5 h-3.5" />
-                <span>{callPrompt.copied ? 'Copied!' : 'Copy Number'}</span>
+                <span>{callPrompt.copied ? 'Copied!' : (callPrompt.isMobile ? 'Copy Number' : 'No, Copy Number for Phone')}</span>
               </button>
 
               <button
@@ -1766,12 +1905,35 @@ export default function App() {
                 onClick={() => setCallPrompt(prev => ({ ...prev, isOpen: false }))}
                 className="btn btn-ghost text-xs justify-center py-2.5 text-stone-500 hover:text-stone-800 cursor-pointer"
               >
-                Dismiss
+                Close
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* 9. FLOATING SCROLL NAVIGATION: SCROLL TO BOTTOM / SCROLL TO TOP */}
+      <aside aria-label="Page scroll quick navigation" className="fixed bottom-6 left-6 z-40 print:hidden">
+        <button
+          type="button"
+          onClick={handleScrollToggle}
+          className="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-900/90 hover:bg-stone-900 text-stone-100 hover:text-white rounded-full shadow-2xl border border-stone-700/80 text-xs font-semibold backdrop-blur-xs transition-all hover:scale-105 cursor-pointer active:scale-95"
+          aria-label={isNearBottom ? "Scroll to top of page" : "Scroll to bottom of page"}
+          title={isNearBottom ? "Scroll to top of page" : "Scroll to bottom of page"}
+        >
+          {isNearBottom ? (
+            <>
+              <ArrowUp className="w-4 h-4 text-amber-400" />
+              <span>Scroll to Top</span>
+            </>
+          ) : (
+            <>
+              <ArrowDown className="w-4 h-4 text-amber-400" />
+              <span>Scroll to Bottom</span>
+            </>
+          )}
+        </button>
+      </aside>
 
     </div>
   );
