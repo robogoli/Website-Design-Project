@@ -3,7 +3,7 @@
  * Cumming & Forsyth County Community Infrastructure
  *
  * Client-side directory assistant that parses resident questions against
- * verified Forsyth County organizations, returning the top 3 matches with follow-up prompts.
+ * Forsyth County organizations, returning the top 3 matches with follow-up prompts.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -107,7 +107,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     }, 450);
   };
 
-  // Offline keyword matching engine: categorizes query and pulls top 3 verified Forsyth County listings
+  // Offline keyword matching engine: categorizes query and pulls top 3 Forsyth County listings
   const matchDirectoryQuery = (query: string): { 
     responseText: string; 
     matched?: ResourceItem[];
@@ -147,7 +147,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     if (q.includes('repair') || q.includes('auto') || q.includes('car') || q.includes('brake') || q.includes('plumb') || q.includes('pipe') || q.includes('hvac') || /\ba\/c\b|\bair conditioning\b/.test(q) || q.includes('heat') || q.includes('handyman') || q.includes('roof') || q.includes('drywall') || q.includes('appliance') || q.includes('washer') || q.includes('dryer') || q.includes('refrigerator')) {
       const repairs = COMMUNITY_RESOURCES.filter(r => r.category === 'repairs').slice(0, 3);
       return {
-        responseText: "Car trouble or something broken at home? It helps having honest folks you can call. Here are our top 3 verified local repair teams:\n\nWhat needs fixing? Let me know what you're dealing with, or ask:",
+        responseText: "Car trouble or something broken at home? It helps having honest folks you can call. Here are our top 3 local repair teams:\n\nWhat needs fixing? Let me know what you're dealing with, or ask:",
         matched: repairs,
         examplePrompts: [
           'Who does emergency 24/7 plumbing leaks in Cumming?',
