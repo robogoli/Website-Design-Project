@@ -144,7 +144,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     }
 
     // Automotive and residential repair trades
-    if (q.includes('repair') || q.includes('auto') || q.includes('car') || q.includes('brake') || q.includes('plumb') || q.includes('pipe') || q.includes('hvac') || q.includes('ac') || q.includes('heat') || q.includes('handyman') || q.includes('roof') || q.includes('drywall') || q.includes('appliance') || q.includes('washer') || q.includes('dryer') || q.includes('refrigerator')) {
+    if (q.includes('repair') || q.includes('auto') || q.includes('car') || q.includes('brake') || q.includes('plumb') || q.includes('pipe') || q.includes('hvac') || /\ba\/c\b|\bair conditioning\b/.test(q) || q.includes('heat') || q.includes('handyman') || q.includes('roof') || q.includes('drywall') || q.includes('appliance') || q.includes('washer') || q.includes('dryer') || q.includes('refrigerator')) {
       const repairs = COMMUNITY_RESOURCES.filter(r => r.category === 'repairs').slice(0, 3);
       return {
         responseText: "Car trouble or something broken at home? It helps having honest folks you can call. Here are our top 3 verified local repair teams:\n\nWhat needs fixing? Let me know what you're dealing with, or ask:",
