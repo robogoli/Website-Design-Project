@@ -1,11 +1,19 @@
+/**
+ * CivicBridge — Interactive Directory Guide
+ * Cumming & Forsyth County Community Infrastructure
+ *
+ * Client-side directory assistant that parses resident questions against
+ * verified Forsyth County organizations, returning the top 3 matches with follow-up prompts.
+ */
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, X, Send, Sparkles, MessageCircle, ArrowUpRight, Phone, ExternalLink } from 'lucide-react';
+import { MessageCircle, X, Send, Sparkles, ArrowUpRight, Phone } from 'lucide-react';
 import { ResourceItem } from '../types';
 import { COMMUNITY_RESOURCES } from '../data/mockData';
 
 interface ChatMessage {
   id: string;
-  sender: 'user' | 'bot';
+  sender: 'user' | 'guide';
   text: string;
   timestamp: string;
   matchedResources?: ResourceItem[];
@@ -34,7 +42,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
-      sender: 'bot',
+      sender: 'guide',
       text: "Hey there! Need directions or a phone number? I help folks find what they need around Cumming and Forsyth County. That covers hot meals, clinics, honest mechanics, schools, or emergency housing.\n\nTo get started, tell me what you need, or try one of these examples:",
       timestamp: 'Just now',
       examplePrompts: [
@@ -78,20 +86,20 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     setInputMessage('');
     setIsTyping(true);
 
-    // Delays bot response using setTimeout
+    // Natural pacing delay so response is readable
     setTimeout(() => {
-      const { responseText, matched, examplePrompts } = generateBotResponse(query);
-      const botMsgId = `bot-${Date.now()}`;
-      const botTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const { responseText, matched, examplePrompts } = matchDirectoryQuery(query);
+      const guideMsgId = `guide-${Date.now()}`;
+      const guideTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
       setMessages(prev => [
         ...prev,
         {
-          id: botMsgId,
-          sender: 'bot',
+          id: guideMsgId,
+          sender: 'guide',
           text: responseText,
-          timestamp: botTimestamp,
-          matchedResources: matched?.slice(0, 3), // Caps suggestions to top 3
+          timestamp: guideTimestamp,
+          matchedResources: matched?.slice(0, 3), // Caps suggestions to the 3 most relevant listings
           examplePrompts
         }
       ]);
@@ -99,14 +107,15 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     }, 450);
   };
 
-  const generateBotResponse = (query: string): { 
+  // Offline keyword matching engine: categorizes query and pulls top 3 verified Forsyth County listings
+  const matchDirectoryQuery = (query: string): { 
     responseText: string; 
     matched?: ResourceItem[];
     examplePrompts?: string[];
   } => {
     const q = query.toLowerCase();
 
-    // Routes crisis queries to 988 and 211 emergency resources via filter
+    // Crisis and urgent hotline matches
     if (q.includes('crisis') || q.includes('hotline') || q.includes('suicide') || q.includes('emergency') || q.includes('988') || q.includes('211') || q.includes('eviction')) {
       const emergencyMatches = COMMUNITY_RESOURCES.filter(r => r.isEmergency || r.id === 'food-1').slice(0, 3);
       return {
@@ -120,7 +129,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Matches school keywords and returns top 3 schools via category filter
+    // Education, school, and university matches
     if (q.includes('school') || q.includes('college') || q.includes('university') || q.includes('ung') || q.includes('lanier tech') || q.includes('elementary') || q.includes('middle') || q.includes('high school') || q.includes('preschool') || q.includes('pre-k') || q.includes('education') || q.includes('degree')) {
       const schools = COMMUNITY_RESOURCES.filter(r => r.category === 'schools').slice(0, 3);
       return {
@@ -134,8 +143,8 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Matches trade keywords and returns top 3 repair services via category filter
-    if (q.includes('repair') || q.includes('auto') || q.includes('car') || q.includes('brake') || q.includes('plumb') || q.includes('pipe') || q.includes('hvac') || /\ba\/c\b|\bair conditioning\b/.test(q) || q.includes('heat') || q.includes('handyman') || q.includes('roof') || q.includes('drywall') || q.includes('appliance') || q.includes('washer') || q.includes('dryer') || q.includes('refrigerator')) {
+    // Automotive and residential repair trades
+    if (q.includes('repair') || q.includes('auto') || q.includes('car') || q.includes('brake') || q.includes('plumb') || q.includes('pipe') || q.includes('hvac') || q.includes('ac') || q.includes('heat') || q.includes('handyman') || q.includes('roof') || q.includes('drywall') || q.includes('appliance') || q.includes('washer') || q.includes('dryer') || q.includes('refrigerator')) {
       const repairs = COMMUNITY_RESOURCES.filter(r => r.category === 'repairs').slice(0, 3);
       return {
         responseText: "Car trouble or something broken at home? It helps having honest folks you can call. Here are our top 3 verified local repair teams:\n\nWhat needs fixing? Let me know what you're dealing with, or ask:",
@@ -148,7 +157,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Matches pantry terms and returns top 3 food programs via category filter
+    // Emergency food pantries and hot meals
     if (q.includes('food') || q.includes('pantry') || q.includes('grocer') || q.includes('hunger') || q.includes('meal') || q.includes('eat') || q.includes('pantries')) {
       const food = COMMUNITY_RESOURCES.filter(r => r.category === 'food').slice(0, 3);
       return {
@@ -162,7 +171,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Matches health terms and returns top 3 clinic resources via category filter
+    // Healthcare, free clinics, and sliding-scale doctors
     if (q.includes('health') || q.includes('clinic') || q.includes('doctor') || q.includes('dental') || q.includes('teeth') || q.includes('dentist') || q.includes('prescription') || q.includes('mental') || q.includes('therapy') || q.includes('counseling')) {
       const health = COMMUNITY_RESOURCES.filter(r => r.category === 'healthcare').slice(0, 3);
       return {
@@ -176,7 +185,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Matches childcare terms and returns top 3 care providers via category filter
+    // Childcare and preschool providers
     if (q.includes('childcare') || q.includes('daycare') || q.includes('baby') || q.includes('infant') || q.includes('toddler') || q.includes('afterschool') || q.includes('ymca') || q.includes('caps')) {
       const childcare = COMMUNITY_RESOURCES.filter(r => r.category === 'childcare').slice(0, 3);
       return {
@@ -190,7 +199,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Matches recreation terms and returns top 3 parks via category filter
+    // Outdoor recreation and parks
     if (q.includes('park') || q.includes('sport') || q.includes('swim') || q.includes('pool') || q.includes('lake') || q.includes('hike') || q.includes('trail') || q.includes('nature') || q.includes('recreation')) {
       const sports = COMMUNITY_RESOURCES.filter(r => r.category === 'sports').slice(0, 3);
       return {
@@ -204,7 +213,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Matches dining terms and returns top 3 restaurants via category filter
+    // Family-owned restaurants and local diners
     if (q.includes('dine') || q.includes('dining') || q.includes('restaurant') || q.includes('pizza') || q.includes('deli') || q.includes('breakfast') || q.includes('steak')) {
       const dining = COMMUNITY_RESOURCES.filter(r => r.category === 'dining').slice(0, 3);
       return {
@@ -218,7 +227,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Matches workforce terms and returns top 3 career resources via category filter
+    // Library and workforce development resources
     if (q.includes('job') || q.includes('career') || q.includes('work') || q.includes('resume') || q.includes('library') || q.includes('ged') || q.includes('esl')) {
       const workforce = COMMUNITY_RESOURCES.filter(r => r.category === 'workforce').slice(0, 3);
       return {
@@ -232,7 +241,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Searches resource text fields via lowercase substring matching
+    // Generic fallback: broad text search across name, tagline, description, and keyServices
     const keywordMatches = COMMUNITY_RESOURCES.filter(r => 
       r.name.toLowerCase().includes(q) ||
       r.description.toLowerCase().includes(q) ||
@@ -266,17 +275,16 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
 
   return (
     <>
-      {/* Toggles chat modal open via setIsOpen button */}
       <div className="fixed bottom-6 right-6 z-40 print:hidden">
         {!isOpen && (
           <button
             type="button"
             onClick={() => setIsOpen(true)}
             className="group flex items-center gap-2.5 bg-amber-800 hover:bg-amber-900 text-white px-4 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer focus:outline-none focus:ring-3 focus:ring-amber-500 focus:ring-offset-2"
-            aria-label="Open CivicBridge Interactive Chatbot"
+            aria-label="Open CivicBridge Interactive Guide"
           >
             <div className="relative">
-              <Bot className="w-5 h-5 transition-transform group-hover:scale-110" />
+              <MessageCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
               <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
@@ -287,26 +295,24 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
         )}
       </div>
 
-      {/* Renders interactive chat window when isOpen is true */}
       {isOpen && (
         <div 
           role="dialog"
-          aria-label="CivicBridge Interactive Assistant"
+          aria-label="CivicBridge Interactive Guide"
           className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[400px] h-[550px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200 print:hidden"
         >
-          {/* Displays bot status and close trigger using flex header */}
           <header className="bg-amber-800 text-white px-4 py-3.5 flex items-center justify-between shrink-0 shadow-xs">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 bg-amber-700/80 rounded-lg">
-                <Bot className="w-5 h-5 text-amber-100" />
+                <MessageCircle className="w-5 h-5 text-amber-100" />
               </div>
               <div>
                 <h2 className="text-sm font-bold font-serif leading-tight">
-                  CivicBridge Assistant
+                  CivicBridge Guide
                 </h2>
                 <span className="text-[11px] text-amber-200/90 flex items-center gap-1 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Online · 220 Local Places in Forsyth County
+                  Active · 220 Local Places in Forsyth County
                 </span>
               </div>
             </div>
@@ -315,13 +321,12 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
               type="button"
               onClick={() => setIsOpen(false)}
               className="p-1.5 text-amber-200 hover:text-white hover:bg-amber-700/60 rounded-lg transition-colors cursor-pointer"
-              aria-label="Close assistant"
+              aria-label="Close guide"
             >
               <X className="w-5 h-5" />
             </button>
           </header>
 
-          {/* Dispatches preset topic queries via horizontal button list */}
           <div className="bg-stone-50 border-b border-stone-200 p-2 overflow-x-auto scrollbar-none flex gap-1.5 shrink-0">
             {QUICK_PROMPTS.map((prompt, idx) => (
               <button
@@ -335,7 +340,6 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
             ))}
           </div>
 
-          {/* Displays chat history with auto-scroll via messagesEndRef */}
           <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 bg-stone-50/50">
             {messages.map((msg) => (
               <div
@@ -351,7 +355,6 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                 >
                   <p className="whitespace-pre-line">{msg.text}</p>
 
-                  {/* Renders top 3 matched resources via card list */}
                   {msg.matchedResources && msg.matchedResources.length > 0 && (
                     <div className="space-y-1.5 pt-1.5 border-t border-stone-100">
                       <span className="text-[10px] font-mono uppercase text-stone-500 block font-bold">
@@ -408,7 +411,6 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                     </div>
                   )}
 
-                  {/* Provides clickable follow-up prompts via examplePrompts buttons */}
                   {msg.examplePrompts && msg.examplePrompts.length > 0 && (
                     <div className="space-y-1.5 pt-2 border-t border-stone-100">
                       <span className="text-[10.5px] font-bold text-amber-900 block flex items-center gap-1">
@@ -438,7 +440,6 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
               </div>
             ))}
 
-            {/* Displays bouncing typing indicator when isTyping is true */}
             {isTyping && (
               <div className="flex items-center gap-1.5 p-3 max-w-[80px] bg-white border border-stone-200 rounded-2xl rounded-tl-none">
                 <span className="w-1.5 h-1.5 bg-amber-800 rounded-full animate-bounce"></span>
@@ -450,7 +451,6 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Submits user query on enter or click via form onSubmit */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -464,7 +464,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Ask anything (e.g. food pantries, clinic, honest mechanic, preschool)..."
               className="flex-1 text-xs py-2 px-3 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-amber-800 focus:bg-white transition-colors"
-              aria-label="Type your message to the CivicBridge assistant"
+              aria-label="Type your message to the CivicBridge guide"
             />
             <button
               type="submit"

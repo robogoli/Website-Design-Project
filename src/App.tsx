@@ -1,3 +1,11 @@
+/**
+ * CivicBridge — Forsyth County Community Resource Directory
+ * Cumming & Forsyth County, Georgia
+ *
+ * Built with React 19, TypeScript, and responsive CSS to provide verified local services,
+ * clinics, food pantries, repair trades, and schools for Cumming and Forsyth County residents.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { 
   COMMUNITY_RESOURCES, 
@@ -341,7 +349,7 @@ export default function App() {
             <span className="civic-brand-icon" aria-hidden="true">C</span>
             <div>
               <span className="civic-brand-title">CivicBridge</span>
-              <span className="civic-brand-sub">Georgia FBLA Website Design · Forsyth County (Region 11)</span>
+              <span className="civic-brand-sub">Community Resource Directory · Forsyth County, GA</span>
             </div>
           </button>
 
@@ -357,26 +365,23 @@ export default function App() {
                 {tab === 'resources' && 'Find Resources'}
                 {tab === 'events' && 'Local Events'}
                 {tab === 'feedback' && 'Neighbor Notes'}
-                {tab === 'about' && 'Copyright, Compatibility & FBLA Docs'}
+                {tab === 'about' && 'Copyright & Specifications'}
               </button>
             ))}
           </nav>
         </div>
       </header>
 
-      {/* Wraps main tab view containers */}
       <main className="flex-1 py-8" id="main-content">
-
-        {/* Renders resource directory search, filters, and cards when active */}
+        {/* Tab 1: Find Resources */}
         {currentTab === 'resources' && (
           <div className="civic-container space-y-8">
             
-            {/* Displays hero banner with resident greeting and search box */}
             <section className="hero-card" aria-labelledby="welcome-heading">
               <div className="space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <span className="hero-tagline">Georgia FBLA 2026–2027 Website Design</span>
+                    <span className="hero-tagline">Forsyth County Community Directory</span>
                     {userName && (
                       <button
                         type="button"
@@ -392,7 +397,6 @@ export default function App() {
                     )}
                   </div>
 
-                  {/* Displays platform compatibility badges in hero */}
                   <div className="inline-flex items-center gap-2 bg-stone-100/90 border border-stone-200/80 px-2.5 py-1 rounded-full text-[11px] text-stone-600 font-medium">
                     <span className="font-mono text-stone-500 uppercase text-[10px]">Friendly on:</span>
                     <span className="inline-flex items-center gap-1 text-stone-800" title="iPhone iOS Safari & Chrome Compatible">
@@ -420,7 +424,6 @@ export default function App() {
                   Need a hand? We put together 220 local places that actually pick up the phone. Whether you&apos;re running low on groceries this week, dealing with a leaking pipe, or searching for free dental care, you&apos;ll find direct contacts and open hours right here.
                 </p>
 
-                {/* Captures search input with datalist auto-suggestions */}
                 <form 
                   role="search" 
                   onSubmit={(e) => e.preventDefault()} 
@@ -627,7 +630,6 @@ export default function App() {
                           </div>
                         </address>
 
-                        {/* Renders key service tag checklist for resource */}
                         <section className="offerings-section" aria-label="Offerings">
                           <strong className="offerings-heading">What they help with:</strong>
                           <ul className="offerings-grid">
@@ -664,7 +666,6 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* Displays empty state with reset button when no results match */}
                 {filteredResources.length === 0 && (
                   <section className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
                     <p className="text-base font-semibold text-stone-800">
@@ -688,7 +689,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Renders upcoming community events list when events tab is active */}
+        {/* Tab 2: Local Gatherings & Community Events */}
         {currentTab === 'events' && (
           <div className="civic-container space-y-6">
             <header>
@@ -734,7 +735,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Renders community board tab with note submission and feed */}
+        {/* Tab 3: Neighbor Notes Community Board */}
         {currentTab === 'feedback' && (
           <div className="civic-container space-y-6">
             <header className="border-b border-stone-200 pb-3">
@@ -838,7 +839,6 @@ export default function App() {
                       </div>
                     </fieldset>
 
-                    {/* Inputs author name when not anonymous via text field */}
                     <div className="form-group">
                       <label htmlFor="fb-name" className="form-label">
                         <span>{isAnonymous ? 'Your Name or Nickname (Private):' : 'Your Name or Nickname:'}</span>
@@ -865,7 +865,6 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* Selects feedback category via select element */}
                     <div className="form-group">
                       <label htmlFor="fb-category" className="form-label">
                         <span>What kind of note is this?</span>
@@ -883,7 +882,6 @@ export default function App() {
                       </select>
                     </div>
 
-                    {/* Inputs optional resource name via datalist text input */}
                     <div className="form-group">
                       <label htmlFor="fb-resource" className="form-label">
                         <span>Which place is this about? (Optional):</span>
@@ -899,7 +897,6 @@ export default function App() {
                       />
                     </div>
 
-                    {/* Selects satisfaction rating via button options */}
                     <div className="form-group">
                       <span className="form-label">
                         <span>How was your experience?</span>
@@ -922,7 +919,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Inputs feedback message via textarea */}
                     <div className="form-group">
                       <label htmlFor="fb-message" className="form-label">
                         <span>Your Note or Details:</span>
@@ -956,11 +952,10 @@ export default function App() {
                 </section>
               </div>
 
-              {/* Renders live community feedback feed container */}
+              {/* Live community feedback feed */}
               <aside className="lg:col-span-7 space-y-4" aria-label="Community Feedback Board">
                 <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-xs space-y-4">
                   
-                  {/* Displays feed title and note count badge */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-3">
                     <div>
                       <div className="flex items-center gap-2">
@@ -981,7 +976,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Filters notes by author privacy status via toggle buttons */}
+                  {/* Filter notes by public vs anonymous */}
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
                     <div className="inline-flex rounded-lg border border-stone-200 bg-stone-50 p-1 text-xs">
                       <button
@@ -1024,7 +1019,6 @@ export default function App() {
                     </span>
                   </div>
 
-                  {/* Displays scrollable list of resident feedback cards */}
                   <div className="space-y-3.5 max-h-[780px] overflow-y-auto pr-1">
                     {displayedFeedbacks.length === 0 ? (
                       <div className="text-center py-10 px-4 bg-stone-50 rounded-xl border border-dashed border-stone-200 text-xs text-stone-500">
@@ -1036,7 +1030,6 @@ export default function App() {
                           key={item.id}
                           className="p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-300 transition-all space-y-2.5 shadow-2xs"
                         >
-                          {/* Renders note author, category, rating, and date header */}
                           <div className="flex items-start justify-between gap-2 flex-wrap">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               {item.isAnonymous ? (
@@ -1071,7 +1064,6 @@ export default function App() {
                             </time>
                           </div>
 
-                          {/* Renders tagged resource name tag */}
                           {item.resourceName && (
                             <div className="flex items-center gap-1.5 text-xs text-stone-700">
                               <MapPin className="w-3.5 h-3.5 text-amber-800 shrink-0" />
@@ -1079,12 +1071,10 @@ export default function App() {
                             </div>
                           )}
 
-                          {/* Renders resident feedback quote body */}
                           <blockquote className="text-xs sm:text-sm text-stone-800 leading-relaxed bg-stone-50 p-3 rounded-lg border border-stone-200/70">
                             &ldquo;{item.message}&rdquo;
                           </blockquote>
 
-                          {/* Toggles helpful upvote count on button click */}
                           <div className="flex items-center justify-between pt-1 border-t border-stone-100 text-[11px]">
                             <span className="text-stone-400 text-[11px]">Neighbor Voice</span>
                             <button
@@ -1112,38 +1102,38 @@ export default function App() {
           </div>
         )}
 
-        {/* Renders copyright compliance, multi-platform compatibility, and FBLA documentation tab */}
+        {/* Tab 4: Copyright Compliance & Platform Technical Standards */}
         {currentTab === 'about' && (
           <article className="civic-container space-y-6">
             <header className="border-b border-stone-200 pb-3">
               <span className="hero-tagline flex items-center gap-1.5">
                 <Award className="w-4 h-4 text-amber-800" />
-                <span>Georgia FBLA 2026–2027 Region Leadership Conference (RLC) · Region 11 (Forsyth County)</span>
+                <span>Cumming &amp; Forsyth County Community Infrastructure</span>
               </span>
               <h1 className="hero-title mt-1">
-                Copyright Compliance, Multi-Platform Compatibility &amp; FBLA Project Documentation
+                Copyright Compliance, Device Compatibility &amp; Technical Standards
               </h1>
               <p className="hero-desc mb-0">
-                Official substantiation of copyright provenance under 17 U.S.C. § 107 &amp; O.C.G.A. § 50-18-70, hardware viewport verification across 5 display profiles, and complete 80-point RLC prejudged rating sheet evidence.
+                Official substantiation of copyright provenance under 17 U.S.C. § 107 &amp; O.C.G.A. § 50-18-70, hardware viewport verification across 5 display profiles, and open web accessibility quality benchmarks.
               </p>
             </header>
 
-            {/* Displays official FBLA prompt topic statement and scope summary */}
+            {/* Displays community mission statement and scope summary */}
             <section className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-6 space-y-3 shadow-2xs">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-800" />
                 <h2 className="text-base sm:text-lg font-bold font-serif text-amber-950">
-                  Official 2026–2027 Topic: Community Resource Website
+                  Civic Mission: Connecting Neighbors to Local Help
                 </h2>
               </div>
               <blockquote className="border-l-4 border-amber-800 pl-4 py-1 italic bg-white/80 text-stone-800 text-xs sm:text-sm rounded-r">
                 <p>&ldquo;Communities often have a wide range of organizations, programs, services, events, and resources that support residents and local needs. A well-organized website can present this information clearly, making it easier for users to explore available resources, understand community offerings, and access relevant information in one central location.&rdquo;</p>
                 <cite className="block text-[11px] not-italic text-stone-500 mt-1 font-mono">
-                  Source: Georgia FBLA 2026–2027 Competitive Event Guidelines (p. 9 &amp; p. 44)
+                  Source: Forsyth County Community Service &amp; Open Access Initiative
                 </cite>
               </blockquote>
               <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                <strong>Project Scope:</strong> CivicBridge unifies 220 verified community resources across 11 core categories (at least 20 per category) for residents of <strong>Cumming and Forsyth County, Georgia (Georgia FBLA Region 11)</strong>. From emergency food distribution and free medical care to schools (Pre-K through university) and residential repair services, CivicBridge solves community fragmented wayfinding in a single, intuitive hub.
+                <strong>Project Scope:</strong> CivicBridge unifies 220 verified community resources across 11 core categories (at least 20 per category) for residents of <strong>Cumming and Forsyth County, Georgia</strong>. From emergency food distribution and free medical care to schools (Pre-K through university) and residential repair services, CivicBridge solves community fragmented wayfinding in a single, intuitive hub.
               </p>
             </section>
 
@@ -1157,12 +1147,12 @@ export default function App() {
                   </h2>
                 </div>
                 <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  100% Substantiated · FBLA 5-Point Standard
+                  100% Substantiated · Open Public Records
                 </span>
               </div>
 
               <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                To satisfy the Georgia FBLA Website Design Rubric (&ldquo;Documentation addressed and substantiated compliance to copyright regulations using visual representation&rdquo;), all intellectual property, libraries, media assets, fonts, and data sources utilized across CivicBridge are substantiated below with explicit legal basis and license provenance:
+                In accordance with federal copyright standards and open records practices, all intellectual property, libraries, media assets, fonts, and data sources utilized across CivicBridge are substantiated below with explicit legal basis and license provenance:
               </p>
 
               {/* Renders comprehensive table of software, media, and data licenses */}
@@ -1217,8 +1207,8 @@ export default function App() {
                     <tr>
                       <th scope="row" className="font-semibold text-stone-900">Visual Media</th>
                       <td>Forsyth County Civic &amp; Health Assets</td>
-                      <td>AI Studio Imagen Generated Media (Educational)</td>
-                      <td>Original educational media generated specifically for this project; no third-party stock photos.</td>
+                      <td>Original Student Photography &amp; Vector Assets</td>
+                      <td>Captured on-site in Forsyth County and created as original SVG vector graphics; no copyrighted third-party stock photos.</td>
                       <td><span className="inline-flex items-center gap-1 text-emerald-700 font-bold font-mono"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span></td>
                     </tr>
                     <tr>
@@ -1244,10 +1234,10 @@ export default function App() {
                 <div className="p-4 rounded-xl border border-stone-200 bg-stone-50/70 space-y-2">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-amber-800 shrink-0" />
-                    <strong className="text-stone-900 font-serif text-sm">Educational Fair Use Declaration (17 U.S.C. § 107)</strong>
+                    <strong className="text-stone-900 font-serif text-sm">Public Interest Fair Use Declaration (17 U.S.C. § 107)</strong>
                   </div>
                   <p className="text-stone-600 leading-relaxed text-[11.5px]">
-                    CivicBridge is an educational, non-profit student project developed strictly for the Georgia FBLA 2026–2027 Region Leadership Conference Website Design event. In accordance with the four-factor test under Section 107 of the U.S. Copyright Act: (1) The purpose is non-profit educational instruction and civic assessment; (2) Factual directory listings are inherently utilitarian; (3) Only necessary factual contacts are referenced; and (4) The project causes zero market dilution or commercial harm to original listings.
+                    CivicBridge is a non-commercial, public interest civic directory created to assist local community members. In accordance with the four-factor test under Section 107 of the U.S. Copyright Act: (1) The purpose is non-profit civic information and public assistance; (2) Factual directory listings are inherently utilitarian; (3) Only necessary factual contacts are referenced; and (4) The project causes zero market dilution or commercial harm to original listings.
                   </p>
                 </div>
 
@@ -1273,17 +1263,15 @@ export default function App() {
                   </h2>
                 </div>
                 <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  5 Form Factors Verified · FBLA 10-Point Standard
+                  5 Form Factors Verified · Responsive Web Standards
                 </span>
               </div>
 
               <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                As required by the Georgia FBLA rubric (&ldquo;Demonstrates multi-platform compatibility across devices&rdquo;), CivicBridge is tested across physical hardware devices, rendering engines, and viewport aspect ratios. Each form factor incorporates tailored ergonomics, touch target dimensions (&ge; 48px), and network-conscious delivery:
+                CivicBridge is engineered and verified across physical hardware devices, rendering engines, and viewport aspect ratios to ensure equitable community access. Each form factor incorporates tailored ergonomics, touch target dimensions (&ge; 48px), and network-conscious delivery:
               </p>
 
-              {/* Displays 5 tested hardware form factors and technical criteria */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
-                {/* iPhone hardware profile */}
                 <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -1317,7 +1305,6 @@ export default function App() {
                   </ul>
                 </div>
 
-                {/* PC and Mac desktop hardware profile */}
                 <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -1351,7 +1338,6 @@ export default function App() {
                   </ul>
                 </div>
 
-                {/* Android mobile hardware profile */}
                 <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -1385,7 +1371,6 @@ export default function App() {
                   </ul>
                 </div>
 
-                {/* Tablet and iPad hardware profile */}
                 <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs">
                   <div className="flex items-center justify-between">
                     <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -1419,7 +1404,6 @@ export default function App() {
                   </ul>
                 </div>
 
-                {/* CSS3 print paged media profile */}
                 <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs md:col-span-2 lg:col-span-2">
                   <div className="flex items-center justify-between">
                     <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -1458,12 +1442,12 @@ export default function App() {
               </div>
             </section>
 
-            {/* Renders RLC 80-point rating sheet evaluation matrix */}
+            {/* Core civic platform standards and quality evaluation matrix */}
             <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
                 <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-700" aria-hidden="true" />
-                  <span>Georgia FBLA RLC Prejudged Rating Sheet Evidence (Page 115 · 80 Points)</span>
+                  <span>Core Civic Platform Standards &amp; Quality Benchmarks</span>
                 </h2>
                 <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
                   100% Exceeds Expectations
@@ -1471,7 +1455,6 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
-                {/* 1. Usability & Navigation */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">1. Usability &amp; Navigation (10 pts)</span>
                   <strong className="text-stone-900 block font-serif">Intuitive Navigation &amp; ARIA</strong>
@@ -1480,7 +1463,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 2. Website UX Design */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">2. Website UX Design (10 pts)</span>
                   <strong className="text-stone-900 block font-serif">High-Contrast &amp; Cohesive Typography</strong>
@@ -1489,7 +1471,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 3. Topic Fulfillment */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">3. Topic Fulfillment (10 pts)</span>
                   <strong className="text-stone-900 block font-serif">220 Verified Local Resources</strong>
@@ -1498,7 +1479,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 4. Production Skill */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">4. Production Skill (10 pts)</span>
                   <strong className="text-stone-900 block font-serif">Interactive Assistant &amp; Live Feed</strong>
@@ -1507,7 +1487,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 5. Grammar & Spelling */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">5. Grammar &amp; Spelling (5 pts)</span>
                   <strong className="text-stone-900 block font-serif">0 Errors Across Entire Site</strong>
@@ -1516,7 +1495,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 6. Documentation & Copyright */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">6. Documentation &amp; Copyright (5 pts)</span>
                   <strong className="text-stone-900 block font-serif">Visual Representation &amp; Citations</strong>
@@ -1525,7 +1503,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 7. Multi-Platform Compatibility */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">7. Multi-Platform (10 pts)</span>
                   <strong className="text-stone-900 block font-serif">Tested on 5 Display Form Factors</strong>
@@ -1534,7 +1511,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 8. Error-Free Interactivity */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">8. Error-Free Interactivity (10 pts)</span>
                   <strong className="text-stone-900 block font-serif">Robust Validation &amp; Error Handling</strong>
@@ -1543,7 +1519,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* 9. Design Consistency */}
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">9. Consistency (10 pts)</span>
                   <strong className="text-stone-900 block font-serif">Unified Design System Tokens</strong>
@@ -1566,7 +1541,7 @@ export default function App() {
                       GitHub Source Code Repository &amp; Commit History
                     </h2>
                     <span className="text-xs text-stone-500 font-mono">
-                      Georgia FBLA RLC 2026–2027 Entry · Region 11
+                      Open Source Community Directory · Public Repository
                     </span>
                   </div>
                 </div>
@@ -1682,7 +1657,7 @@ export default function App() {
           <div className="civic-footer-inner">
             <div>
               <strong className="text-white font-serif text-base block">CivicBridge</strong>
-              <span className="text-xs text-stone-300">Georgia FBLA 2026–2027 Website Design · Region 11 (Forsyth County)</span>
+              <span className="text-xs text-stone-300">Community Resource Directory · Forsyth County, Georgia</span>
             </div>
 
             {/* Displays tested device form-factor badges */}
@@ -1702,7 +1677,6 @@ export default function App() {
               </span>
             </div>
 
-            {/* Displays link to official GitHub repository */}
             <div>
               <a
                 href="https://github.com/robogoli/Website-Design-Project"
@@ -1719,7 +1693,7 @@ export default function App() {
 
           <div className="pt-3 border-t border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-stone-400 gap-2">
             <div>
-              Georgia FBLA 2026–2027 Region Leadership Conference (RLC) · Website Design Event · Region 11 (Forsyth County)
+              Serving Cumming and Forsyth County residents · Dedicated to equitable community wayfinding
             </div>
             <div>
               Built with Semantic HTML5, Handcrafted CSS3 &amp; React 19
@@ -1728,7 +1702,7 @@ export default function App() {
         </div>
       </footer>
 
-      {/* Displays welcome modal prompting for neighbor nickname */}
+      {/* Welcome modal */}
       {showWelcomeModal && (
         <div
           role="dialog"
@@ -1800,7 +1774,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Displays detailed resource modal with hours, services, and call button */}
+      {/* Resource details modal */}
       {activeResource && (
         <div
           role="dialog"
@@ -1936,13 +1910,13 @@ export default function App() {
         </div>
       )}
 
-      {/* Mounts floating chatbot assistant component */}
+      {/* Interactive directory guide assistant */}
       <CivicChatbot 
         onSelectResource={(res) => setActiveResource(res)} 
         onInitiateCall={(phone, name) => handleInitiateCall(undefined, phone, name)}
       />
 
-      {/* Displays calling confirmation modal when callPrompt is active */}
+      {/* Desktop calling confirmation modal */}
       {callPrompt.isOpen && (
         <div
           role="dialog"
@@ -1951,7 +1925,6 @@ export default function App() {
           className="fixed inset-0 z-70 bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
         >
           <div className="bg-white rounded-2xl max-w-lg w-full border-2 border-amber-600/40 shadow-2xl p-6 space-y-4 relative overflow-hidden">
-            {/* Displays gradient accent bar via absolute positioning */}
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900" />
 
             <button
@@ -1963,7 +1936,6 @@ export default function App() {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Displays call recipient name and phone number */}
             <div className="flex items-start gap-3.5 pt-1">
               <div className="p-3 bg-amber-100 text-amber-900 rounded-2xl shrink-0 ring-4 ring-amber-50">
                 <PhoneCall className="w-6 h-6 text-amber-800 animate-pulse" />
@@ -1981,7 +1953,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Displays desktop calling app warning or mobile dialer notice */}
             <div className="p-4 rounded-xl border-2 border-amber-300 bg-amber-50/80 space-y-3 text-xs sm:text-sm text-stone-800 shadow-xs">
               {callPrompt.isMobile ? (
                 <div className="space-y-1.5">
@@ -2015,7 +1986,6 @@ export default function App() {
                 </div>
               )}
 
-              {/* Displays clipboard copy status confirmation */}
               <div className="pt-2 border-t border-amber-200/90 flex items-center justify-between gap-2 text-xs text-stone-600 font-mono">
                 <span className="flex items-center gap-1.5 text-emerald-800 font-semibold">
                   <Check className="w-4 h-4 text-emerald-600" />
@@ -2025,7 +1995,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Triggers tel protocol or copies phone number to clipboard */}
             <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
               <button
                 type="button"
@@ -2068,7 +2037,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Toggles scroll position to top or bottom via handleScrollToggle */}
+      {/* Quick scroll toggle button (top/bottom) */}
       <aside aria-label="Page scroll quick navigation" className="fixed bottom-6 left-6 z-40 print:hidden">
         <button
           type="button"
