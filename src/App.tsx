@@ -42,7 +42,8 @@ import {
   ArrowDown,
   ArrowUp,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Printer
 } from 'lucide-react';
 
 // Defines initial discovery category tiles with icons and counts
