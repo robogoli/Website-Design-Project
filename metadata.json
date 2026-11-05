@@ -3,6 +3,10 @@
   "description": "Georgia FBLA 2026-2027 RLC Website Design: Verified Community Resource Website for Cumming and Forsyth County (Region 11), Georgia.",
   "requestFramePermissions": [],
   "majorCapabilities": [
-    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
-  ]
+  "COMMUNITY_RESOURCE_DIRECTORY",
+  "RESOURCE_SEARCH_AND_FILTERING",
+  "CATEGORY_BASED_NAVIGATION",
+  "INTERACTIVE_COMMUNITY_RESOURCE_FINDER",
+  "RESPONSIVE_WEB_DESIGN"
+]
 }
