@@ -9,6 +9,7 @@ interface ChatMessage {
   text: string;
   timestamp: string;
   matchedResources?: ResourceItem[];
+  examplePrompts?: string[];
 }
 
 interface CivicChatbotProps {
@@ -34,8 +35,13 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     {
       id: 'welcome',
       sender: 'bot',
-      text: "Hi neighbor! I'm your local guide here to help you find whatever you or your family need around Cumming and Forsyth County—from free groceries and healthcare to reliable mechanics, schools, childcare, or emergency support. What can I help you find today?",
-      timestamp: 'Just now'
+      text: "Hey there! Need directions or a phone number? I help folks find what they need around Cumming and Forsyth County. That covers hot meals, clinics, honest mechanics, schools, or emergency housing.\n\nTo get started, tell me what you need, or try one of these examples:",
+      timestamp: 'Just now',
+      examplePrompts: [
+        'Where can I get emergency groceries today?',
+        'Free dental clinic for a toothache',
+        'Emergency 24/7 plumbing repair in Cumming'
+      ]
     }
   ]);
 
@@ -72,9 +78,9 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     setInputMessage('');
     setIsTyping(true);
 
-    // Simulate smart interactive reasoning with a natural pause
+    // Delays bot response using setTimeout
     setTimeout(() => {
-      const { responseText, matched } = generateBotResponse(query);
+      const { responseText, matched, examplePrompts } = generateBotResponse(query);
       const botMsgId = `bot-${Date.now()}`;
       const botTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -85,97 +91,148 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
           sender: 'bot',
           text: responseText,
           timestamp: botTimestamp,
-          matchedResources: matched
+          matchedResources: matched?.slice(0, 3), // Caps suggestions to top 3
+          examplePrompts
         }
       ]);
       setIsTyping(false);
     }, 450);
   };
 
-  const generateBotResponse = (query: string): { responseText: string; matched?: ResourceItem[] } => {
+  const generateBotResponse = (query: string): { 
+    responseText: string; 
+    matched?: ResourceItem[];
+    examplePrompts?: string[];
+  } => {
     const q = query.toLowerCase();
 
-    // 1. Emergency / Crisis check
+    // Routes crisis queries to 988 and 211 emergency resources via filter
     if (q.includes('crisis') || q.includes('hotline') || q.includes('suicide') || q.includes('emergency') || q.includes('988') || q.includes('211') || q.includes('eviction')) {
+      const emergencyMatches = COMMUNITY_RESOURCES.filter(r => r.isEmergency || r.id === 'food-1').slice(0, 3);
       return {
-        responseText: "If you or someone you love is going through a tough time, please know that you are not alone and caring support is ready right now:\n• Suicide & Crisis Lifeline: Call or text 988 (Available 24/7, confidential)\n• Forsyth County 2-1-1: Dial 211 for emergency rent, shelter, or utility bills\n• The Place of Forsyth Crisis Line: (770) 887-1098\n• Bald Ridge Lodge (Youth Shelter): (770) 887-1232\n\nHere are verified local places ready to support you with open arms:",
-        matched: COMMUNITY_RESOURCES.filter(r => r.isEmergency || r.id === 'food-1')
+        responseText: "If things are tough right now, don't wait. Reach out immediately. The Suicide & Crisis Lifeline is free, confidential, and open 24/7 at 988. You can also dial 211 for emergency rent or shelter. Here are the top 3 emergency contacts ready to help you right now:\n\nWhat kind of urgent assistance do you need most?",
+        matched: emergencyMatches,
+        examplePrompts: [
+          'How do I get emergency rent or utility help?',
+          'Where is the nearest safe youth shelter in Cumming?',
+          'Free crisis counseling and 24/7 support'
+        ]
       };
     }
 
-    // 2. Schools & Colleges check
+    // Matches school keywords and returns top 3 schools via category filter
     if (q.includes('school') || q.includes('college') || q.includes('university') || q.includes('ung') || q.includes('lanier tech') || q.includes('elementary') || q.includes('middle') || q.includes('high school') || q.includes('preschool') || q.includes('pre-k') || q.includes('education') || q.includes('degree')) {
-      const schools = COMMUNITY_RESOURCES.filter(r => r.category === 'schools');
+      const schools = COMMUNITY_RESOURCES.filter(r => r.category === 'schools').slice(0, 3);
       return {
-        responseText: "Forsyth County has wonderful schools and educational paths for all ages:\n• Preschool: Forsyth County Head Start & Georgia Pre-K\n• Elementary: Cumming Elementary (with dual-language immersion)\n• Middle & High: Otwell Middle & Forsyth Central High STEM Academy\n• Trade & Technical: Lanier Technical College (tuition-free HOPE Career Grants)\n• 4-Year University: University of North Georgia (UNG Cumming Campus)\n\nTake a look at a few options below:",
-        matched: schools
+        responseText: "Forsyth County has great education options for all ages. Here are the top 3 schools and colleges in the county:\n\nWhat age or program are you looking into? Tell me your specific need, or try asking one of these:",
+        matched: schools,
+        examplePrompts: [
+          'Which elementary schools have dual language immersion?',
+          'What degrees at Lanier Tech are 100% tuition-free?',
+          'Where can I enroll my child in Head Start preschool?'
+        ]
       };
     }
 
-    // 3. Repairs check
+    // Matches trade keywords and returns top 3 repair services via category filter
     if (q.includes('repair') || q.includes('auto') || q.includes('car') || q.includes('brake') || q.includes('plumb') || q.includes('pipe') || q.includes('hvac') || q.includes('ac') || q.includes('heat') || q.includes('handyman') || q.includes('roof') || q.includes('drywall') || q.includes('appliance') || q.includes('washer') || q.includes('dryer') || q.includes('refrigerator')) {
-      const repairs = COMMUNITY_RESOURCES.filter(r => r.category === 'repairs');
+      const repairs = COMMUNITY_RESOURCES.filter(r => r.category === 'repairs').slice(0, 3);
       return {
-        responseText: "When something in the house or car breaks down, here are honest, verified local pros in Cumming:\n• Auto Mechanics: Cumming Community Auto & Brake Repair\n• Plumbing & HVAC: North Georgia HVAC & 24/7 Plumbing\n• Home Handyman: Forsyth Handyman & Accessibility Ramps\n• Appliance Fixes: Sawnee Appliance & Electronics Repair\n\nClick on any service below to view hours, estimates, or call directly:",
-        matched: repairs
+        responseText: "Car trouble or something broken at home? It helps having honest folks you can call. Here are our top 3 verified local repair teams:\n\nWhat needs fixing? Let me know what you're dealing with, or ask:",
+        matched: repairs,
+        examplePrompts: [
+          'Who does emergency 24/7 plumbing leaks in Cumming?',
+          'Where can I get honest brake or engine repairs?',
+          'Handyman for wheelchair ramp or home fixes'
+        ]
       };
     }
 
-    // 4. Food & Pantries check
+    // Matches pantry terms and returns top 3 food programs via category filter
     if (q.includes('food') || q.includes('pantry') || q.includes('grocer') || q.includes('hunger') || q.includes('meal') || q.includes('eat') || q.includes('pantries')) {
-      const food = COMMUNITY_RESOURCES.filter(r => r.category === 'food');
+      const food = COMMUNITY_RESOURCES.filter(r => r.category === 'food').slice(0, 3);
       return {
-        responseText: "Here are welcoming food pantries and meal programs where local families can receive groceries with dignity and care:\n• The Place of Forsyth: Free weekly groceries, fresh produce, and baby formula\n• Meals by Grace: Door-to-door food delivery for families with children\n• Forsyth Senior Meals on Wheels: Warm, nutritious weekday lunches delivered to homebound seniors\n\nNo legal status check or proof is needed at these pantries.",
-        matched: food
+        responseText: "Need groceries this week? Nobody should go hungry. You don't need to show proof of legal status. Here are the top 3 food assistance programs in Cumming:\n\nWhat kind of grocery help do you need? Tell me your situation, or try asking:",
+        matched: food,
+        examplePrompts: [
+          'Which food pantries are open on weekday evenings?',
+          'Can I get food boxes delivered to my door for my kids?',
+          'Where can I find free baby formula and diapers in Forsyth?'
+        ]
       };
     }
 
-    // 5. Healthcare & Clinic check
+    // Matches health terms and returns top 3 clinic resources via category filter
     if (q.includes('health') || q.includes('clinic') || q.includes('doctor') || q.includes('dental') || q.includes('teeth') || q.includes('dentist') || q.includes('prescription') || q.includes('mental') || q.includes('therapy') || q.includes('counseling')) {
-      const health = COMMUNITY_RESOURCES.filter(r => r.category === 'healthcare');
+      const health = COMMUNITY_RESOURCES.filter(r => r.category === 'healthcare').slice(0, 3);
       return {
-        responseText: "Everyone deserves compassionate medical and dental care. Here are free and sliding-scale providers in Forsyth County:\n• Good Shepherd Clinic: 100% free doctor visits, prescriptions, and dental extractions for uninsured residents\n• Georgia Mountains Health: Affordable family medicine and dental on a sliding fee scale\n• Avita Community Partners: Gentle mental health counseling and 24/7 crisis support.",
-        matched: health
+        responseText: "Doctor bills can be scary, especially without insurance. Here are the top 3 free and sliding-scale clinics in Forsyth County:\n\nWhat kind of healthcare do you need right now? You can specify your need, or try asking:",
+        matched: health,
+        examplePrompts: [
+          'Where can I get free tooth extractions without insurance?',
+          'Free doctor visits and generic prescription refills',
+          'Affordable sliding-scale family doctors near Cumming'
+        ]
       };
     }
 
-    // 6. Childcare & Daycare check
+    // Matches childcare terms and returns top 3 care providers via category filter
     if (q.includes('childcare') || q.includes('daycare') || q.includes('baby') || q.includes('infant') || q.includes('toddler') || q.includes('afterschool') || q.includes('ymca') || q.includes('caps')) {
-      const childcare = COMMUNITY_RESOURCES.filter(r => r.category === 'childcare');
+      const childcare = COMMUNITY_RESOURCES.filter(r => r.category === 'childcare').slice(0, 3);
       return {
-        responseText: "Here are trusted local childcare programs that offer financial scholarships and accept Georgia CAPS subsidies:\n• Forsyth County YMCA Child Development Academy: Infant to after-school care with sliding-scale help\n• Little Sunshine Early Learning: Full-day care with CAPS subsidies accepted\n• Cumming First Baptist WEE: Nurturing part-time preschool and mother's morning out.",
-        matched: childcare
+        responseText: "Finding dependable care for little ones takes effort. Here are the top 3 childcare and early education centers in Forsyth County:\n\nWhat age is your child, and what schedule do you need? You can type your question, or ask:",
+        matched: childcare,
+        examplePrompts: [
+          'Which daycares in Cumming accept Georgia CAPS subsidies?',
+          'Are there part-time morning preschools available?',
+          'After-school programs with financial scholarships'
+        ]
       };
     }
 
-    // 7. Sports & Parks check
+    // Matches recreation terms and returns top 3 parks via category filter
     if (q.includes('park') || q.includes('sport') || q.includes('swim') || q.includes('pool') || q.includes('lake') || q.includes('hike') || q.includes('trail') || q.includes('nature') || q.includes('recreation')) {
-      const sports = COMMUNITY_RESOURCES.filter(r => r.category === 'sports');
+      const sports = COMMUNITY_RESOURCES.filter(r => r.category === 'sports').slice(0, 3);
       return {
-        responseText: "Looking to spend some quality time outside? Forsyth County has wonderful scenic parks and family recreation spots:\n• Sawnee Mountain Preserve: 11+ miles of peaceful hiking trails and the stunning Indian Seats overlook\n• Mary Alice Park: Sandy beach swimming, boat ramps, and lakeside picnic tables on Lake Lanier\n• Cumming Aquatic Center & Central Park: 50m indoor Olympic pool, outdoor splash park, and sports fields.",
-        matched: sports
+        responseText: "Looking to get outside this weekend? Here are the top 3 outdoor recreation spots in Forsyth County:\n\nWhat kind of outing are you planning? Tell me what you have in mind, or ask:",
+        matched: sports,
+        examplePrompts: [
+          'Are the hiking trails at Sawnee Mountain good for beginners?',
+          'Where can we swim at Lake Lanier with picnic tables?',
+          'Indoor pool and splash park day passes in Cumming'
+        ]
       };
     }
 
-    // 8. Dining check
+    // Matches dining terms and returns top 3 restaurants via category filter
     if (q.includes('dine') || q.includes('dining') || q.includes('restaurant') || q.includes('pizza') || q.includes('deli') || q.includes('breakfast') || q.includes('steak')) {
-      const dining = COMMUNITY_RESOURCES.filter(r => r.category === 'dining');
+      const dining = COMMUNITY_RESOURCES.filter(r => r.category === 'dining').slice(0, 3);
       return {
-        responseText: "Here are cozy, family-owned restaurants where Cumming locals love to eat:\n• Tam’s BackStage: Historic dining with comfort classics right by the School Street Playhouse\n• Marie’s Italian Deli: Homestyle lasagna, freshly sliced deli subs, and authentic cannoli\n• Giorgio’s Family Restaurant: All-day breakfast, Greek gyros, and oven-fresh pizza.",
-        matched: dining
+        responseText: "Hungry for good local food? Skip the chains. Here are our top 3 family-owned restaurants in Cumming:\n\nWhat kind of food are you craving tonight? Specify what you like, or ask:",
+        matched: dining,
+        examplePrompts: [
+          'Family dinner near downtown Cumming playhouse',
+          'Where can I find authentic Italian subs and cannoli?',
+          'Best place for all-day breakfast and Greek gyros'
+        ]
       };
     }
 
-    // 9. Workforce & Library check
+    // Matches workforce terms and returns top 3 career resources via category filter
     if (q.includes('job') || q.includes('career') || q.includes('work') || q.includes('resume') || q.includes('library') || q.includes('ged') || q.includes('esl')) {
-      const workforce = COMMUNITY_RESOURCES.filter(r => r.category === 'workforce');
+      const workforce = COMMUNITY_RESOURCES.filter(r => r.category === 'workforce').slice(0, 3);
       return {
-        responseText: "Free community resources for job searches, study spaces, and learning new skills:\n• Cumming Library: Free Wi-Fi, public computers, quiet study rooms, and resume coaching\n• WorkSource Georgia: Career training grants up to $8,000 and direct local hiring events\n• Forsyth Literacy Council: Free GED preparation and friendly ESL conversation classes.",
-        matched: workforce
+        responseText: "Looking for work or a quiet place to learn? Here are the top 3 community career and library resources in Forsyth County:\n\nWhat career or study help are you looking for? Let me know, or try asking:",
+        matched: workforce,
+        examplePrompts: [
+          'How do I apply for the $8,000 career training grant?',
+          'Free computer access and resume review in Cumming',
+          'Free adult GED prep and English conversation classes'
+        ]
       };
     }
 
-    // 10. General search against directory
+    // Searches resource text fields via lowercase substring matching
     const keywordMatches = COMMUNITY_RESOURCES.filter(r => 
       r.name.toLowerCase().includes(q) ||
       r.description.toLowerCase().includes(q) ||
@@ -184,21 +241,32 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     ).slice(0, 3);
 
     if (keywordMatches.length > 0) {
+      const topName = keywordMatches[0].name;
       return {
-        responseText: `I found ${keywordMatches.length} friendly local places matching "${query}" in our Cumming & Forsyth County directory:`,
-        matched: keywordMatches
+        responseText: `Found matching places in Forsyth County. Here are the top ${keywordMatches.length}:\n\nCould you tell me a little more about your actual need? For example, you could ask:`,
+        matched: keywordMatches,
+        examplePrompts: [
+          `What are the opening hours and phone for ${topName}?`,
+          `Are there free or sliding-scale options for this?`,
+          `Show me more places located in central Cumming`
+        ]
       };
     }
 
     return {
-      responseText: "I'm always glad to help you find local resources in Cumming and Forsyth County! You can ask me things like:\n• 'Where can I find free food or groceries?'\n• 'Are there free clinics or dentists in Cumming?'\n• 'What schools or college options are available?'\n• 'Who does reliable auto or home repairs?'\n• 'Where can I find affordable childcare?'",
-      matched: COMMUNITY_RESOURCES.slice(0, 2)
+      responseText: "I want to make sure I connect you with the right place. Could you specify your actual need? Here are 3 example questions you can tap or ask:",
+      matched: COMMUNITY_RESOURCES.slice(0, 3),
+      examplePrompts: [
+        'Where can I get emergency groceries today?',
+        'Find a free clinic or dentist for uninsured adults',
+        'Emergency plumbing or car brake repair in Cumming'
+      ]
     };
   };
 
   return (
     <>
-      {/* Floating Chatbot Launcher Button */}
+      {/* Toggles chat modal open via setIsOpen button */}
       <div className="fixed bottom-6 right-6 z-40 print:hidden">
         {!isOpen && (
           <button
@@ -219,14 +287,14 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
         )}
       </div>
 
-      {/* Interactive Chatbot Window */}
+      {/* Renders interactive chat window when isOpen is true */}
       {isOpen && (
         <div 
           role="dialog"
           aria-label="CivicBridge Interactive Assistant"
           className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[400px] h-[550px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200 print:hidden"
         >
-          {/* Header */}
+          {/* Displays bot status and close trigger using flex header */}
           <header className="bg-amber-800 text-white px-4 py-3.5 flex items-center justify-between shrink-0 shadow-xs">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 bg-amber-700/80 rounded-lg">
@@ -253,7 +321,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
             </button>
           </header>
 
-          {/* Quick Prompts Bar */}
+          {/* Dispatches preset topic queries via horizontal button list */}
           <div className="bg-stone-50 border-b border-stone-200 p-2 overflow-x-auto scrollbar-none flex gap-1.5 shrink-0">
             {QUICK_PROMPTS.map((prompt, idx) => (
               <button
@@ -267,7 +335,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
             ))}
           </div>
 
-          {/* Messages Body */}
+          {/* Displays chat history with auto-scroll via messagesEndRef */}
           <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 bg-stone-50/50">
             {messages.map((msg) => (
               <div
@@ -283,11 +351,11 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                 >
                   <p className="whitespace-pre-line">{msg.text}</p>
 
-                  {/* Matched Interactive Resource Cards */}
+                  {/* Renders top 3 matched resources via card list */}
                   {msg.matchedResources && msg.matchedResources.length > 0 && (
                     <div className="space-y-1.5 pt-1.5 border-t border-stone-100">
-                      <span className="text-[10px] font-mono uppercase text-stone-400 block font-bold">
-                        Recommended Resources:
+                      <span className="text-[10px] font-mono uppercase text-stone-500 block font-bold">
+                        Top 3 Recommended Places:
                       </span>
                       {msg.matchedResources.map((res) => (
                         <div
@@ -339,6 +407,29 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                       ))}
                     </div>
                   )}
+
+                  {/* Provides clickable follow-up prompts via examplePrompts buttons */}
+                  {msg.examplePrompts && msg.examplePrompts.length > 0 && (
+                    <div className="space-y-1.5 pt-2 border-t border-stone-100">
+                      <span className="text-[10.5px] font-bold text-amber-900 block flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-700" />
+                        <span>Tap an example or type below to specify:</span>
+                      </span>
+                      <div className="flex flex-col gap-1.5">
+                        {msg.examplePrompts.map((promptText, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => handleSendMessage(promptText)}
+                            className="text-left text-[11px] p-2 rounded-lg bg-amber-50/80 hover:bg-amber-100 border border-amber-200 text-stone-800 hover:text-amber-950 transition-colors cursor-pointer flex items-center justify-between gap-1.5 group shadow-2xs"
+                          >
+                            <span>&ldquo;{promptText}&rdquo;</span>
+                            <ArrowUpRight className="w-3 h-3 text-amber-700 shrink-0 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <span className="text-[9.5px] text-stone-400 font-mono mt-1 px-1">
@@ -347,7 +438,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
               </div>
             ))}
 
-            {/* Typing Indicator */}
+            {/* Displays bouncing typing indicator when isTyping is true */}
             {isTyping && (
               <div className="flex items-center gap-1.5 p-3 max-w-[80px] bg-white border border-stone-200 rounded-2xl rounded-tl-none">
                 <span className="w-1.5 h-1.5 bg-amber-800 rounded-full animate-bounce"></span>
@@ -359,7 +450,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input Footer */}
+          {/* Submits user query on enter or click via form onSubmit */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
