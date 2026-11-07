@@ -1,156 +1,94 @@
-/**
- * CivicBridge — Forsyth County Community Resource Directory
- * Cumming & Forsyth County, Georgia
- *
- * Built with React 19, TypeScript, and responsive CSS to provide verified local services,
- * clinics, food pantries, repair trades, and schools for Cumming and Forsyth County residents.
- */
-
-import React, { useState, useEffect } from 'react';
-import { 
-  COMMUNITY_RESOURCES, 
-  COMMUNITY_EVENTS, 
-  RESEARCH_CITATIONS, 
-  CATEGORIES,
-  INITIAL_COMMUNITY_FEEDBACKS
-} from './data/mockData';
-import { ResourceItem, UserFeedback } from './types';
-import { CivicChatbot } from './components/CivicChatbot';
-import { 
-  Search, 
-  Phone, 
-  MapPin, 
-  Clock, 
-  CheckCircle2, 
-  X, 
-  ShieldCheck, 
-  BarChart3, 
-  Smartphone, 
-  Monitor,
-  Globe,
-  BookOpen, 
-  User, 
-  MessageSquare, 
-  Send, 
-  ThumbsUp, 
-  ThumbsDown, 
-  AlertCircle, 
-  Eye, 
-  EyeOff, 
-  Users,
-  Github,
-  ExternalLink,
-  Award,
-  Layers,
-  FileCode,
-  FileText,
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Search,
+  X,
+  ChevronDown,
+  ArrowDown,
+  ArrowUp,
+  MapPin,
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
   Copy,
   Check,
   PhoneCall,
-  ArrowDown,
-  ArrowUp,
-  ChevronDown,
   Sparkles,
-  Printer
+  ExternalLink,
+  Award,
+  Smartphone,
+  Monitor,
+  Printer,
+  BarChart3,
+  BookOpen,
+  Github,
+  FileText
 } from 'lucide-react';
 
-// Defines initial discovery category tiles with icons and counts
-const CATEGORY_DISCOVERY_ITEMS = [
-  { id: 'schools', label: 'Schools & Education', count: '20 Places', desc: 'Pre-K, elementary, middle, high schools, Lanier Tech & UNG college programs', icon: '🎓' },
-  { id: 'repairs', label: 'Repairs & Maintenance', count: '20 Places', desc: 'Friendly mechanics, 24/7 plumbers, HVAC technicians & neighborhood handymen', icon: '🔧' },
-  { id: 'food', label: 'Food & Groceries', count: '20 Places', desc: 'Free grocery pantries, hot community lunches & food boxes for local families', icon: '🥫' },
-  { id: 'housing', label: 'Housing & Utilities', count: '20 Places', desc: 'Rent relief grants, utility bill assistance, shelter beds & weatherization help', icon: '🏠' },
-  { id: 'healthcare', label: 'Health & Dental Care', count: '20 Places', desc: 'Free doctor visits, sliding-scale dental care, mental wellness & prescriptions', icon: '🩺' },
-  { id: 'childcare', label: 'Childcare & Daycare', count: '20 Places', desc: 'Early learning preschools, loving daycare centers & Georgia CAPS subsidy providers', icon: '👶' },
-  { id: 'sports', label: 'Parks & Recreation', count: '20 Places', desc: 'Sawnee Mountain hiking trails, Lake Lanier swimming, greenways & playgrounds', icon: '🌳' },
-  { id: 'dining', label: 'Local Family Dining', count: '20 Places', desc: 'Cozy Cumming diners, authentic delis, slow-smoked BBQ & neighborhood cafes', icon: '🍽️' },
-  { id: 'workforce', label: 'Library & Job Help', count: '20 Places', desc: 'Quiet library spaces, free resume help, job training & public computer access', icon: '💼' },
-  { id: 'seniors', label: 'Senior Living & Care', count: '20 Places', desc: 'Senior community centers, Meals on Wheels, social clubs & ride assistance', icon: '👵' },
-  { id: 'youth-family', label: 'Youth & Family Support', count: '20 Places', desc: 'Youth mentoring programs, parenting workshops, counseling & family support', icon: '👨‍👩‍👧' },
-];
+import { ResourceItem, DistrictType } from './types';
+import { CATEGORIES, RESEARCH_CITATIONS, HERO_IMAGE } from './data/mockData';
+import { useResources } from './hooks/useResources';
+import { useFeedback } from './hooks/useFeedback';
 
-export default function App() {
-  // Tracks active view tab via setCurrentTab
-  const [currentTab, setCurrentTab] = useState<'resources' | 'events' | 'feedback' | 'about'>('resources');
-  
-  // Stores search query and category filters to restrict initial render
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+import { Navbar, TabKey } from './components/Navbar';
+import { Footer } from './components/Footer';
+import { ResourceCard } from './components/ResourceCard';
+import { ResourceDetails } from './components/ResourceDetails';
+import { EventsSection } from './components/EventsSection';
+import { FeedbackSection } from './components/FeedbackSection';
+import { CivicChatbot } from './components/CivicChatbot';
+
+export function App() {
+  // Navigation tab state
+  const [currentTab, setCurrentTab] = useState<TabKey>('resources');
+
+  // Directory resources hook
+  const {
+    resources: filteredResources,
+    allResources,
+    totalCount,
+    selectedCategory,
+    setSelectedCategory,
+    searchQuery,
+    setSearchQuery,
+    selectedDistrict,
+    setSelectedDistrict,
+    onlyVerified,
+    setOnlyVerified,
+    isFiltered,
+    resetFilters,
+    verifiedListings,
+    toggleVerifyResource
+  } = useResources();
+
+  // Community feedback hook
+  const {
+    feedbacks,
+    allFeedbacksCount,
+    filterType,
+    setFilterType,
+    addFeedback,
+    toggleLike,
+    likedFeedbacks
+  } = useFeedback();
+
+  // Selected resource for details modal
   const [activeResource, setActiveResource] = useState<ResourceItem | null>(null);
 
-  // Tracks scroll position via scroll event listener
-  const [isNearBottom, setIsNearBottom] = useState(false);
+  // Prefill resource name for feedback form
+  const [feedbackPrefillResource, setFeedbackPrefillResource] = useState('');
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPos = window.scrollY + window.innerHeight;
-      const totalHeight = document.documentElement.scrollHeight;
-      setIsNearBottom(totalHeight - scrollPos < 350);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  const handleScrollToggle = () => {
-    if (isNearBottom) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
-      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+  // User name greeting state
+  const [userName, setUserName] = useState<string>(() => {
+    try {
+      return localStorage.getItem('civicbridge_neighbor_name') || '';
+    } catch {
+      return '';
     }
-  };
-
-  // Stores neighbor name input and welcome modal state
-  const [userName, setUserName] = useState('');
-  const [tempName, setTempName] = useState('');
+  });
+  const [tempName, setTempName] = useState(userName);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
-  // Stores controlled input states for feedback form
-  const [feedbackName, setFeedbackName] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [feedbackCategory, setFeedbackCategory] = useState<UserFeedback['category']>('Accuracy & Updates');
-  const [feedbackResource, setFeedbackResource] = useState('');
-  const [feedbackRating, setFeedbackRating] = useState<UserFeedback['rating']>('Helpful');
-  const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [feedbackError, setFeedbackError] = useState('');
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-
-  // Initializes community feedback array with localStorage fallback
-  const [feedbacks, setFeedbacks] = useState<UserFeedback[]>(() => {
-    try {
-      const saved = localStorage.getItem('civicbridge_feedbacks') || localStorage.getItem('cumming_community_feedbacks');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error('Failed to parse saved community feedbacks:', e);
-    }
-    return INITIAL_COMMUNITY_FEEDBACKS;
-  });
-
-  const [feedbackSideFilter, setFeedbackSideFilter] = useState<'all' | 'public' | 'anonymous'>('all');
-  const [likedFeedbackIds, setLikedFeedbackIds] = useState<Record<string, boolean>>({});
-  const [quickCheckedMap, setQuickCheckedMap] = useState<Record<string, boolean>>({});
-
-  // Reads cached user name from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('civicbridge_user_name') || localStorage.getItem('cumming_user_name');
-    if (saved) {
-      setUserName(saved);
-      setFeedbackName(saved);
-    } else {
-      setShowWelcomeModal(true);
-    }
-  }, []);
-
-  // Saves user name to localStorage on form submit
-  const handleSaveName = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanName = tempName.trim().slice(0, 20) || 'Neighbor';
-    setUserName(cleanName);
-    setFeedbackName(cleanName);
-    localStorage.setItem('civicbridge_user_name', cleanName);
-    setShowWelcomeModal(false);
-  };
-
-  // Manages call prompt modal and clipboard state
+  // Calling prompt modal state (for desktop app check)
   const [callPrompt, setCallPrompt] = useState<{
     isOpen: boolean;
     phone: string;
@@ -164,13 +102,52 @@ export default function App() {
     cleanedPhone: '',
     resourceName: '',
     isMobile: false,
-    copied: false,
+    copied: false
   });
 
-  const handleInitiateCall = (e: React.MouseEvent | undefined, phone: string, resourceName: string) => {
-    if (e) {
-      e.preventDefault();
+  // Scroll to bottom / top state
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const docHeight = document.documentElement.scrollHeight;
+
+      setShowScrollBottom(scrollY > 250);
+      setIsAtBottom(scrollY + windowHeight >= docHeight - 120);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleScrollToggle = () => {
+    if (isAtBottom) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
     }
+  };
+
+  const handleSaveName = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = tempName.trim().slice(0, 20);
+    setUserName(trimmed);
+    try {
+      if (trimmed) {
+        localStorage.setItem('civicbridge_neighbor_name', trimmed);
+      } else {
+        localStorage.removeItem('civicbridge_neighbor_name');
+      }
+    } catch {
+      // Storage restriction fallback
+    }
+    setShowWelcomeModal(false);
+  };
+
+  const handleInitiateCall = (phone: string, resourceName: string) => {
     const cleaned = phone.replace(/[^\d+]/g, '');
     const isMobileDevice = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -188,921 +165,288 @@ export default function App() {
       cleanedPhone: cleaned,
       resourceName,
       isMobile: isMobileDevice,
-      copied: copyTriggered,
+      copied: copyTriggered
     });
 
-    // Dials directly on mobile via tel: and prompts with confirmation on desktop
     if (isMobileDevice) {
       try {
         window.location.href = `tel:${cleaned}`;
       } catch {
-        // Catches protocol launch errors on restricted browsers
+        // Fallback for restricted mobile iframes
       }
     }
   };
 
-  // Toggles feedback upvote counts and records liked IDs in state
-  const handleToggleLikeFeedback = (feedbackId: string) => {
-    setFeedbacks(prev => {
-      const updated = prev.map(item => {
-        if (item.id === feedbackId) {
-          const isLiked = likedFeedbackIds[feedbackId];
-          const currentLikes = item.likesCount || 0;
-          return { ...item, likesCount: isLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1 };
-        }
-        return item;
-      });
-      try {
-        localStorage.setItem('civicbridge_feedbacks', JSON.stringify(updated));
-      } catch (err) {
-        console.error('Failed to store community feedbacks:', err);
-      }
-      return updated;
-    });
-
-    setLikedFeedbackIds(prev => ({
-      ...prev,
-      [feedbackId]: !prev[feedbackId]
-    }));
-  };
-
-  // Filters feedbacks by public vs anonymous flag
-  const displayedFeedbacks = feedbacks.filter((item) => {
-    if (feedbackSideFilter === 'public') return !item.isAnonymous;
-    if (feedbackSideFilter === 'anonymous') return item.isAnonymous;
-    return true;
-  });
-
-  // Validates inputs and appends new feedback to state and localStorage
-  const handleFeedbackSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFeedbackError('');
-
-    let finalDisplayName = 'A Friendly Neighbor';
-    if (!isAnonymous) {
-      const trimmedName = feedbackName.trim() || userName;
-      if (!trimmedName || trimmedName.length < 2) {
-        setFeedbackError('Please enter your name (at least 2 characters) or select the anonymous option below.');
-        return;
-      }
-      finalDisplayName = trimmedName;
-    }
-
-    const trimmedMsg = feedbackMessage.trim();
-    if (trimmedMsg.length < 10) {
-      setFeedbackError('Please provide at least 10 characters describing your feedback or suggestion.');
-      return;
-    }
-    if (trimmedMsg.length > 500) {
-      setFeedbackError('Message must be 500 characters or fewer.');
-      return;
-    }
-
-    const newId = `fb-${Date.now()}`;
-    const nowFormatted = new Date().toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-
-    const newFeedback: UserFeedback = {
-      id: newId,
-      userName: finalDisplayName,
-      isAnonymous,
-      category: feedbackCategory,
-      resourceName: feedbackResource.trim() || undefined,
-      rating: feedbackRating,
-      message: trimmedMsg,
-      submittedAt: nowFormatted,
-      status: 'Received & Logged',
-      likesCount: 0
-    };
-
-    const updatedFeedbacks = [newFeedback, ...feedbacks];
-    setFeedbacks(updatedFeedbacks);
-    try {
-      localStorage.setItem('civicbridge_feedbacks', JSON.stringify(updatedFeedbacks));
-    } catch (err) {
-      console.error('Failed to save feedbacks:', err);
-    }
-
-    setSubmissionSuccess(true);
-    setFeedbackMessage('');
-    setFeedbackResource('');
-    setTimeout(() => setSubmissionSuccess(false), 5000);
-  };
-
-  // Records user verified status for a resource in state
-  const handleQuickResourceCheck = (resourceId: string) => {
-    setQuickCheckedMap(prev => ({ ...prev, [resourceId]: true }));
-  };
-
-  // Evaluates whether search query or category filter is active
-  const hasActiveFilter = selectedCategory !== '';
-  const hasActiveSearch = searchQuery.trim() !== '';
-  const hasActiveQueryOrFilter = hasActiveFilter || hasActiveSearch;
-
-  // Filters resources across category, name, description, and services
-  const filteredResources = !hasActiveQueryOrFilter
-    ? []
-    : COMMUNITY_RESOURCES.filter((item) => {
-        const categoryMatches = selectedCategory === 'all' || item.category === selectedCategory;
-        const query = searchQuery.toLowerCase().trim();
-        if (selectedCategory !== '' && !categoryMatches) return false;
-        if (query === '') return true;
-
-        return (
-          item.name.toLowerCase().includes(query) ||
-          item.description.toLowerCase().includes(query) ||
-          item.tagline.toLowerCase().includes(query) ||
-          item.categoryLabel.toLowerCase().includes(query) ||
-          item.eligibility.toLowerCase().includes(query) ||
-          item.address.toLowerCase().includes(query) ||
-          item.keyServices.some((svc) => svc.toLowerCase().includes(query))
-        );
-      });
+  const districts: Array<DistrictType | 'all'> = [
+    'all',
+    'Central Cumming',
+    'North Forsyth',
+    'South Forsyth',
+    'East Forsyth',
+    'West Forsyth'
+  ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900 font-sans">
-      
-      {/* Displays 988 emergency lifeline banner with direct dial link */}
-      <aside className="crisis-banner" aria-label="Crisis Hotlines">
-        <div className="crisis-banner-inner">
-          <span className="font-bold">Need a helping hand or someone to talk to?</span>
-          <span>Suicide &amp; Crisis Lifeline: <a href="tel:988" onClick={(e) => handleInitiateCall(e, '988', 'Suicide & Crisis Lifeline')}>988 (24/7)</a></span>
-          <span aria-hidden="true">·</span>
-          <span>Forsyth County 2-1-1: <a href="tel:211" onClick={(e) => handleInitiateCall(e, '211', 'Forsyth County 2-1-1 Helpline')}>Dial 211</a></span>
-          <span aria-hidden="true">·</span>
-          <span>The Place of Forsyth: <a href="tel:7708871098" onClick={(e) => handleInitiateCall(e, '(770) 887-1098', 'The Place of Forsyth County')}>(770) 887-1098</a></span>
-        </div>
-      </aside>
+    <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900">
+      {/* Skip to main content landmark for keyboard accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-50 bg-amber-800 text-white px-4 py-2 rounded-lg font-bold shadow-lg"
+      >
+        Skip to main content
+      </a>
 
-      {/* Renders site branding and top-level tab buttons */}
-      <header className="civic-header">
-        <div className="civic-container civic-header-inner">
-          <button 
-            type="button"
-            onClick={() => { setCurrentTab('resources'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            className="civic-brand"
-            aria-label="CivicBridge Home"
-          >
-            <span className="civic-brand-icon" aria-hidden="true">C</span>
-            <div>
-              <span className="civic-brand-title">CivicBridge</span>
-              <span className="civic-brand-sub">Community Resource Directory · Forsyth County, GA</span>
-            </div>
-          </button>
+      {/* Global header navigation */}
+      <Navbar
+        currentTab={currentTab}
+        onSelectTab={setCurrentTab}
+        userName={userName}
+        onOpenNameModal={() => {
+          setTempName(userName);
+          setShowWelcomeModal(true);
+        }}
+        onCall={handleInitiateCall}
+      />
 
-          <nav className="civic-nav" aria-label="Main Navigation">
-            {(['resources', 'events', 'feedback', 'about'] as const).map((tab) => (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setCurrentTab(tab)}
-                className={`civic-nav-link ${currentTab === tab ? 'civic-nav-link--active' : ''}`}
-                aria-current={currentTab === tab ? 'page' : undefined}
-              >
-                {tab === 'resources' && 'Find Resources'}
-                {tab === 'events' && 'Local Events'}
-                {tab === 'feedback' && 'Neighbor Notes'}
-                {tab === 'about' && 'Copyright & Specifications'}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </header>
+      {/* Autocomplete datalist for instant search */}
+      <datalist id="civic-search-suggestions">
+        {allResources.slice(0, 30).map(r => (
+          <option key={r.id} value={r.name} />
+        ))}
+      </datalist>
 
-      <main className="flex-1 py-8" id="main-content">
-        {/* Tab 1: Find Resources */}
+      {/* Main page content area */}
+      <main id="main-content" className="flex-1 py-6 sm:py-8">
+        {/* TAB 1: FIND RESOURCES */}
         {currentTab === 'resources' && (
-          <div className="civic-container space-y-8">
-            
-            <section className="hero-card" aria-labelledby="welcome-heading">
-              <div className="space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="hero-tagline">Forsyth County Community Directory</span>
-                    {userName && (
+          <div className="civic-container space-y-6">
+            {/* Hero section */}
+            <header className="hero-banner relative overflow-hidden min-h-[480px] rounded-[32px] p-8 md:p-16 flex flex-col justify-center bg-gradient-to-br from-[#71320f] to-[#4b210d] shadow-lg border border-amber-900/60">
+              <div className="relative z-10 max-w-4xl space-y-5">
+                <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 text-amber-950 border border-amber-300 px-5 py-3 font-bold text-xs sm:text-sm shadow-xs self-start">
+                  <Sparkles className="w-4 h-4 text-amber-900 shrink-0" />
+                  <span>FORSYTH COUNTY COMMUNITY DIRECTORY</span>
+                </span>
+
+                <h1
+                  style={{ color: '#ffffff' }}
+                  className="text-white font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight max-w-4xl"
+                >
+                  Find local help in Cumming without the runaround.
+                </h1>
+
+                <p className="text-white/85 text-lg md:text-xl leading-relaxed">
+                  Telephone numbers, hours, and addresses for emergency food pantries, free medical clinics, preschools, and home repair services across Forsyth County.
+                </p>
+
+                {/* Instant search input */}
+                <div className="pt-2">
+                  <div className="relative max-w-xl">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                    <input
+                      type="text"
+                      list="civic-search-suggestions"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search clinics, pantries, mechanics, schools..."
+                      className="w-full rounded-2xl border border-stone-200 bg-white px-6 py-5 pl-14 text-base sm:text-lg text-stone-900 placeholder:text-stone-400 shadow-md focus:outline-none focus:ring-4 focus:ring-amber-500/30 transition-all"
+                      aria-label="Search community resources"
+                    />
+                    {searchQuery && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setTempName(userName === 'Neighbor' ? '' : userName);
-                          setShowWelcomeModal(true);
-                        }}
-                        className="text-xs text-stone-500 hover:text-amber-800 underline cursor-pointer flex items-center gap-1"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-700 rounded-full"
+                        aria-label="Clear search query"
                       >
-                        <User className="w-3.5 h-3.5 text-stone-400" />
-                        <span>(Not {userName}? Change name)</span>
+                        <X className="w-4 h-4" />
                       </button>
                     )}
                   </div>
-
-                  <div className="inline-flex items-center gap-2 bg-stone-100/90 border border-stone-200/80 px-2.5 py-1 rounded-full text-[11px] text-stone-600 font-medium">
-                    <span className="font-mono text-stone-500 uppercase text-[10px]">Friendly on:</span>
-                    <span className="inline-flex items-center gap-1 text-stone-800" title="iPhone iOS Safari & Chrome Compatible">
-                      <Smartphone className="w-3.5 h-3.5 text-amber-800" />
-                      <span>iPhone</span>
-                    </span>
-                    <span className="text-stone-300">·</span>
-                    <span className="inline-flex items-center gap-1 text-stone-800" title="PC Desktop Browsers Compatible">
-                      <Monitor className="w-3.5 h-3.5 text-amber-800" />
-                      <span>PC / Laptop</span>
-                    </span>
-                    <span className="text-stone-300">·</span>
-                    <span className="inline-flex items-center gap-1 text-stone-800" title="Android & Mobile Phone Compatible">
-                      <Smartphone className="w-3.5 h-3.5 text-amber-800" />
-                      <span>Any Phone</span>
-                    </span>
-                  </div>
                 </div>
-
-                <h1 id="welcome-heading" className="hero-title">
-                  {userName ? `Hey ${userName}, welcome in.` : 'Find what you need in Forsyth County.'}
-                </h1>
-
-                <p className="hero-desc">
-                  Need a hand? We put together 220 local places that actually pick up the phone. Whether you&apos;re running low on groceries this week, dealing with a leaking pipe, or searching for free dental care, you&apos;ll find direct contacts and open hours right here.
-                </p>
-
-                <form 
-                  role="search" 
-                  onSubmit={(e) => e.preventDefault()} 
-                  className="search-wrapper"
-                >
-                  <label htmlFor="resource-search" className="sr-only">
-                    Search CivicBridge Directory
-                  </label>
-                  <Search className="w-4 h-4 search-icon-adornment" aria-hidden="true" />
-                  <input
-                    id="resource-search"
-                    type="search"
-                    list="civic-search-suggestions"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by name, service, or need (e.g. food pantries, clinic, elementary schools, car repairs, daycare)..."
-                    className="search-input"
-                    aria-label="Search resources"
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      className="search-clear-btn"
-                      aria-label="Clear search query"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  )}
-
-                  <datalist id="civic-search-suggestions">
-                    <option value="Elementary Schools" />
-                    <option value="Middle Schools" />
-                    <option value="High Schools" />
-                    <option value="Lanier Technical College" />
-                    <option value="University of North Georgia" />
-                    <option value="Auto Repair & Brakes" />
-                    <option value="Plumbing & HVAC Repair" />
-                    <option value="Handyman & Home Repairs" />
-                    <option value="Appliance & Electronics Repair" />
-                    <option value="The Place of Forsyth" />
-                    <option value="Good Shepherd Clinic" />
-                    <option value="Childcare & Daycare" />
-                  </datalist>
-                </form>
               </div>
-            </section>
 
-            {/* Renders horizontal category filter buttons */}
-            <section aria-label="Category Filters" className="space-y-3">
-              <fieldset>
-                <legend className="sr-only">Select a resource category</legend>
-                <div className="filter-toolbar" role="group">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedCategory('all')}
-                    className={`category-pill ${selectedCategory === 'all' ? 'category-pill--active' : ''}`}
-                    aria-pressed={selectedCategory === 'all'}
-                  >
-                    All Places (220)
-                  </button>
-                  {CATEGORIES.filter(c => c.id !== 'all').map((cat) => {
-                    const isActive = selectedCategory === cat.id;
-                    return (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => setSelectedCategory(cat.id)}
-                        className={`category-pill ${isActive ? 'category-pill--active' : ''}`}
-                        aria-pressed={isActive}
-                      >
-                        {cat.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
+              {/* Subtle background glow */}
+              <div className="absolute right-0 bottom-0 top-0 w-1/2 opacity-15 pointer-events-none bg-radial from-amber-400 to-transparent" />
+            </header>
 
-              <div className="text-xs text-stone-600 pt-1 flex items-center justify-between flex-wrap gap-2">
-                <span>
-                  {hasActiveQueryOrFilter ? (
-                    <>
-                      Found <strong>{filteredResources.length}</strong> friendly places
-                      {selectedCategory && selectedCategory !== 'all' && (
-                        <span> in <strong>{CATEGORIES.find(c => c.id === selectedCategory)?.label}</strong></span>
-                      )}
-                      {searchQuery && (
-                        <span> matching &ldquo;<strong>{searchQuery}</strong>&rdquo;</span>
-                      )}
-                    </>
-                  ) : (
-                    <span>
-                      Pick a card below or type in search above. We&apos;ve checked 220 spots across Forsyth County.
-                    </span>
-                  )}
+            {/* Filter controls */}
+            <section className="bg-white border border-stone-200 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4" aria-label="Directory Filters">
+              {/* Category pills */}
+              <div>
+                <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide block mb-2">
+                  Browse by Category:
                 </span>
-                {hasActiveQueryOrFilter && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedCategory('');
-                      setSearchQuery('');
-                    }}
-                    className="text-amber-800 hover:text-amber-950 font-semibold underline cursor-pointer text-xs flex items-center gap-1"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    <span>Clear &amp; Show Categories</span>
-                  </button>
-                )}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                  {CATEGORIES.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors cursor-pointer ${
+                        selectedCategory === cat.id
+                          ? 'bg-amber-800 text-white font-semibold shadow-xs'
+                          : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* District pills and verified toggle */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-stone-100">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide mr-1">
+                    District:
+                  </span>
+                  {districts.map((dist) => (
+                    <button
+                      key={dist}
+                      type="button"
+                      onClick={() => setSelectedDistrict(dist)}
+                      className={`px-2.5 py-1 rounded-full text-xs transition-colors cursor-pointer ${
+                        selectedDistrict === dist
+                          ? 'bg-stone-800 text-white font-semibold'
+                          : 'bg-stone-100 hover:bg-stone-200 text-stone-600'
+                      }`}
+                    >
+                      {dist === 'all' ? 'All Districts' : dist}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-xs font-medium text-stone-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={onlyVerified}
+                      onChange={(e) => setOnlyVerified(e.target.checked)}
+                      className="rounded text-amber-800 focus:ring-amber-500 cursor-pointer"
+                    />
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                    <span>Verified records only</span>
+                  </label>
+
+                  {isFiltered && (
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="text-xs text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer"
+                    >
+                      Reset filters
+                    </button>
+                  )}
+                </div>
               </div>
             </section>
 
-            {/* Displays discovery cards when idle or matched listings when filtered */}
-            {!hasActiveQueryOrFilter ? (
-              <section aria-label="Category Explorer" className="space-y-4">
-                <div className="p-5 bg-white border border-stone-200 rounded-2xl shadow-2xs space-y-2">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-800" />
-                      <span>Start with a category.</span>
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedCategory('all')}
-                      className="btn btn-outline text-xs cursor-pointer font-semibold"
-                    >
-                      Show All 220 Places
-                    </button>
-                  </div>
-                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed">
-                    Pick a card below, or type in the search bar. We don&apos;t dump all 220 cards down the page at once so your phone stays fast. Each box holds at least 20 verified spots around Cumming, with checked phone numbers and directions.
-                  </p>
+            {/* Content area: Discovery tiles when idle, or ResourceCard grid when filtered */}
+            {!isFiltered ? (
+              <section className="space-y-4" aria-label="Category Overview">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-bold font-serif text-stone-900">
+                    Explore 220 Resources across Forsyth County
+                  </h2>
+                  <span className="text-xs font-mono text-stone-500">
+                    20 listings per category
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  {CATEGORY_DISCOVERY_ITEMS.map((item) => (
+                  {CATEGORIES.filter(c => c.id !== 'all').map((cat) => (
                     <button
-                      key={item.id}
+                      key={cat.id}
                       type="button"
-                      onClick={() => setSelectedCategory(item.id)}
-                      className="p-4 rounded-xl border border-stone-200 bg-white hover:border-amber-800 hover:shadow-md transition-all text-left flex items-start gap-3.5 cursor-pointer group shadow-2xs"
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className="p-4 bg-white border border-stone-200 hover:border-amber-700/50 rounded-2xl text-left shadow-2xs hover:shadow-xs transition-all cursor-pointer group flex flex-col justify-between"
                     >
-                      <span className="text-2xl p-2.5 bg-stone-100 rounded-xl group-hover:bg-amber-100 transition-colors shrink-0" aria-hidden="true">
-                        {item.icon}
-                      </span>
-                      <div className="space-y-1 flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1.5">
-                          <strong className="text-xs sm:text-sm font-bold font-serif text-stone-900 group-hover:text-amber-900 transition-colors">
-                            {item.label}
-                          </strong>
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0">
-                            {item.count}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-bold text-stone-900 font-serif text-sm group-hover:text-amber-800 transition-colors">
+                            {cat.label}
+                          </h3>
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                            20 Places
                           </span>
                         </div>
-                        <p className="text-[11.5px] text-stone-600 leading-snug line-clamp-2">
-                          {item.desc}
+                        <p className="text-xs text-stone-600 line-clamp-2">
+                          Verified local services, operating hours, direct phone contacts, and physical locations in Cumming &amp; Forsyth.
                         </p>
-                        <span className="text-[11px] font-semibold text-amber-800 group-hover:underline inline-flex items-center gap-0.5 pt-0.5">
-                          See 20 Places &rarr;
-                        </span>
                       </div>
+                      <span className="text-xs font-bold text-amber-800 group-hover:underline pt-3 inline-flex items-center gap-1">
+                        View Category &rarr;
+                      </span>
                     </button>
                   ))}
                 </div>
               </section>
             ) : (
-              <>
-                {/* Renders responsive grid of matched resource cards */}
-                <div className="civic-grid-2col" role="region" aria-label="Resource Listings">
-                  {filteredResources.map((res) => (
-                    <article
-                      key={res.id}
-                      id={`res-${res.id}`}
-                      className="resource-card"
-                    >
-                      <div>
-                        <header className="resource-header">
-                          <span className="resource-category-tag">{res.categoryLabel}</span>
-                          <span className="resource-cost-badge">{res.cost}</span>
-                        </header>
-
-                        <h2 className="resource-title">{res.name}</h2>
-                        <p className="resource-tagline">{res.tagline}</p>
-
-                        <address className="resource-contact-block">
-                          <div className="resource-contact-row">
-                            <Phone className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
-                            <a 
-                              href={`tel:${res.phone.replace(/[^\d+]/g, '')}`} 
-                              onClick={(e) => handleInitiateCall(e, res.phone, res.name)}
-                              className="resource-contact-link"
-                              title={`Call ${res.name} at ${res.phone}`}
-                            >
-                              {res.phone}
-                            </a>
-                          </div>
-                          <div className="resource-contact-row">
-                            <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
-                            <span className="truncate">{res.address}</span>
-                          </div>
-                          <div className="resource-contact-row">
-                            <Clock className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
-                            <time className="truncate">{res.hours}</time>
-                          </div>
-                        </address>
-
-                        <section className="offerings-section" aria-label="Offerings">
-                          <strong className="offerings-heading">What they help with:</strong>
-                          <ul className="offerings-grid">
-                            {res.keyServices.slice(0, 4).map((svc, i) => (
-                              <li key={i} className="offering-item" title={svc}>
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
-                                <span className="truncate">{svc}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </section>
-                      </div>
-
-                      <footer className="resource-footer">
-                        <button
-                          type="button"
-                          onClick={() => setActiveResource(res)}
-                          className="btn btn-outline text-xs"
-                          aria-haspopup="dialog"
-                        >
-                          More details
-                        </button>
-                        <a
-                          href={`tel:${res.phone.replace(/[^\d+]/g, '')}`}
-                          onClick={(e) => handleInitiateCall(e, res.phone, res.name)}
-                          className="btn btn-primary text-xs inline-flex items-center gap-1.5 cursor-pointer"
-                          aria-label={`Call ${res.name} at ${res.phone}`}
-                        >
-                          <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
-                          <span>Call now</span>
-                        </a>
-                      </footer>
-                    </article>
-                  ))}
+              <section className="space-y-4" aria-label="Filtered Resource Listings">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900">
+                    Found {filteredResources.length} {filteredResources.length === 1 ? 'place' : 'places'}
+                  </h2>
+                  <span className="text-xs font-mono text-stone-500">
+                    Showing results for current filters
+                  </span>
                 </div>
 
-                {filteredResources.length === 0 && (
-                  <section className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
+                {filteredResources.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredResources.map((res) => (
+                      <ResourceCard
+                        key={res.id}
+                        resource={res}
+                        onSelect={setActiveResource}
+                        onCall={handleInitiateCall}
+                        isVerified={res.isVerified || verifiedListings[res.id]}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
                     <p className="text-base font-semibold text-stone-800">
-                      We couldn&apos;t find any places matching &ldquo;{searchQuery}&rdquo;.
+                      No organizations matched your current filters.
                     </p>
-                    <p className="text-xs text-stone-500">
-                      Try searching for everyday words like &ldquo;schools&rdquo;, &ldquo;repairs&rdquo;, &ldquo;food&rdquo;, &ldquo;clinic&rdquo;, or &ldquo;childcare&rdquo;.
+                    <p className="text-xs text-stone-500 max-w-sm mx-auto">
+                      Try searching with fewer keywords, selecting &ldquo;All Districts&rdquo;, or resetting your filters.
                     </p>
                     <button
                       type="button"
-                      onClick={() => { setSearchQuery(''); setSelectedCategory(''); }}
-                      className="btn btn-primary text-xs"
+                      onClick={resetFilters}
+                      className="btn btn-primary text-xs cursor-pointer"
                     >
-                      Back to All Categories
+                      Clear All Filters
                     </button>
-                  </section>
+                  </div>
                 )}
-              </>
+              </section>
             )}
-
           </div>
         )}
 
-        {/* Tab 2: Local Gatherings & Community Events */}
+        {/* TAB 2: LOCAL GATHERINGS */}
         {currentTab === 'events' && (
-          <div className="civic-container space-y-6">
-            <header>
-              <h1 className="hero-title">
-                Local Gatherings &amp; Community Events
-              </h1>
-              <p className="hero-desc">
-                Things happening around Cumming this month. These events are open to the public and free to attend, covering grocery distribution mornings, drive-through food boxes, family recreation days, and community health fairs.
-              </p>
-            </header>
-
-            <div className="space-y-4">
-              {COMMUNITY_EVENTS.map((evt) => (
-                <article key={evt.id} className="event-card">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="space-y-1.5 max-w-xl">
-                      <div className="event-badge-datetime">
-                        <time dateTime={evt.date}>{evt.date}</time> · <span>{evt.time}</span>
-                      </div>
-                      <h2 className="event-title">{evt.title}</h2>
-                      <p className="event-description">{evt.description}</p>
-                      
-                      <address className="flex flex-wrap items-center gap-2 text-xs text-stone-500 pt-1">
-                        <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
-                        <span>{evt.location}</span>
-                        <span aria-hidden="true">·</span>
-                        <span>Organized by {evt.organizer}</span>
-                      </address>
-                    </div>
-
-                    <a
-                      href="tel:7708871098"
-                      onClick={(e) => handleInitiateCall(e, '(770) 887-1098', evt.title)}
-                      className="btn btn-primary text-xs whitespace-nowrap self-start sm:self-center inline-flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>Call organizer</span>
-                    </a>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
+          <EventsSection onCall={handleInitiateCall} />
         )}
 
-        {/* Tab 3: Neighbor Notes Community Board */}
+        {/* TAB 3: NEIGHBOR NOTES */}
         {currentTab === 'feedback' && (
-          <div className="civic-container space-y-6">
-            <header className="border-b border-stone-200 pb-3">
-              <span className="hero-tagline">
-                Community Voices &amp; Neighbor Notes
-              </span>
-              <h1 className="hero-title mt-1">
-                Neighbor Notes &amp; Community Board
-              </h1>
-              <p className="hero-desc mb-0">
-                Been to one of these spots recently? Leave a note. If someone changed their hours or treated your family with real care, speak up. It takes thirty seconds and saves the next neighbor a wasted trip.
-              </p>
-            </header>
-
-            {/* Splits feedback view into form and feed columns */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              
-              {/* Renders feedback submission form container */}
-              <div className="lg:col-span-5 space-y-4">
-                
-                {/* Displays confirmation alert when submission succeeds */}
-                {submissionSuccess && (
-                  <div role="status" aria-live="polite" className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>Your note has been posted to the community board! Thank you for helping neighbors.</span>
-                  </div>
-                )}
-
-                <section className="feedback-card" aria-labelledby="form-heading">
-                  <h2 id="form-heading" className="text-lg font-bold font-serif text-stone-900 mb-1 flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-amber-800" aria-hidden="true" />
-                    <span>Drop a quick note or update</span>
-                  </h2>
-                  <p className="text-xs text-stone-600 mb-4">
-                    Spot a wrong phone number or had a great visit? Let folks know. You can sign your name or keep it totally anonymous.
-                  </p>
-
-                  {feedbackError && (
-                    <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                      <span>{feedbackError}</span>
-                    </div>
-                  )}
-
-                  <form onSubmit={handleFeedbackSubmit} noValidate className="space-y-3.5">
-                    
-                    {/* Toggles author attribution between name and anonymous */}
-                    <fieldset className="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-2">
-                      <legend className="text-xs font-bold text-stone-900 flex items-center justify-between w-full pb-1">
-                        <span className="flex items-center gap-1.5">
-                          {isAnonymous ? <EyeOff className="w-4 h-4 text-stone-600" /> : <Eye className="w-4 h-4 text-amber-800" />}
-                          <span>Would you like your name shown?</span>
-                        </span>
-                        <span className={`text-[10.5px] font-mono font-bold px-2 py-0.5 rounded-full ${
-                          isAnonymous ? 'bg-stone-200 text-stone-800' : 'bg-amber-100 text-amber-900'
-                        }`}>
-                          {isAnonymous ? 'Anonymous' : 'Public Name'}
-                        </span>
-                      </legend>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
-                        <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
-                          !isAnonymous 
-                            ? 'border-amber-800 bg-amber-50/70 text-amber-950 font-medium shadow-xs' 
-                            : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
-                        }`}>
-                          <input 
-                            type="radio" 
-                            name="anonymity-preference" 
-                            checked={!isAnonymous} 
-                            onChange={() => setIsAnonymous(false)} 
-                            className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
-                          />
-                          <div>
-                            <span className="font-bold block">Yes, show my name</span>
-                            <span className="text-[11px] text-stone-500 block leading-tight mt-0.5">
-                              Displays your name alongside your note
-                            </span>
-                          </div>
-                        </label>
-
-                        <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
-                          isAnonymous 
-                            ? 'border-amber-800 bg-amber-50/70 text-amber-950 font-medium shadow-xs' 
-                            : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
-                        }`}>
-                          <input 
-                            type="radio" 
-                            name="anonymity-preference" 
-                            checked={isAnonymous} 
-                            onChange={() => setIsAnonymous(true)} 
-                            className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
-                          />
-                          <div>
-                            <span className="font-bold block">Keep me anonymous</span>
-                            <span className="text-[11px] text-stone-500 block leading-tight mt-0.5">
-                              Hides your name; displays as &ldquo;A Friendly Neighbor&rdquo;
-                            </span>
-                          </div>
-                        </label>
-                      </div>
-                    </fieldset>
-
-                    <div className="form-group">
-                      <label htmlFor="fb-name" className="form-label">
-                        <span>{isAnonymous ? 'Your Name or Nickname (Private):' : 'Your Name or Nickname:'}</span>
-                        <span className="text-[11px] text-stone-400 font-mono">
-                          {isAnonymous ? 'Hidden from feed' : 'Required'}
-                        </span>
-                      </label>
-                      <input
-                        id="fb-name"
-                        type="text"
-                        maxLength={30}
-                        value={isAnonymous ? '' : feedbackName}
-                        onChange={(e) => setFeedbackName(e.target.value)}
-                        placeholder={isAnonymous ? 'Anonymous mode enabled (name will not be shown)' : 'e.g. Alex M. or Forsyth Neighbor'}
-                        className={`form-control ${isAnonymous ? 'bg-stone-100 text-stone-400 cursor-not-allowed' : ''}`}
-                        disabled={isAnonymous}
-                        required={!isAnonymous}
-                      />
-                      {isAnonymous && (
-                        <p className="text-[11px] text-stone-500 flex items-center gap-1.5 pt-1">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                          <span>Your privacy is protected. Displays as <strong>&ldquo;A Friendly Neighbor&rdquo;</strong>.</span>
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="fb-category" className="form-label">
-                        <span>What kind of note is this?</span>
-                      </label>
-                      <select
-                        id="fb-category"
-                        value={feedbackCategory}
-                        onChange={(e) => setFeedbackCategory(e.target.value as UserFeedback['category'])}
-                        className="form-control"
-                      >
-                        <option value="Accuracy & Updates">Hours, phone, or address update</option>
-                        <option value="Suggest New Resource">Suggest a new local place or program</option>
-                        <option value="Website Accessibility">Website ease of use or accessibility</option>
-                        <option value="General Suggestion">General neighbor tip or suggestion</option>
-                      </select>
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="fb-resource" className="form-label">
-                        <span>Which place is this about? (Optional):</span>
-                      </label>
-                      <input
-                        id="fb-resource"
-                        type="text"
-                        list="civic-search-suggestions"
-                        value={feedbackResource}
-                        onChange={(e) => setFeedbackResource(e.target.value)}
-                        placeholder="e.g. The Place, Good Shepherd Clinic, Lanier Tech, Auto Repair..."
-                        className="form-control"
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <span className="form-label">
-                        <span>How was your experience?</span>
-                      </span>
-                      <div className="grid grid-cols-3 gap-2 pt-0.5">
-                        {(['Very Helpful', 'Helpful', 'Needs Improvement'] as const).map((r) => (
-                          <button
-                            key={r}
-                            type="button"
-                            onClick={() => setFeedbackRating(r)}
-                            className={`py-2 px-2 text-xs font-semibold rounded-lg border cursor-pointer transition-colors ${
-                              feedbackRating === r
-                                ? 'bg-amber-800 text-white border-amber-800 shadow-xs'
-                                : 'bg-stone-50 border-stone-200 text-stone-700 hover:bg-stone-100'
-                            }`}
-                          >
-                            {r === 'Very Helpful' ? 'Wonderful' : r === 'Helpful' ? 'Helpful' : 'Could Be Better'}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label htmlFor="fb-message" className="form-label">
-                        <span>Your Note or Details:</span>
-                        <output htmlFor="fb-message" className="text-[11px] text-stone-400 font-mono">
-                          {feedbackMessage.length}/500 chars (min 10)
-                        </output>
-                      </label>
-                      <textarea
-                        id="fb-message"
-                        rows={4}
-                        maxLength={500}
-                        value={feedbackMessage}
-                        onChange={(e) => setFeedbackMessage(e.target.value)}
-                        placeholder="Share what you noticed, a tip for fellow families, or what needs updating..."
-                        className="form-control resize-y"
-                        required
-                      ></textarea>
-                    </div>
-
-                    <div className="pt-2">
-                      <button
-                        type="submit"
-                        className="btn btn-primary w-full py-2.5 text-xs font-semibold shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-                      >
-                        <Send className="w-4 h-4" />
-                        <span>Post to Community Board</span>
-                      </button>
-                    </div>
-
-                  </form>
-                </section>
-              </div>
-
-              {/* Live community feedback feed */}
-              <aside className="lg:col-span-7 space-y-4" aria-label="Community Feedback Board">
-                <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-xs space-y-4">
-                  
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Users className="w-5 h-5 text-amber-800" aria-hidden="true" />
-                        <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900">
-                          Community Board &amp; Neighbor Notes
-                        </h2>
-                      </div>
-                      <p className="text-xs text-stone-600 mt-0.5">
-                        Real updates, experiences, and kind words shared by local Forsyth County residents.
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 self-start sm:self-auto">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-200">
-                        <span>{feedbacks.length} Neighbor Notes</span>
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Filter notes by public vs anonymous */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
-                    <div className="inline-flex rounded-lg border border-stone-200 bg-stone-50 p-1 text-xs">
-                      <button
-                        type="button"
-                        onClick={() => setFeedbackSideFilter('all')}
-                        className={`px-3 py-1 font-semibold rounded-md transition-colors cursor-pointer ${
-                          feedbackSideFilter === 'all'
-                            ? 'bg-amber-800 text-white shadow-xs'
-                            : 'text-stone-600 hover:text-stone-900'
-                        }`}
-                      >
-                        All ({feedbacks.length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFeedbackSideFilter('public')}
-                        className={`px-3 py-1 font-semibold rounded-md transition-colors cursor-pointer ${
-                          feedbackSideFilter === 'public'
-                            ? 'bg-amber-800 text-white shadow-xs'
-                            : 'text-stone-600 hover:text-stone-900'
-                        }`}
-                      >
-                        Signed ({feedbacks.filter(f => !f.isAnonymous).length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setFeedbackSideFilter('anonymous')}
-                        className={`px-3 py-1 font-semibold rounded-md transition-colors cursor-pointer ${
-                          feedbackSideFilter === 'anonymous'
-                            ? 'bg-amber-800 text-white shadow-xs'
-                            : 'text-stone-600 hover:text-stone-900'
-                        }`}
-                      >
-                        Anonymous ({feedbacks.filter(f => f.isAnonymous).length})
-                      </button>
-                    </div>
-
-                    <span className="text-[11px] text-stone-500 font-mono">
-                      Showing {displayedFeedbacks.length} notes
-                    </span>
-                  </div>
-
-                  <div className="space-y-3.5 max-h-[780px] overflow-y-auto pr-1">
-                    {displayedFeedbacks.length === 0 ? (
-                      <div className="text-center py-10 px-4 bg-stone-50 rounded-xl border border-dashed border-stone-200 text-xs text-stone-500">
-                        No neighbor notes found in this filter yet.
-                      </div>
-                    ) : (
-                      displayedFeedbacks.map((item) => (
-                        <article 
-                          key={item.id}
-                          className="p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-300 transition-all space-y-2.5 shadow-2xs"
-                        >
-                          <div className="flex items-start justify-between gap-2 flex-wrap">
-                            <div className="flex items-center gap-1.5 flex-wrap">
-                              {item.isAnonymous ? (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-stone-100 text-stone-700 border border-stone-300">
-                                  <EyeOff className="w-3.5 h-3.5 text-stone-500" />
-                                  <span>A Friendly Neighbor</span>
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">
-                                  <User className="w-3.5 h-3.5 text-amber-700" />
-                                  <span>{item.userName}</span>
-                                </span>
-                              )}
-
-                              <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-stone-100 text-stone-600 border border-stone-200/60">
-                                {item.category}
-                              </span>
-
-                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
-                                item.rating === 'Very Helpful'
-                                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                                  : item.rating === 'Helpful'
-                                  ? 'bg-sky-50 text-sky-800 border border-sky-200'
-                                  : 'bg-amber-50 text-amber-800 border border-amber-200'
-                              }`}>
-                                {item.rating === 'Very Helpful' ? 'Wonderful' : item.rating === 'Helpful' ? 'Helpful' : 'Could Be Better'}
-                              </span>
-                            </div>
-
-                            <time className="text-[11px] text-stone-400 font-mono shrink-0">
-                              {item.submittedAt}
-                            </time>
-                          </div>
-
-                          {item.resourceName && (
-                            <div className="flex items-center gap-1.5 text-xs text-stone-700">
-                              <MapPin className="w-3.5 h-3.5 text-amber-800 shrink-0" />
-                              <span>About: <strong className="text-stone-900">{item.resourceName}</strong></span>
-                            </div>
-                          )}
-
-                          <blockquote className="text-xs sm:text-sm text-stone-800 leading-relaxed bg-stone-50 p-3 rounded-lg border border-stone-200/70">
-                            &ldquo;{item.message}&rdquo;
-                          </blockquote>
-
-                          <div className="flex items-center justify-between pt-1 border-t border-stone-100 text-[11px]">
-                            <span className="text-stone-400 text-[11px]">Neighbor Voice</span>
-                            <button
-                              type="button"
-                              onClick={() => handleToggleLikeFeedback(item.id)}
-                              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-semibold transition-colors cursor-pointer ${
-                                likedFeedbackIds[item.id]
-                                  ? 'bg-amber-100 text-amber-900 border-amber-300'
-                                  : 'bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100 hover:text-stone-900'
-                              }`}
-                              aria-label={`Mark feedback as helpful, currently ${item.likesCount || 0} votes`}
-                            >
-                              <ThumbsUp className={`w-3.5 h-3.5 ${likedFeedbackIds[item.id] ? 'text-amber-800 fill-amber-800' : 'text-stone-500'}`} />
-                              <span>Helpful ({item.likesCount || 0})</span>
-                            </button>
-                          </div>
-                        </article>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </aside>
-
-            </div>
-          </div>
+          <FeedbackSection
+            feedbacks={feedbacks}
+            allCount={allFeedbacksCount}
+            filterType={filterType}
+            onFilterChange={setFilterType}
+            onSubmitFeedback={addFeedback}
+            onToggleLike={toggleLike}
+            likedFeedbackIds={likedFeedbacks}
+            initialResourceName={feedbackPrefillResource}
+          />
         )}
 
-        {/* Tab 4: Copyright Compliance & Platform Technical Standards */}
+        {/* TAB 4: COPYRIGHT & STANDARDS */}
         {currentTab === 'about' && (
           <article className="civic-container space-y-6">
             <header className="border-b border-stone-200 pb-3">
@@ -1118,7 +462,7 @@ export default function App() {
               </p>
             </header>
 
-            {/* Displays community mission statement and scope summary */}
+            {/* Scope block */}
             <section className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-6 space-y-3 shadow-2xs">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-800" />
@@ -1137,7 +481,7 @@ export default function App() {
               </p>
             </section>
 
-            {/* Renders visual copyright compliance and intellectual property provenance matrix */}
+            {/* Visual copyright table */}
             <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
                 <div className="flex items-center gap-2">
@@ -1155,7 +499,6 @@ export default function App() {
                 In accordance with federal copyright standards and open records practices, all intellectual property, libraries, media assets, fonts, and data sources utilized across CivicBridge are substantiated below with explicit legal basis and license provenance:
               </p>
 
-              {/* Renders comprehensive table of software, media, and data licenses */}
               <div className="civic-table-wrapper">
                 <table className="civic-table">
                   <caption className="sr-only">Substantiated Visual Copyright Compliance Matrix</caption>
@@ -1207,7 +550,7 @@ export default function App() {
                     <tr>
                       <th scope="row" className="font-semibold text-stone-900">Visual Media</th>
                       <td>Forsyth County Civic &amp; Health Assets</td>
-                      <td>Original Student Photography &amp; Vector Assets</td>
+                      <td>Original Photography &amp; Vector Assets</td>
                       <td>Captured on-site in Forsyth County and created as original SVG vector graphics; no copyrighted third-party stock photos.</td>
                       <td><span className="inline-flex items-center gap-1 text-emerald-700 font-bold font-mono"><CheckCircle2 className="w-3.5 h-3.5" /> Verified</span></td>
                     </tr>
@@ -1229,7 +572,7 @@ export default function App() {
                 </table>
               </div>
 
-              {/* Displays fair use doctrine defense and DMCA agent contact details */}
+              {/* Fair use and DMCA */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 text-xs">
                 <div className="p-4 rounded-xl border border-stone-200 bg-stone-50/70 space-y-2">
                   <div className="flex items-center gap-2">
@@ -1247,13 +590,13 @@ export default function App() {
                     <strong className="text-stone-900 font-serif text-sm">DMCA Notice &amp; Takedown Protocol</strong>
                   </div>
                   <p className="text-stone-600 leading-relaxed text-[11.5px]">
-                    CivicBridge respects intellectual property rights and adheres to the Digital Millennium Copyright Act (17 U.S.C. § 512). If any organization or copyright holder identifies content that requires correction, attribution adjustment, or removal, notifications may be directed to our project repository or team email at <span className="font-mono text-amber-900 font-semibold">copyright@civicbridge.org</span>. Claims receive an expedited 24-hour review and response protocol.
+                    CivicBridge respects intellectual property rights and adheres to the Digital Millennium Copyright Act (17 U.S.C. § 512). If any organization identifies content requiring correction, attribution adjustment, or removal, notifications may be directed to <span className="font-mono text-amber-900 font-semibold">copyright@civicbridge.org</span>. Claims receive an expedited 24-hour review and response protocol.
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* Renders multi-platform hardware and viewport compatibility matrix */}
+            {/* Viewport matrix */}
             <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
                 <div className="flex items-center gap-2">
@@ -1288,19 +631,11 @@ export default function App() {
                   <ul className="text-xs text-stone-600 space-y-1.5 pt-1.5 border-t border-stone-200/60">
                     <li className="flex items-start gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Direct <code className="font-mono text-[10px] text-amber-900">tel:</code> protocol launch to phone dialer</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Safe-area padding protecting Dynamic Island and home bar</span>
+                      <span>Direct phone dialer protocol launch</span>
                     </li>
                     <li className="flex items-start gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                       <span>Thumb touch targets exceeding WCAG 48x48px requirement</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Zero horizontal page overflow or viewport jank</span>
                     </li>
                   </ul>
                 </div>
@@ -1327,14 +662,6 @@ export default function App() {
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                       <span>Automatic phone clipboard copy on dial attempt</span>
                     </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>2-column card grid &amp; side-by-side feedback board</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>High-contrast keyboard focus rings &amp; ESC key close</span>
-                    </li>
                   </ul>
                 </div>
 
@@ -1359,14 +686,6 @@ export default function App() {
                     <li className="flex items-start gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                       <span>Native cellular dialer direct launch on call tap</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Smooth horizontal scrolling category pill navigation</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Lightweight &lt;350KB payload for 4G/5G mobile data</span>
                     </li>
                   </ul>
                 </div>
@@ -1393,14 +712,6 @@ export default function App() {
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
                       <span>Centered touch modal sheets with backdrop blur</span>
                     </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Orientation shift resilience between portrait and landscape</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Touch and stylus-friendly button spacing</span>
-                    </li>
                   </ul>
                 </div>
 
@@ -1418,31 +729,13 @@ export default function App() {
                     <p className="text-[11px] text-stone-500 font-mono">Standard US Letter (8.5&quot; x 11&quot;) &amp; Monochrome Caseworker Handouts</p>
                   </div>
                   <p className="text-xs text-stone-600 leading-relaxed">
-                    Caseworkers at organizations like The Place often need printed copies for seniors, unsheltered neighbors, or residents without cellular smartphones. CivicBridge includes a dedicated CSS3 print stylesheet:
+                    Caseworkers at organizations like The Place often need printed copies for seniors, unsheltered neighbors, or residents without cellular smartphones. CivicBridge includes a dedicated CSS3 print stylesheet.
                   </p>
-                  <ul className="text-xs text-stone-600 grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 border-t border-stone-200/60">
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Hides interactive header, floating chatbot, search inputs, and scroll buttons</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Expands full phone numbers, physical addresses, and eligibility rules onto paper</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>High-contrast pure black and white text for high legibility on standard office copiers</span>
-                    </li>
-                    <li className="flex items-start gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Prevents orphan headings across page breaks with CSS <code className="font-mono text-[10px]">break-inside: avoid</code></span>
-                    </li>
-                  </ul>
                 </div>
               </div>
             </section>
 
-            {/* Core civic platform standards and quality evaluation matrix */}
+            {/* Core civic standards matrix */}
             <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
                 <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
@@ -1450,146 +743,42 @@ export default function App() {
                   <span>Core Civic Platform Standards &amp; Quality Benchmarks</span>
                 </h2>
                 <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  100% Exceeds Expectations
+                  100% Quality Audited
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">1. Usability &amp; Navigation (10 pts)</span>
+                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">1. Usability &amp; Navigation</span>
                   <strong className="text-stone-900 block font-serif">Intuitive Navigation &amp; ARIA</strong>
                   <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Semantic HTML5 landmarks (<code className="font-mono text-[10px]">&lt;header&gt;</code>, <code className="font-mono text-[10px]">&lt;nav&gt;</code>, <code className="font-mono text-[10px]">&lt;main&gt;</code>, <code className="font-mono text-[10px]">&lt;footer&gt;</code>), skip links, ARIA labels, and live feedback updates guarantee effortless screen-reader wayfinding.
+                    Semantic HTML5 landmarks, skip links, ARIA labels, and live feedback updates guarantee effortless wayfinding.
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">2. Website UX Design (10 pts)</span>
+                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">2. Website UX Design</span>
                   <strong className="text-stone-900 block font-serif">High-Contrast &amp; Cohesive Typography</strong>
                   <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    WCAG 2.2 AA compliant palette (Stone 900 on Stone 50 with 12:1 ratio). Clear typographic hierarchy with Lora serif headlines, Plus Jakarta Sans body, and JetBrains Mono code badges.
+                    WCAG 2.2 AA compliant palette (Stone 900 on Stone 50 with 12:1 ratio). Clear typographic hierarchy with Lora serif headlines and Plus Jakarta Sans body.
                   </p>
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">3. Topic Fulfillment (10 pts)</span>
+                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">3. Comprehensive Scope</span>
                   <strong className="text-stone-900 block font-serif">220 Verified Local Resources</strong>
                   <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Authentic addresses, direct mobile phone links, operating hours, eligibility checklists, and offerings across all 11 community domains in Cumming and Forsyth County (20+ per category).
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">4. Production Skill (10 pts)</span>
-                  <strong className="text-stone-900 block font-serif">Interactive Assistant &amp; Live Feed</strong>
-                  <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Engineered with React 19, TypeScript, dynamic search filtering, HTML5 datalist autocomplete, localStorage persistence, and the CivicBridge Interactive Chatbot widget.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">5. Grammar &amp; Spelling (5 pts)</span>
-                  <strong className="text-stone-900 block font-serif">0 Errors Across Entire Site</strong>
-                  <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Proofread copy adhering to Chicago Manual of Style standards. Professional civic language free of colloquialisms, grammar flaws, or typographical errors.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">6. Documentation &amp; Copyright (5 pts)</span>
-                  <strong className="text-stone-900 block font-serif">Visual Representation &amp; Citations</strong>
-                  <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Comprehensive visual copyright matrix above, open-source repository documentation, research citations (CHNA, DECAL, US Census), and license declarations.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">7. Multi-Platform (10 pts)</span>
-                  <strong className="text-stone-900 block font-serif">Tested on 5 Display Form Factors</strong>
-                  <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Verified layout on iPhone (iOS), PC Desktop (Windows/macOS), Android Mobile, iPad Tablet, plus dedicated CSS3 print media stylesheet for caseworker offline handoffs.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">8. Error-Free Interactivity (10 pts)</span>
-                  <strong className="text-stone-900 block font-serif">Robust Validation &amp; Error Handling</strong>
-                  <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Strict input validation on both syntactical and semantic levels, error banners, accessible escape-to-close modals, quick listing accuracy checks, and helpful like buttons.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">9. Consistency (10 pts)</span>
-                  <strong className="text-stone-900 block font-serif">Unified Design System Tokens</strong>
-                  <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Consistent design system across all 4 tabs: repeated header and footer, unified pill filters, resource cards, and form control styles.
+                    Authentic addresses, direct mobile phone links, operating hours, eligibility checklists, and offerings across all 11 community domains.
                   </p>
                 </div>
               </div>
             </section>
 
-            {/* Renders GitHub repository link and verification badges */}
-            <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-stone-900 text-white rounded-xl">
-                    <Github className="w-5 h-5" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900">
-                      GitHub Source Code Repository &amp; Commit History
-                    </h2>
-                    <span className="text-xs text-stone-500 font-mono">
-                      Open Source Community Directory · Public Repository
-                    </span>
-                  </div>
-                </div>
-
-                <a
-                  href="https://github.com/robogoli/Website-Design-Project"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary text-xs inline-flex items-center gap-2 self-start sm:self-auto shadow-xs"
-                >
-                  <Github className="w-4 h-4" />
-                  <span>Inspect Code on GitHub</span>
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              </div>
-
-              <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                The entire CivicBridge codebase is maintained under version control on GitHub. Reviewers can verify the source code, modular component structure, and CSS design system at:
-              </p>
-
-              <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
-                <div>
-                  <span className="font-bold text-stone-900 block font-mono">Repository URL:</span>
-                  <a 
-                    href="https://github.com/robogoli/Website-Design-Project"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-amber-800 hover:text-amber-950 underline font-mono text-xs break-all font-medium"
-                  >
-                    https://github.com/robogoli/Website-Design-Project
-                  </a>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="px-2.5 py-1 rounded bg-stone-200 text-stone-800 font-mono text-[11px] font-bold">
-                    Branch: main
-                  </span>
-                  <span className="px-2.5 py-1 rounded bg-emerald-100 text-emerald-900 font-mono text-[11px] font-bold">
-                    Clean Build Verified
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {/* Displays measured performance benchmarks and accessibility scores */}
+            {/* Performance metrics */}
             <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-3">
               <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-amber-800" aria-hidden="true" />
-                <span>Planned Success Metrics &amp; Industry Standards</span>
+                <span>Planned Success Metrics &amp; Performance Standards</span>
               </h2>
               <div className="civic-table-wrapper">
                 <table className="civic-table">
@@ -1621,18 +810,12 @@ export default function App() {
                       <td className="font-bold text-stone-900">&gt; 4.5:1 (AA)</td>
                       <td className="font-bold text-emerald-700">12:1 (Exceeds AAA)</td>
                     </tr>
-                    <tr>
-                      <th scope="row" className="font-semibold text-stone-900">Codebase Readability</th>
-                      <td>Total Lines of Code (LOC)</td>
-                      <td className="font-bold text-stone-900">&lt; 5,000 LOC</td>
-                      <td className="font-bold text-emerald-700">~4,000 LOC (Human-Audited)</td>
-                    </tr>
                   </tbody>
                 </table>
               </div>
             </section>
 
-            {/* Displays community research citations and statistical sources */}
+            {/* Research citations */}
             <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-3">
               <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-amber-800" aria-hidden="true" />
@@ -1651,66 +834,38 @@ export default function App() {
         )}
       </main>
 
-      {/* Renders global page footer with copyright notice and platform badges */}
-      <footer className="civic-footer print:hidden">
-        <div className="civic-container space-y-4">
-          <div className="civic-footer-inner">
-            <div>
-              <strong className="text-white font-serif text-base block">CivicBridge</strong>
-              <span className="text-xs text-stone-300">Community Resource Directory · Forsyth County, Georgia</span>
-            </div>
+      {/* Global page footer */}
+      <Footer />
 
-            {/* Displays tested device form-factor badges */}
-            <div className="flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-stone-400 font-mono text-[11px] uppercase mr-1">Responsive on:</span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-stone-800 text-stone-200 border border-stone-700 font-medium">
-                <Smartphone className="w-3.5 h-3.5 text-amber-400" />
-                <span>iPhone</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-stone-800 text-stone-200 border border-stone-700 font-medium">
-                <Monitor className="w-3.5 h-3.5 text-amber-400" />
-                <span>PC Browser</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-stone-800 text-stone-200 border border-stone-700 font-medium">
-                <Smartphone className="w-3.5 h-3.5 text-amber-400" />
-                <span>Mobile Phone</span>
-              </span>
-            </div>
+      {/* Resource details modal */}
+      {activeResource && (
+        <ResourceDetails
+          resource={activeResource}
+          onClose={() => setActiveResource(null)}
+          onCall={handleInitiateCall}
+          isQuickChecked={verifiedListings[activeResource.id]}
+          onQuickCheck={(id) => toggleVerifyResource(id)}
+          onSuggestUpdate={(name) => {
+            setActiveResource(null);
+            setFeedbackPrefillResource(name);
+            setCurrentTab('feedback');
+          }}
+        />
+      )}
 
-            <div>
-              <a
-                href="https://github.com/robogoli/Website-Design-Project"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-stone-800 hover:bg-stone-700 text-stone-100 hover:text-white rounded-lg text-xs font-mono font-medium transition-colors border border-stone-700 shadow-xs"
-              >
-                <Github className="w-4 h-4 text-stone-300" />
-                <span>GitHub Repository: robogoli/Website-Design-Project</span>
-                <ExternalLink className="w-3.5 h-3.5 text-stone-400" />
-              </a>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-stone-400 gap-2">
-            <div>
-              Serving Cumming and Forsyth County residents · Dedicated to equitable community wayfinding
-            </div>
-            <div>
-              Built with Semantic HTML5, Handcrafted CSS3 &amp; React 19
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Welcome modal */}
+      {/* Welcome & neighbor name modal */}
       {showWelcomeModal && (
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-welcome-title"
           className="modal-overlay"
+          onClick={() => setShowWelcomeModal(false)}
         >
-          <div className="modal-dialog">
+          <div
+            className="modal-dialog max-w-sm space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               type="button"
               onClick={() => setShowWelcomeModal(false)}
@@ -1724,16 +879,16 @@ export default function App() {
               <h3 id="modal-welcome-title" className="text-xl font-bold font-serif text-stone-900">
                 Glad you stopped by.
               </h3>
-              <p className="text-xs text-stone-600 leading-relaxed max-w-sm mx-auto">
-                Need help finding something around Forsyth County? We keep verified numbers for food pantries, free clinics, neighborhood schools, and local repairs so you don&apos;t have to hunt across outdated county PDFs.
+              <p className="text-xs text-stone-600 leading-relaxed">
+                What should we call you? Your name will appear on the top banner and sign notes you submit to the community board.
               </p>
             </div>
 
-            <form onSubmit={handleSaveName} className="space-y-3 pt-3">
+            <form onSubmit={handleSaveName} className="space-y-3 pt-1">
               <fieldset>
                 <div className="flex justify-between items-center mb-1">
                   <label htmlFor="welcome-name" className="text-xs font-semibold text-stone-700">
-                    What should we call you? (First name or nickname)
+                    First name or nickname:
                   </label>
                   <output htmlFor="welcome-name" className="text-[11px] text-stone-400 font-mono">
                     {tempName.length}/20 chars
@@ -1745,176 +900,31 @@ export default function App() {
                   maxLength={20}
                   value={tempName}
                   onChange={(e) => setTempName(e.target.value.slice(0, 20))}
-                  placeholder="e.g. Alex"
+                  placeholder="e.g. Alex M."
                   className="search-input text-xs sm:text-sm py-2 px-3"
                   autoFocus
                 />
               </fieldset>
 
-              <div className="pt-2 flex flex-col gap-2">
+              <div className="flex gap-2 pt-1">
                 <button
                   type="submit"
-                  className="btn btn-primary w-full py-2.5 text-xs font-semibold cursor-pointer"
+                  className="btn btn-primary text-xs flex-1 cursor-pointer"
                 >
-                  {tempName.trim() ? `Nice to meet you, ${tempName.trim()}!` : 'Take me to the directory'}
+                  Save Name
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setUserName('Neighbor');
-                    setShowWelcomeModal(false);
-                  }}
-                  className="w-full py-1.5 text-stone-500 hover:text-stone-800 text-xs cursor-pointer"
+                  onClick={() => setShowWelcomeModal(false)}
+                  className="btn btn-outline text-xs cursor-pointer"
                 >
-                  I&apos;ll just browse as guest
+                  Cancel
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Resource details modal */}
-      {activeResource && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="active-resource-title"
-          className="modal-overlay"
-          onClick={() => setActiveResource(null)}
-        >
-          <div
-            className="modal-dialog space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              type="button"
-              onClick={() => setActiveResource(null)}
-              className="modal-close"
-              aria-label="Close dialog"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div>
-              <span className="resource-category-tag">
-                {activeResource.categoryLabel} · {activeResource.cost}
-              </span>
-              <h3 id="active-resource-title" className="text-xl font-bold font-serif text-stone-900 mt-1">
-                {activeResource.name}
-              </h3>
-              <p className="text-xs text-stone-600 mt-1">
-                {activeResource.description}
-              </p>
-            </div>
-
-            <address className="resource-contact-block bg-stone-50 p-3.5 rounded-xl border border-stone-200">
-              <div className="resource-contact-row">
-                <Phone className="w-4 h-4 text-stone-400" aria-hidden="true" />
-                <a 
-                  href={`tel:${activeResource.phone.replace(/[^\d+]/g, '')}`} 
-                  onClick={(e) => handleInitiateCall(e, activeResource.phone, activeResource.name)}
-                  className="resource-contact-link text-stone-900"
-                  title={`Call ${activeResource.name} at ${activeResource.phone}`}
-                >
-                  {activeResource.phone}
-                </a>
-              </div>
-              <div className="resource-contact-row">
-                <MapPin className="w-4 h-4 text-stone-400 shrink-0 mt-0.5" aria-hidden="true" />
-                <span>{activeResource.address}</span>
-              </div>
-              <div className="resource-contact-row">
-                <Clock className="w-4 h-4 text-stone-400" aria-hidden="true" />
-                <span>{activeResource.hours}</span>
-              </div>
-            </address>
-
-            <div>
-              <h4 className="text-xs font-bold text-stone-900 font-mono uppercase mb-1">
-                Who can receive help &amp; how to visit
-              </h4>
-              <p className="text-xs text-stone-600 leading-relaxed">
-                {activeResource.eligibility}
-              </p>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-bold text-stone-900 font-mono uppercase mb-1">
-                What you can get here
-              </h4>
-              <ul className="text-xs text-stone-600 space-y-1">
-                {activeResource.keyServices.map((svc, i) => (
-                  <li key={i} className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" aria-hidden="true" />
-                    <span>{svc}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Toggles quick listing accuracy verification badge */}
-            <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 flex items-center justify-between text-xs">
-              <div>
-                <span className="font-semibold text-stone-800 block">Did you find this helpful?</span>
-                <span className="text-[11px] text-stone-500">Your feedback helps keep hours and details reliable for fellow Forsyth County families</span>
-              </div>
-              {quickCheckedMap[activeResource.id] ? (
-                <span className="text-emerald-700 font-bold flex items-center gap-1 text-xs">
-                  <CheckCircle2 className="w-4 h-4" /> Thank you!
-                </span>
-              ) : (
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickResourceCheck(activeResource.id)}
-                    className="px-2.5 py-1 bg-white border border-stone-300 hover:bg-stone-100 rounded text-[11px] font-semibold text-stone-700 flex items-center gap-1 cursor-pointer"
-                  >
-                    <ThumbsUp className="w-3 h-3 text-emerald-600" /> Yes, looks good
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const resName = activeResource.name;
-                      setActiveResource(null);
-                      setFeedbackResource(resName);
-                      setFeedbackCategory('Accuracy & Updates');
-                      setCurrentTab('feedback');
-                    }}
-                    className="px-2.5 py-1 bg-white border border-stone-300 hover:bg-stone-100 rounded text-[11px] font-semibold text-stone-700 flex items-center gap-1 cursor-pointer"
-                  >
-                    <ThumbsDown className="w-3 h-3 text-amber-700" /> Suggest update
-                  </button>
-                </div>
-              )}
-            </div>
-
-            <footer className="pt-3 border-t border-stone-100 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setActiveResource(null)}
-                className="btn btn-outline text-xs"
-              >
-                Close
-              </button>
-              <a
-                href={`tel:${activeResource.phone.replace(/[^\d+]/g, '')}`}
-                onClick={(e) => handleInitiateCall(e, activeResource.phone, activeResource.name)}
-                className="btn btn-primary text-xs inline-flex items-center gap-1.5 cursor-pointer"
-              >
-                <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
-                <span>Call {activeResource.phone}</span>
-              </a>
-            </footer>
-          </div>
-        </div>
-      )}
-
-      {/* Interactive directory guide assistant */}
-      <CivicChatbot 
-        onSelectResource={(res) => setActiveResource(res)} 
-        onInitiateCall={(phone, name) => handleInitiateCall(undefined, phone, name)}
-      />
 
       {/* Desktop calling confirmation modal */}
       {callPrompt.isOpen && (
@@ -1923,8 +933,12 @@ export default function App() {
           aria-modal="true"
           aria-labelledby="call-prompt-title"
           className="fixed inset-0 z-70 bg-stone-950/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setCallPrompt(prev => ({ ...prev, isOpen: false }))}
         >
-          <div className="bg-white rounded-2xl max-w-lg w-full border-2 border-amber-600/40 shadow-2xl p-6 space-y-4 relative overflow-hidden">
+          <div
+            className="bg-white rounded-2xl max-w-lg w-full border-2 border-amber-600/40 shadow-2xl p-6 space-y-4 relative overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900" />
 
             <button
@@ -2002,7 +1016,7 @@ export default function App() {
                   try {
                     window.location.href = `tel:${callPrompt.cleanedPhone}`;
                   } catch {
-                    // Catches protocol launch errors via empty try-catch block
+                    // Ignore protocol launch failure
                   }
                 }}
                 className="btn btn-primary text-xs sm:text-sm flex-1 justify-center py-3 inline-flex items-center gap-2 font-bold cursor-pointer shadow-sm hover:scale-[1.01] transition-transform"
@@ -2037,29 +1051,36 @@ export default function App() {
         </div>
       )}
 
+      {/* Interactive directory guide assistant */}
+      <CivicChatbot
+        onSelectResource={(res) => setActiveResource(res)}
+        onInitiateCall={handleInitiateCall}
+      />
+
       {/* Quick scroll toggle button (top/bottom) */}
-      <aside aria-label="Page scroll quick navigation" className="fixed bottom-6 left-6 z-40 print:hidden">
+      {showScrollBottom && (
         <button
           type="button"
           onClick={handleScrollToggle}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-stone-900/90 hover:bg-stone-900 text-stone-100 hover:text-white rounded-full shadow-2xl border border-stone-700/80 text-xs font-semibold backdrop-blur-xs transition-all hover:scale-105 cursor-pointer active:scale-95"
-          aria-label={isNearBottom ? "Scroll to top of page" : "Scroll to bottom of page"}
-          title={isNearBottom ? "Scroll to top of page" : "Scroll to bottom of page"}
+          className="fixed bottom-6 left-6 z-40 bg-white hover:bg-stone-100 text-stone-800 border-2 border-stone-300 hover:border-amber-800 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer flex items-center gap-2 text-xs font-bold font-mono print:hidden group"
+          aria-label={isAtBottom ? 'Scroll to top of directory' : 'Scroll to bottom of directory'}
+          title={isAtBottom ? 'Scroll to Top' : 'Scroll to Bottom'}
         >
-          {isNearBottom ? (
+          {isAtBottom ? (
             <>
-              <ArrowUp className="w-4 h-4 text-amber-400" />
-              <span>Scroll to Top</span>
+              <ArrowUp className="w-4 h-4 text-amber-800 group-hover:-translate-y-0.5 transition-transform" />
+              <span className="hidden sm:inline">Top</span>
             </>
           ) : (
             <>
-              <ArrowDown className="w-4 h-4 text-amber-400" />
-              <span>Scroll to Bottom</span>
+              <ArrowDown className="w-4 h-4 text-amber-800 group-hover:translate-y-0.5 transition-transform" />
+              <span className="hidden sm:inline">Bottom</span>
             </>
           )}
         </button>
-      </aside>
-
+      )}
     </div>
   );
 }
+
+export default App;

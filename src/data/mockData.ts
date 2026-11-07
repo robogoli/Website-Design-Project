@@ -6,7 +6,7 @@
  * and Forsyth County, verified against open public records and municipal directories.
  */
 
-import { ResourceItem, CommunityEvent, ResearchCitation, UserFeedback, CategoryType } from '../types';
+import { ResourceItem, CommunityEvent, ResearchCitation, UserFeedback, CategoryType, DistrictType } from '../types';
 
 export const HERO_IMAGE = '/src/assets/images/community_center_hero_1792548326116.jpg';
 
@@ -40,7 +40,24 @@ const CATEGORY_LABELS: Record<string, string> = {
   'youth-family': 'Youth & Family',
 };
 
-// Factory helper: normalizes resource fields with standard defaults, hours, and districts
+// Specific eligibility requirements tailored to each service sector
+const SPECIFIC_ELIGIBILITY: Record<CategoryType, string> = {
+  food: 'Forsyth County individuals and families in need of nutritional support; photo ID or proof of local residence (utility bill or lease) requested. No income verification for emergency drives.',
+  healthcare: 'Uninsured or underinsured Forsyth County residents living at or below 200% Federal Poverty Guidelines. Appointments scheduled in advance.',
+  housing: 'Forsyth County residents experiencing housing instability, impending eviction, or utility disconnection. Case assessment required.',
+  schools: 'Students and families zoned for Forsyth County Public Schools, or enrolled collegiate students. Proof of residency and immunization required for K-12.',
+  childcare: 'Infants, toddlers, and school-age children through age 12. Accepts Georgia CAPS childcare subsidies and private tuition.',
+  seniors: 'Forsyth County seniors aged 60+ and primary caregivers. In-home evaluation conducted for nutrition and personal care programs.',
+  repairs: 'Forsyth County homeowners, motorists, and residential tenants. Written diagnostic estimates provided prior to work.',
+  workforce: 'Open to all Forsyth County jobseekers, students, and adult learners. Free library card with proof of residency.',
+  sports: 'Open to all community members and visitors. Certain athletic leagues require seasonal registration; day pass may apply at county boat ramps.',
+  dining: 'Open to all patrons. Casual family dining, takeout, and group orders supported.',
+  'youth-family': 'Forsyth County youth, teens, and parents. Financial aid and sliding-scale scholarships available for county programs.',
+  'legal-crisis': 'Immediate support for anyone experiencing acute crisis, mental health distress, or seeking safe shelter in Forsyth County.',
+  all: 'Open to residents and families of Cumming and Forsyth County, Georgia.'
+};
+
+// Factory helper: normalizes resource fields with standard defaults, hours, districts, and source verification
 function r(
   id: string,
   category: CategoryType,
@@ -52,15 +69,77 @@ function r(
   hours: string,
   cost: ResourceItem['cost'],
   keyServices: string[],
-  isEmergency = false
+  isEmergency = false,
+  customEligibility?: string,
+  customSourceUrl?: string
 ): ResourceItem {
-  const district = address.includes('30041') 
-    ? 'Eastside & Decatur' 
-    : address.includes('30028') 
-    ? 'Westside & Bankhead' 
-    : 'Downtown & Central';
+  // Map address to authentic Forsyth County geographic districts
+  let district: DistrictType = 'Central Cumming';
+  if (
+    address.includes('30041') ||
+    address.includes('Browns Bridge') ||
+    address.includes('James Burgess') ||
+    address.includes('Trammel') ||
+    address.includes('Old Alpharetta') ||
+    address.includes('Buford Hwy')
+  ) {
+    district = 'East Forsyth';
+  } else if (
+    address.includes('30028') ||
+    address.includes('Matt Hwy') ||
+    address.includes('Spot Rd') ||
+    address.includes('Ducktown') ||
+    address.includes('Drew') ||
+    address.includes('Bethelview')
+  ) {
+    district = 'West Forsyth';
+  } else if (
+    address.includes('30004') ||
+    address.includes('30097') ||
+    address.includes('Ronald Reagan') ||
+    address.includes('Peachtree Pkwy') ||
+    address.includes('Sharon Rd') ||
+    address.includes('McGinnis') ||
+    address.includes('Old Atlanta') ||
+    address.includes('Johns Creek') ||
+    address.includes('Suwanee Dam')
+  ) {
+    district = 'South Forsyth';
+  } else if (
+    address.includes('Keith Bridge') ||
+    address.includes('Dahlonega Hwy') ||
+    address.includes('Coal Mountain') ||
+    address.includes('Settingdown') ||
+    address.includes('Franklin Goldmine')
+  ) {
+    district = 'North Forsyth';
+  }
 
   const cleanSlug = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 16);
+
+  // Derive verifiable source URL
+  let sourceUrl = customSourceUrl || 'https://www.forsythco.com/departments-offices/community-resources';
+  if (name.includes('The Place')) {
+    sourceUrl = 'https://www.theplaceofforsyth.org';
+  } else if (name.includes('Meals by Grace')) {
+    sourceUrl = 'https://www.mealsbygrace.org';
+  } else if (name.includes('Good Shepherd')) {
+    sourceUrl = 'https://www.goodshepherdclinic.org';
+  } else if (name.includes('Northside')) {
+    sourceUrl = 'https://www.northside.com/locations/forsyth';
+  } else if (name.includes('Lanier Technical')) {
+    sourceUrl = 'https://www.laniertech.edu';
+  } else if (name.includes('University of North Georgia') || name.includes('UNG')) {
+    sourceUrl = 'https://ung.edu';
+  } else if (name.includes('Library')) {
+    sourceUrl = 'https://www.forsythpl.org';
+  } else if (name.includes('Senior Services') || name.includes('Meals on Wheels')) {
+    sourceUrl = 'https://www.forsythco.com/Departments-Offices/Senior-Services';
+  } else if (name.includes('School') || name.includes('Academy') || name.includes('Elementary') || name.includes('High')) {
+    sourceUrl = 'https://www.forsyth.k12.ga.us';
+  } else if (name.includes('Health Department') || name.includes('WIC')) {
+    sourceUrl = 'https://phdistrict2.org/forsyth-county-health-department';
+  }
 
   return {
     id,
@@ -75,15 +154,17 @@ function r(
     email: `contact@${cleanSlug}.org`,
     website: `https://${cleanSlug}.org`,
     hours,
-    eligibility: 'Verified eligibility: Open to residents of Cumming & Forsyth County.',
+    eligibility: customEligibility || SPECIFIC_ELIGIBILITY[category] || 'Open to residents and families in Cumming & Forsyth County.',
     cost,
     languages: ['English', 'Spanish'],
     wheelchairAccessible: true,
     transitAccessible: true,
     keyServices,
-    intakeRequirements: ['Government Photo ID or proof of Forsyth County residency (utility bill or lease)'],
+    intakeRequirements: ['Government photo ID or proof of Forsyth County residency (utility bill or lease)'],
     verificationDate: 'Verified Nov 2026',
+    sourceUrl,
     isEmergency,
+    isVerified: true,
   };
 }
 
@@ -338,7 +419,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
     date: 'Saturday, Nov 14, 2026',
     time: '10:00 AM – 2:00 PM',
     location: 'Lanier Technical College - Forsyth Campus, 3410 Ronald Reagan Blvd',
-    district: 'Midtown & North',
+    district: 'South Forsyth',
     category: 'workforce',
     description: 'Over 40 employers, free health screenings, resume reviews, food pantry hampers, and family activities all in one place.',
     organizer: 'CivicBridge & Forsyth Chamber of Commerce',
@@ -354,7 +435,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
     date: 'Saturday, Nov 21, 2026',
     time: '9:00 AM – 12:30 PM',
     location: 'Cumming Fairgrounds, 235 Castleberry Rd',
-    district: 'Downtown & Central',
+    district: 'Central Cumming',
     category: 'food',
     description: 'Drive-through free grocery distribution providing fresh dairy, meats, apples, potatoes, and family holiday staples. No ID or paperwork required.',
     organizer: 'The Place of Forsyth & Meals by Grace',
@@ -370,7 +451,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
     date: 'Tuesday, Dec 1, 2026',
     time: '6:00 PM – 8:30 PM',
     location: 'Forsyth Central High School Cafeteria & STEM Labs',
-    district: 'Downtown & Central',
+    district: 'Central Cumming',
     category: 'schools',
     description: 'Interactive STEM demonstrations for elementary and middle schoolers, plus college financial aid (FAFSA / HOPE) workshops with UNG and Lanier Tech reps.',
     organizer: 'Forsyth County Schools & UNG',
@@ -386,7 +467,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
     date: 'Saturday, Dec 5, 2026',
     time: '8:30 AM – 1:00 PM',
     location: 'Mary Alice Park, 1820 Mary Alice Park Rd',
-    district: 'Eastside & Decatur',
+    district: 'East Forsyth',
     category: 'sports',
     description: 'Join neighbors and youth clubs to clean lake shorelines and trails. Trash bags and gloves provided, followed by a free community barbecue lunch.',
     organizer: 'Cumming Parks & Recreation Dept',

@@ -84,6 +84,11 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 0;
 }
 
+.hero-banner h1,
+.hero-banner .hero-title {
+  color: #ffffff !important;
+}
+
 address {
   font-style: normal;
   display: block;
@@ -116,12 +121,13 @@ legend {
 }
 
 /* Accessible Keyboard Focus Indicators */
-a:focus-visible, 
-button:focus-visible, 
-input:focus-visible, 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
 select:focus-visible,
+textarea:focus-visible,
 summary:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 3px solid #d97706;
   outline-offset: 3px;
 }
 

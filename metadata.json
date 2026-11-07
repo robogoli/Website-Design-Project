@@ -1,6 +1,6 @@
 {
   "name": "CivicBridge",
-  "description": "CivicBridge: Verified Community Resource Directory for Cumming and Forsyth County, Georgia.",
+  "description": "A community resource directory connecting residents of Cumming and Forsyth County, Georgia, with local services, educational opportunities, and community programs.",
   "requestFramePermissions": [],
   "majorCapabilities": [
   "COMMUNITY_RESOURCE_DIRECTORY",

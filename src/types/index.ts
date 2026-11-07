@@ -15,11 +15,11 @@ export type CategoryType =
 
 export type DistrictType =
   | 'all'
-  | 'Downtown & Central'
-  | 'Midtown & North'
-  | 'Westside & Bankhead'
-  | 'Eastside & Decatur'
-  | 'Southside & Lakewood';
+  | 'Central Cumming'
+  | 'North Forsyth'
+  | 'South Forsyth'
+  | 'East Forsyth'
+  | 'West Forsyth';
 
 export interface ResourceItem {
   id: string;
@@ -35,6 +35,8 @@ export interface ResourceItem {
   website: string;
   hours: string;
   eligibility: string;
+  sourceUrl: string;
+  verificationDate: string;
   cost: 'Free' | 'Sliding Scale' | 'Medicaid/Insurance' | 'Subsidized' | 'Subsidized / Sliding Scale' | 'Affordable / Paid';
   languages: string[];
   wheelchairAccessible: boolean;
@@ -42,8 +44,8 @@ export interface ResourceItem {
   imageUrl?: string;
   keyServices: string[];
   intakeRequirements: string[];
-  verificationDate: string;
   isEmergency: boolean;
+  isVerified?: boolean;
 }
 
 export interface CommunityProgram {
