@@ -117,10 +117,15 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
             <span className="resource-cost-badge">
               {resource.cost}
             </span>
-            {resource.isVerified && (
+            {resource.isVerified ? (
               <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
                 {resource.verificationDate || 'Verified Listing'}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-300 font-medium">
+                <span className="w-2 h-2 rounded-full bg-stone-400 shrink-0" aria-hidden="true" />
+                Unverified Listing
               </span>
             )}
           </div>
@@ -132,9 +137,13 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
             {resource.description}
           </p>
 
-          {resource.isVerified && resource.verificationSource && (
+          {resource.isVerified && resource.verificationSource ? (
             <div className="text-[11px] text-emerald-800 bg-emerald-50/80 px-2.5 py-1 rounded-md border border-emerald-200/70 mt-2 font-mono">
               <strong>Verification Source:</strong> {resource.verificationSource}
+            </div>
+          ) : (
+            <div className="text-[11px] text-stone-600 bg-stone-100/80 px-2.5 py-1.5 rounded-md border border-stone-200 mt-2">
+              <strong>Verification Status:</strong> Unverified. Details have not been independently confirmed with provider; call ahead to confirm hours, eligibility, and service availability.
             </div>
           )}
         </div>

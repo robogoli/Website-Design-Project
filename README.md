@@ -13,7 +13,7 @@ A community resource directory connecting residents of Cumming and Forsyth Count
 - [Installation Instructions](#installation-instructions)
 - [Directory Structure](#directory-structure)
 - [Data Sources & Verification](#data-sources--verification)
-- [Accessibility & Multi-Platform Standards](#accessibility--multi-platform-standards)
+- [Accessibility & Design Standards](#accessibility--design-standards)
 - [AI Assistance Disclosure](#ai-assistance-disclosure)
 
 ---
@@ -27,9 +27,9 @@ A community resource directory connecting residents of Cumming and Forsyth Count
 Public health studies (such as the Forsyth County Community Health Needs Assessment) reveal that community support services are frequently fragmented across disparate county PDFs, outdated social media pages, and buried municipal listings. Residents facing an immediate need—such as food insecurity, sudden utility shutoffs, or unexpected car repairs—often experience friction when searching for reliable, up-to-date operating hours, direct phone lines, and eligibility guidelines.
 
 CivicBridge solves this by providing:
-1. **Centralized Directory**: 220 listings organized into 11 distinct community categories (20 listings per category), with verified anchor providers distinguished from community listings.
+1. **Centralized Directory**: 220 community resource listings, with 15 individually verified anchor providers distinguished from community listings.
 2. **Provider-Specific Eligibility**: Explicit eligibility criteria displayed on confirmed listings, with unconfirmed providers clearly designated as "Unknown — contact provider."
-3. **Responsive Wayfinding**: Zero-jank responsive layout optimized for mobile smartphones, desktop computers, tablets, and printable offline caseworker handouts.
+3. **Responsive Wayfinding**: Mobile-friendly layout designed for smartphones, desktop computers, tablets, and printable offline caseworker handouts.
 4. **Desktop Call Safety**: A polite confirmation dialog on desktop systems that verifies the presence of a calling application (e.g., FaceTime, Skype, Windows Phone Link, Zoom) and automatically copies numbers to the clipboard for phone dialing.
 
 ---
@@ -47,19 +47,19 @@ CivicBridge solves this by providing:
 - **Geographic District Filtering**: Refine listings by Forsyth County geographic zones: Central Cumming, North Forsyth, South Forsyth, East Forsyth, and West Forsyth.
 - **Sector Category Navigation**: 11 dedicated service domains: Food & Meals, Housing & Utilities, Health & Dental, Schools & Education, Repairs & Maintenance, Childcare & Daycare, Sports & Parks, Local Restaurants, Workforce & Library, Senior Services, and Youth & Family.
 - **Interactive Guide (Ask a Neighbor)**: Lightweight client-side directory assistant with word-boundary matching for short keywords, relevance ranking, and provider-specific eligibility displays.
-- **Community Events & Gatherings**: Schedule of public events with location details, organizer contacts, and district tags.
-- **Neighbor Notes Community Board**: Moderated community feedback system allowing residents to submit updates, verify listing accuracy, or share experiences with optional anonymous attribution.
-- **Accessibility & Keyboard Navigation**: Full WCAG 2.2 AA compliance, visible 3px keyboard focus indicators (`outline: 3px solid #d97706`), semantic landmarks, and skip links.
+- **Community Events & Gatherings**: Schedule of sample community events with location details, organizer contacts, and district tags.
+- **Neighbor Notes Community Board**: Browser-based community feedback system allowing residents to submit updates, verify listing accuracy, or share experiences with optional anonymous attribution saved in local browser storage.
+- **Accessibility & Keyboard Navigation**: High-contrast text, visible 3px keyboard focus indicators (`outline: 3px solid #d97706`), semantic landmarks, and skip links.
 - **CSS3 Print Stylesheet**: Dedicated `@media print` rules that hide interactive controls and format clean, monochrome handouts for caseworkers.
 
 ---
 
 ## Technologies
 - **Frontend Framework**: React 19 (Functional components, custom hooks)
-- **Language**: TypeScript 5.8 (Strict typing, explicit interfaces)
+- **Language**: TypeScript 7.0 (Strict typing, explicit interfaces)
 - **Styling**: Tailwind CSS 4.0 + Custom CSS3 Design Tokens
 - **Icons**: Lucide React
-- **Build Tool**: Vite
+- **Build Tool**: Vite 8
 - **Deployment**: Static single-page application (SPA) hosted on GitHub Pages
 
 ---
@@ -67,7 +67,7 @@ CivicBridge solves this by providing:
 ## Installation Instructions
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (version 18.0.0 or higher recommended)
+- [Node.js](https://nodejs.org/) (version 22.0.0 or higher recommended)
 - `npm` (comes with Node.js)
 
 ### Local Development Setup
@@ -79,7 +79,7 @@ CivicBridge solves this by providing:
 
 2. Install dependencies:
    ```bash
-   npm install
+   npm ci
    ```
 
 3. Start the development server:
@@ -126,7 +126,7 @@ Website-Design-Project/
 │   │   ├── useResources.ts       # Directory filtering, search query, and category state
 │   │   └── useFeedback.ts        # Community notes state and localStorage persistence
 │   ├── data/
-│   │   └── mockData.ts           # 220 authenticated Forsyth County listings and events
+│   │   └── mockData.ts           # 220 community resource listings across 11 categories
 │   ├── types/
 │   │   └── index.ts              # TypeScript interfaces (ResourceItem, DistrictType, etc.)
 │   ├── App.tsx                   # Main application coordinator
@@ -155,10 +155,10 @@ Verified resource items explicitly record their primary source URL (`sourceUrl`)
 
 ---
 
-## Accessibility & Multi-Platform Standards
+## Accessibility & Design Standards
 - **Keyboard Focus**: Distinct 3px amber focus rings (`outline: 3px solid #d97706; outline-offset: 3px;`) across all interactive elements (`button`, `a`, `input`, `select`, `textarea`).
-- **Color Contrast**: Complies with WCAG 2.2 AA standards, with high-contrast text ratios exceeding 12:1 on neutral backgrounds.
-- **Responsive Viewports**: Tested across mobile smartphones (360px–430px), tablets (768px–820px), desktop displays (1440px–1920px), and CSS3 print media.
+- **Color Contrast**: High-contrast text ratios designed for readability on neutral backgrounds.
+- **Responsive Layout**: Designed for mobile smartphones, tablets, desktop displays, and CSS3 print media.
 - **Escape Key Handling**: All dialogs and modal windows close reliably when the `Escape` key is pressed or when clicking outside the dialog.
 
 ---
