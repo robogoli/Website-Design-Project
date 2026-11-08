@@ -13,8 +13,9 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
   resource,
   onSelect,
   onCall,
-  isVerified = true
+  isVerified = false
 }) => {
+  const verifiedRecord = Boolean(resource.isVerified ?? isVerified);
   return (
     <article
       id={`res-${resource.id}`}
@@ -75,10 +76,10 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
           </ul>
         </section>
 
-        {isVerified && (
+        {verifiedRecord && (
           <div className="mt-3 flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50/70 px-2.5 py-1 rounded-lg border border-emerald-200/60 font-mono">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>Checked: {resource.verificationDate}</span>
+            <span>{resource.verificationDate || 'Verified Record'}</span>
           </div>
         )}
       </div>

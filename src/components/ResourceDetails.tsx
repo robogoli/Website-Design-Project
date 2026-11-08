@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   X,
   Phone,
   MapPin,
   Clock,
+  Globe,
   CheckCircle2,
   PhoneCall,
   ExternalLink,
@@ -31,13 +32,53 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
   onQuickCheck,
   onSuggestUpdate
 }) => {
-  // Close on Escape key press
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const triggerElementRef = useRef<HTMLElement | null>(null);
+
+  // Store trigger element and focus modal on mount; restore on unmount
+  useEffect(() => {
+    triggerElementRef.current = document.activeElement as HTMLElement | null;
+    closeButtonRef.current?.focus();
+
+    return () => {
+      if (triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
+        triggerElementRef.current.focus();
+      }
+    };
+  }, []);
+
+  // Keyboard focus trap & Escape key handling
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
@@ -51,10 +92,12 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         className="modal-dialog space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onClose}
           className="modal-close"
@@ -77,7 +120,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
             {resource.isVerified && (
               <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                {resource.verificationDate}
+                {resource.verificationDate || 'Verified Listing'}
               </span>
             )}
           </div>
@@ -88,6 +131,12 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           <p className="text-xs text-stone-600 mt-1 leading-relaxed">
             {resource.description}
           </p>
+
+          {resource.isVerified && resource.verificationSource && (
+            <div className="text-[11px] text-emerald-800 bg-emerald-50/80 px-2.5 py-1 rounded-md border border-emerald-200/70 mt-2 font-mono">
+              <strong>Verification Source:</strong> {resource.verificationSource}
+            </div>
+          )}
         </div>
 
         <address className="resource-contact-block bg-stone-50 p-3.5 rounded-xl border border-stone-200 space-y-2 not-italic">
@@ -115,6 +164,21 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
             <Clock className="w-4 h-4 text-stone-400 shrink-0" aria-hidden="true" />
             <span className="text-stone-800">{resource.hours}</span>
           </div>
+
+          {resource.website && (
+            <div className="resource-contact-row">
+              <Globe className="w-4 h-4 text-stone-400 shrink-0" aria-hidden="true" />
+              <a
+                href={resource.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-800 hover:text-amber-950 font-semibold inline-flex items-center gap-1 underline text-xs"
+              >
+                <span>Visit Official Website</span>
+                <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+              </a>
+            </div>
+          )}
         </address>
 
         {/* Provider-specific eligibility details */}
@@ -181,13 +245,13 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           <div>
             <span className="font-semibold text-stone-800 block">Is this listing up to date?</span>
             <span className="text-[11px] text-stone-500">
-              Community updates keep hours reliable for Forsyth County families.
+              Community confirmations help neighbors know contact info and hours remain active.
             </span>
           </div>
 
           {isQuickChecked ? (
             <span className="text-emerald-700 font-bold flex items-center gap-1 text-xs shrink-0">
-              <CheckCircle2 className="w-4 h-4" /> Thank you for verifying!
+              <CheckCircle2 className="w-4 h-4" /> Thank you for confirming!
             </span>
           ) : (
             <div className="flex items-center gap-1.5 shrink-0">
@@ -196,7 +260,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
                 onClick={() => onQuickCheck && onQuickCheck(resource.id)}
                 className="px-2.5 py-1 bg-white border border-stone-300 hover:bg-stone-100 rounded text-[11px] font-semibold text-stone-700 flex items-center gap-1 cursor-pointer"
               >
-                <ThumbsUp className="w-3 h-3 text-emerald-600" /> Looks correct
+                <ThumbsUp className="w-3 h-3 text-emerald-600" /> Confirm this information looks correct
               </button>
               <button
                 type="button"

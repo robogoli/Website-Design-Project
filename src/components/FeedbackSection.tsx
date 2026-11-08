@@ -10,7 +10,8 @@ import {
   Send,
   CheckCircle2,
   AlertCircle,
-  ShieldCheck
+  ShieldCheck,
+  Info
 } from 'lucide-react';
 import { UserFeedback } from '../types';
 
@@ -86,6 +87,14 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
         <p className="hero-desc mb-0">
           Been to one of these spots recently? Leave a note. If someone changed their hours or treated your family with real care, speak up. It takes thirty seconds and saves the next neighbor a wasted trip.
         </p>
+
+        {/* Transparent client storage and demonstration disclosure */}
+        <div className="mt-3 p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-start gap-2 leading-relaxed">
+          <Info className="w-4 h-4 text-amber-800 shrink-0 mt-0.5" />
+          <div>
+            <strong>Client-Side Storage &amp; Demonstration Notice:</strong> In this static directory, newly submitted neighbor notes are safely saved in your local browser storage (localStorage). Pre-loaded demonstration notes are marked with a <span className="font-mono font-bold bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-300 text-[11px]">Sample Note</span> tag for demonstration purposes. To submit official corrections to county records, please reach out to the respective municipal department directly.
+          </div>
+        </div>
       </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -371,6 +380,12 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200">
                             <User className="w-3.5 h-3.5 text-amber-700" />
                             <span>{item.userName}</span>
+                          </span>
+                        )}
+
+                        {item.isSample && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                            Sample Note
                           </span>
                         )}
 

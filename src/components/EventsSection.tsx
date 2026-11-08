@@ -110,10 +110,10 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
               </div>
 
               <a
-                href="tel:7708871098"
+                href={`tel:${evt.contactPhone.replace(/[^\d+]/g, '')}`}
                 onClick={(e) => {
                   e.preventDefault();
-                  onCall('(770) 887-1098', evt.title);
+                  onCall(evt.contactPhone, evt.title);
                 }}
                 className="btn btn-primary text-xs whitespace-nowrap self-start sm:self-center inline-flex items-center gap-1.5 cursor-pointer"
               >

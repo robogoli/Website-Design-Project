@@ -58,11 +58,15 @@ function rankResources(query: string, categoryFilter?: string): ResourceItem[] {
     const nameLower = res.name.toLowerCase();
     const tagLower = res.tagline.toLowerCase();
     const descLower = res.description.toLowerCase();
+    const eligLower = res.eligibility.toLowerCase();
+    const phoneLower = res.phone.toLowerCase();
 
     // Check full query
-    if (nameLower.includes(q)) score += 25;
-    if (tagLower.includes(q)) score += 12;
-    if (descLower.includes(q)) score += 8;
+    if (nameLower.includes(q)) score += 30;
+    if (tagLower.includes(q)) score += 15;
+    if (descLower.includes(q)) score += 10;
+    if (eligLower.includes(q)) score += 12;
+    if (phoneLower.includes(q)) score += 20;
 
     // Check individual services
     for (const svc of res.keyServices) {
@@ -75,18 +79,20 @@ function rankResources(query: string, categoryFilter?: string): ResourceItem[] {
       }
     }
 
-    // Check tokens across name, tagline, description
+    // Check tokens across name, tagline, description, eligibility
     for (const token of tokens) {
-      if (matchesWordBoundary(nameLower, token)) score += 10;
-      if (matchesWordBoundary(tagLower, token)) score += 4;
-      if (matchesWordBoundary(descLower, token)) score += 2;
+      if (matchesWordBoundary(nameLower, token)) score += 12;
+      if (matchesWordBoundary(tagLower, token)) score += 5;
+      if (matchesWordBoundary(descLower, token)) score += 3;
+      if (matchesWordBoundary(eligLower, token)) score += 5;
     }
 
     return { res, score };
   });
 
+  // Only return results with genuine relevance score threshold
   return scored
-    .filter(item => item.score > 0)
+    .filter(item => item.score >= 10)
     .sort((a, b) => b.score - a.score)
     .map(item => item.res);
 }
@@ -188,7 +194,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     matched?: ResourceItem[];
     examplePrompts?: string[];
   } => {
-    // 1. Crisis & Emergency hotlines
+    // 1. Crisis & Emergency hotlines (Highest Priority)
     if (
       matchesWordBoundary(query, 'crisis') ||
       matchesWordBoundary(query, 'hotline') ||
@@ -196,14 +202,17 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       matchesWordBoundary(query, 'emergency') ||
       matchesWordBoundary(query, '988') ||
       matchesWordBoundary(query, '211') ||
-      matchesWordBoundary(query, 'eviction')
+      matchesWordBoundary(query, 'abuse') ||
+      matchesWordBoundary(query, 'violence') ||
+      matchesWordBoundary(query, 'haven') ||
+      matchesWordBoundary(query, 'overdose')
     ) {
       const ranked = rankResources(query, 'legal-crisis');
       const fallback = COMMUNITY_RESOURCES.filter(r => r.isEmergency);
       const matches = (ranked.length > 0 ? ranked : fallback).slice(0, 3);
 
       return {
-        responseText: "If things are tough right now, don't wait. Reach out immediately. The Suicide & Crisis Lifeline is free, confidential, and open 24/7 at 988. You can also dial 211 for emergency rent or shelter. Here are the top 3 emergency contacts ready to help you right now:\n\nWhat kind of urgent assistance do you need most?",
+        responseText: "If you or someone you know is in immediate crisis, confidential help is available right now:\n\n• Suicide & Crisis Lifeline: Dial or text 988 (24/7 Free & Confidential)\n• Immediate Danger / Medical Emergency: Dial 911\n• Georgia Crisis & Access Line (GCAL): (800) 715-4225\n• Forsyth County Family Haven (Domestic Safety): (770) 887-1121\n• United Way Helpline: Dial 211\n\nSuggested resources matching your search:",
         matched: matches,
         examplePrompts: [
           'How do I get emergency rent or utility help?',
@@ -213,7 +222,135 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // 2. Education, schools & colleges
+    // 2. Housing, Rent, Eviction & Utility Bill Assistance
+    if (
+      matchesWordBoundary(query, 'housing') ||
+      matchesWordBoundary(query, 'shelter') ||
+      matchesWordBoundary(query, 'rent') ||
+      matchesWordBoundary(query, 'eviction') ||
+      matchesWordBoundary(query, 'utility') ||
+      matchesWordBoundary(query, 'utilities') ||
+      matchesWordBoundary(query, 'electric') ||
+      matchesWordBoundary(query, 'power bill') ||
+      matchesWordBoundary(query, 'sawnee') ||
+      matchesWordBoundary(query, 'gas') ||
+      matchesWordBoundary(query, 'water bill') ||
+      matchesWordBoundary(query, 'homeless') ||
+      matchesWordBoundary(query, 'liheap')
+    ) {
+      const ranked = rankResources(query, 'housing');
+      return {
+        responseText: "Facing housing instability or overdue utility bills? Help is available through Forsyth community programs and LIHEAP grants. Suggested resources matching your search:\n\nWhat kind of assistance do you need most?",
+        matched: ranked.slice(0, 3),
+        examplePrompts: [
+          'Emergency grant to stop an eviction notice in Forsyth',
+          'Past-due Sawnee EMC or Georgia Power bill relief',
+          'Transitional family shelter and rapid re-housing'
+        ]
+      };
+    }
+
+    // 3. Food pantries, groceries & SNAP/EBT
+    if (
+      matchesWordBoundary(query, 'food') ||
+      matchesWordBoundary(query, 'pantry') ||
+      matchesWordBoundary(query, 'pantries') ||
+      matchesWordBoundary(query, 'groceries') ||
+      matchesWordBoundary(query, 'grocery') ||
+      matchesWordBoundary(query, 'hunger') ||
+      matchesWordBoundary(query, 'meal') ||
+      matchesWordBoundary(query, 'meals') ||
+      matchesWordBoundary(query, 'eat') ||
+      matchesWordBoundary(query, 'snap') ||
+      matchesWordBoundary(query, 'ebt') ||
+      matchesWordBoundary(query, 'food stamps')
+    ) {
+      const ranked = rankResources(query, 'food');
+      return {
+        responseText: "Need groceries this week? Multiple pantries in Cumming distribute fresh food and baby supplies. Suggested resources matching your search:\n\nWhat kind of food assistance do you need?",
+        matched: ranked.slice(0, 3),
+        examplePrompts: [
+          'Which food pantries are open on weekday evenings?',
+          'Can I get food boxes delivered to my door for my kids?',
+          'Where can I find free baby formula and diapers in Forsyth?'
+        ]
+      };
+    }
+
+    // 4. Healthcare, Dental & Medicaid
+    if (
+      matchesWordBoundary(query, 'health') ||
+      matchesWordBoundary(query, 'clinic') ||
+      matchesWordBoundary(query, 'doctor') ||
+      matchesWordBoundary(query, 'dental') ||
+      matchesWordBoundary(query, 'teeth') ||
+      matchesWordBoundary(query, 'dentist') ||
+      matchesWordBoundary(query, 'prescription') ||
+      matchesWordBoundary(query, 'mental') ||
+      matchesWordBoundary(query, 'therapy') ||
+      matchesWordBoundary(query, 'counseling') ||
+      matchesWordBoundary(query, 'medicaid') ||
+      matchesWordBoundary(query, 'peachcare') ||
+      matchesWordBoundary(query, 'uninsured')
+    ) {
+      const ranked = rankResources(query, 'healthcare');
+      return {
+        responseText: "Medical and dental care are available regardless of insurance status. Suggested resources matching your search:\n\nWhat kind of care are you looking for?",
+        matched: ranked.slice(0, 3),
+        examplePrompts: [
+          'Where can I get free tooth extractions without insurance?',
+          'Free doctor visits and generic prescription refills',
+          'Affordable sliding-scale family doctors near Cumming'
+        ]
+      };
+    }
+
+    // 5. Senior Services & Meals on Wheels
+    if (
+      matchesWordBoundary(query, 'senior') ||
+      matchesWordBoundary(query, 'seniors') ||
+      matchesWordBoundary(query, 'elderly') ||
+      matchesWordBoundary(query, 'meals on wheels') ||
+      matchesWordBoundary(query, 'aging') ||
+      matchesWordBoundary(query, 'medicare') ||
+      matchesWordBoundary(query, 'caregiver')
+    ) {
+      const ranked = rankResources(query, 'seniors');
+      return {
+        responseText: "Forsyth County Senior Services provides nutrition, wellness, and daytime enrichment for adults 60+. Suggested resources matching your search:",
+        matched: ranked.slice(0, 3),
+        examplePrompts: [
+          'How do I sign up for Meals on Wheels delivery in Forsyth?',
+          'Senior center daytime activities and exercise classes',
+          'Home weatherization assistance for elderly homeowners'
+        ]
+      };
+    }
+
+    // 6. Childcare & Daycare (including CAPS subsidies)
+    if (
+      matchesWordBoundary(query, 'childcare') ||
+      matchesWordBoundary(query, 'daycare') ||
+      matchesWordBoundary(query, 'baby') ||
+      matchesWordBoundary(query, 'infant') ||
+      matchesWordBoundary(query, 'toddler') ||
+      matchesWordBoundary(query, 'afterschool') ||
+      matchesWordBoundary(query, 'ymca') ||
+      matchesWordBoundary(query, 'caps')
+    ) {
+      const ranked = rankResources(query, 'childcare');
+      return {
+        responseText: "Finding dependable childcare takes care and research. Suggested resources matching your search:\n\nWhat age is your child, and what schedule do you need?",
+        matched: ranked.slice(0, 3),
+        examplePrompts: [
+          'Which daycares in Cumming accept Georgia CAPS subsidies?',
+          'Are there part-time morning preschools available?',
+          'After-school programs with financial scholarships'
+        ]
+      };
+    }
+
+    // 7. Education, schools & colleges
     if (
       matchesWordBoundary(query, 'school') ||
       matchesWordBoundary(query, 'schools') ||
@@ -227,11 +364,12 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       matchesWordBoundary(query, 'preschool') ||
       matchesWordBoundary(query, 'pre-k') ||
       matchesWordBoundary(query, 'education') ||
-      matchesWordBoundary(query, 'degree')
+      matchesWordBoundary(query, 'degree') ||
+      matchesWordBoundary(query, 'hope grant')
     ) {
       const ranked = rankResources(query, 'schools');
       return {
-        responseText: "Forsyth County has great education options for all ages. Here are the top 3 schools and colleges matching your request:\n\nWhat age or program are you looking into? Tell me your specific need, or try asking one of these:",
+        responseText: "Forsyth County offers strong public education and tuition-free technical credentials. Suggested resources matching your search:\n\nWhat program or grade level are you looking into?",
         matched: ranked.slice(0, 3),
         examplePrompts: [
           'Which elementary schools have dual language immersion?',
@@ -241,7 +379,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // 3. Automotive and residential repair trades (using word boundaries for 'ac', 'car', etc.)
+    // 8. Automotive and residential repair trades
     if (
       matchesWordBoundary(query, 'repair') ||
       matchesWordBoundary(query, 'repairs') ||
@@ -257,15 +395,11 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       matchesWordBoundary(query, 'heat') ||
       matchesWordBoundary(query, 'handyman') ||
       matchesWordBoundary(query, 'roof') ||
-      matchesWordBoundary(query, 'drywall') ||
-      matchesWordBoundary(query, 'appliance') ||
-      matchesWordBoundary(query, 'washer') ||
-      matchesWordBoundary(query, 'dryer') ||
-      matchesWordBoundary(query, 'refrigerator')
+      matchesWordBoundary(query, 'appliance')
     ) {
       const ranked = rankResources(query, 'repairs');
       return {
-        responseText: "Car trouble or something broken at home? Here are the top 3 ranked repair services in Forsyth County:\n\nWhat needs fixing? Let me know what you're dealing with, or ask:",
+        responseText: "Car trouble or something broken at home? Suggested resources matching your search:\n\nWhat needs fixing?",
         matched: ranked.slice(0, 3),
         examplePrompts: [
           'Who does emergency 24/7 plumbing leaks in Cumming?',
@@ -275,79 +409,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // 4. Food pantries and hot meals (word boundary for 'eat', 'meal', 'food')
-    if (
-      matchesWordBoundary(query, 'food') ||
-      matchesWordBoundary(query, 'pantry') ||
-      matchesWordBoundary(query, 'pantries') ||
-      matchesWordBoundary(query, 'groceries') ||
-      matchesWordBoundary(query, 'grocery') ||
-      matchesWordBoundary(query, 'hunger') ||
-      matchesWordBoundary(query, 'meal') ||
-      matchesWordBoundary(query, 'meals') ||
-      matchesWordBoundary(query, 'eat')
-    ) {
-      const ranked = rankResources(query, 'food');
-      return {
-        responseText: "Need groceries this week? Nobody should go hungry. Here are the top 3 food assistance programs in Cumming:\n\nWhat kind of grocery help do you need? Tell me your situation, or try asking:",
-        matched: ranked.slice(0, 3),
-        examplePrompts: [
-          'Which food pantries are open on weekday evenings?',
-          'Can I get food boxes delivered to my door for my kids?',
-          'Where can I find free baby formula and diapers in Forsyth?'
-        ]
-      };
-    }
-
-    // 5. Healthcare and clinics
-    if (
-      matchesWordBoundary(query, 'health') ||
-      matchesWordBoundary(query, 'clinic') ||
-      matchesWordBoundary(query, 'doctor') ||
-      matchesWordBoundary(query, 'dental') ||
-      matchesWordBoundary(query, 'teeth') ||
-      matchesWordBoundary(query, 'dentist') ||
-      matchesWordBoundary(query, 'prescription') ||
-      matchesWordBoundary(query, 'mental') ||
-      matchesWordBoundary(query, 'therapy') ||
-      matchesWordBoundary(query, 'counseling')
-    ) {
-      const ranked = rankResources(query, 'healthcare');
-      return {
-        responseText: "Doctor bills can be scary, especially without insurance. Here are the top 3 free and sliding-scale healthcare providers in Forsyth County:\n\nWhat kind of healthcare do you need right now? You can specify your need, or try asking:",
-        matched: ranked.slice(0, 3),
-        examplePrompts: [
-          'Where can I get free tooth extractions without insurance?',
-          'Free doctor visits and generic prescription refills',
-          'Affordable sliding-scale family doctors near Cumming'
-        ]
-      };
-    }
-
-    // 6. Childcare and preschool
-    if (
-      matchesWordBoundary(query, 'childcare') ||
-      matchesWordBoundary(query, 'daycare') ||
-      matchesWordBoundary(query, 'baby') ||
-      matchesWordBoundary(query, 'infant') ||
-      matchesWordBoundary(query, 'toddler') ||
-      matchesWordBoundary(query, 'afterschool') ||
-      matchesWordBoundary(query, 'ymca') ||
-      matchesWordBoundary(query, 'caps')
-    ) {
-      const ranked = rankResources(query, 'childcare');
-      return {
-        responseText: "Finding dependable care for little ones takes effort. Here are the top 3 childcare and early education centers in Forsyth County:\n\nWhat age is your child, and what schedule do you need? You can type your question, or ask:",
-        matched: ranked.slice(0, 3),
-        examplePrompts: [
-          'Which daycares in Cumming accept Georgia CAPS subsidies?',
-          'Are there part-time morning preschools available?',
-          'After-school programs with financial scholarships'
-        ]
-      };
-    }
-
-    // 7. Outdoor recreation and parks (word boundaries for 'park', 'pool', 'swim')
+    // 9. Outdoor recreation and parks
     if (
       matchesWordBoundary(query, 'park') ||
       matchesWordBoundary(query, 'parks') ||
@@ -363,7 +425,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     ) {
       const ranked = rankResources(query, 'sports');
       return {
-        responseText: "Looking to get outside this weekend? Here are the top 3 outdoor recreation spots in Forsyth County:\n\nWhat kind of outing are you planning? Tell me what you have in mind, or ask:",
+        responseText: "Looking to get outside this weekend? Suggested resources matching your search:\n\nWhat kind of outing are you planning?",
         matched: ranked.slice(0, 3),
         examplePrompts: [
           'Are the hiking trails at Sawnee Mountain good for beginners?',
@@ -373,29 +435,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // 8. Family dining
-    if (
-      matchesWordBoundary(query, 'dine') ||
-      matchesWordBoundary(query, 'dining') ||
-      matchesWordBoundary(query, 'restaurant') ||
-      matchesWordBoundary(query, 'pizza') ||
-      matchesWordBoundary(query, 'deli') ||
-      matchesWordBoundary(query, 'breakfast') ||
-      matchesWordBoundary(query, 'steak')
-    ) {
-      const ranked = rankResources(query, 'dining');
-      return {
-        responseText: "Hungry for good local food? Skip the chains. Here are our top 3 family-owned restaurants in Cumming:\n\nWhat kind of food are you craving tonight? Specify what you like, or ask:",
-        matched: ranked.slice(0, 3),
-        examplePrompts: [
-          'Family dinner near downtown Cumming playhouse',
-          'Where can I find authentic Italian subs and cannoli?',
-          'Best place for all-day breakfast and Greek gyros'
-        ]
-      };
-    }
-
-    // 9. Workforce & Library (word boundaries for 'job', 'ged', 'esl')
+    // 10. Workforce & Library
     if (
       matchesWordBoundary(query, 'job') ||
       matchesWordBoundary(query, 'jobs') ||
@@ -408,7 +448,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
     ) {
       const ranked = rankResources(query, 'workforce');
       return {
-        responseText: "Looking for work or a quiet place to learn? Here are the top 3 community career and library resources in Forsyth County:\n\nWhat career or study help are you looking for? Let me know, or try asking:",
+        responseText: "Looking for employment assistance or library study tools? Suggested resources matching your search:\n\nWhat kind of career or learning support do you need?",
         matched: ranked.slice(0, 3),
         examplePrompts: [
           'How do I apply for the $8,000 career training grant?',
@@ -418,12 +458,12 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // Generic fallback ranked by relevance score
+    // 11. Generic ranked query
     const rankedGeneral = rankResources(query);
     if (rankedGeneral.length > 0) {
       const topName = rankedGeneral[0].name;
       return {
-        responseText: `Found matching places in Forsyth County. Here are the top ${Math.min(rankedGeneral.length, 3)} ranked by relevance:\n\nCould you tell me a little more about your actual need? For example, you could ask:`,
+        responseText: `Suggested resources matching your search in Forsyth County:\n\nCould you tell me a little more about your actual need? For example, you could ask:`,
         matched: rankedGeneral.slice(0, 3),
         examplePrompts: [
           `What are the opening hours and phone for ${topName}?`,
@@ -433,13 +473,14 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
+    // 12. Meaningful fallback when no matching results are found (does NOT return random irrelevant resources)
     return {
-      responseText: "I want to make sure I connect you with the right place. Could you specify your actual need? Here are 3 example questions you can tap or ask:",
-      matched: COMMUNITY_RESOURCES.slice(0, 3),
+      responseText: "I couldn't find a direct directory listing matching those exact keywords. For personalized help or specialized community referrals:\n\n• Dial 211 (United Way 24/7 Free Helpline for housing, utilities, food & care)\n• Call (770) 781-2101 (Forsyth County Government Information Line)\n• In acute crisis, call or text 988 (Suicide & Crisis Lifeline)\n\nOr try exploring one of these common topics:",
+      matched: [],
       examplePrompts: [
         'Where can I get emergency groceries today?',
         'Find a free clinic or dentist for uninsured adults',
-        'Emergency plumbing or car brake repair in Cumming'
+        'Emergency rent, utility, or power bill assistance'
       ]
     };
   };

@@ -31,12 +31,13 @@ export interface ResourceItem {
   address: string;
   district: DistrictType;
   phone: string;
-  email: string;
-  website: string;
+  email?: string;
+  website?: string;
   hours: string;
   eligibility: string;
-  sourceUrl: string;
-  verificationDate: string;
+  sourceUrl?: string;
+  verificationDate?: string;
+  verificationSource?: string;
   cost: 'Free' | 'Sliding Scale' | 'Medicaid/Insurance' | 'Subsidized' | 'Subsidized / Sliding Scale' | 'Affordable / Paid';
   languages: string[];
   wheelchairAccessible: boolean;
@@ -76,6 +77,7 @@ export interface CommunityEvent {
   category: CategoryType;
   description: string;
   organizer: string;
+  contactPhone: string;
   attendeeCount: number;
   maxCapacity: number;
   freeRefreshments: boolean;
@@ -108,6 +110,7 @@ export interface UserFeedback {
   id: string;
   userName: string;
   isAnonymous?: boolean;
+  isSample?: boolean;
   category: 'Accuracy & Updates' | 'Suggest New Resource' | 'Website Accessibility' | 'General Suggestion';
   resourceName?: string;
   rating: 'Very Helpful' | 'Helpful' | 'Needs Improvement';

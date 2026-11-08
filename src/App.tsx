@@ -177,6 +177,23 @@ export function App() {
     }
   };
 
+  // Global Escape key dismiss handler for dialogs
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (callPrompt.isOpen) {
+          setCallPrompt(prev => ({ ...prev, isOpen: false }));
+        } else if (showWelcomeModal) {
+          setShowWelcomeModal(false);
+        } else if (activeResource) {
+          setActiveResource(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [callPrompt.isOpen, showWelcomeModal, activeResource]);
+
   const districts: Array<DistrictType | 'all'> = [
     'all',
     'Central Cumming',
@@ -401,7 +418,7 @@ export function App() {
                         resource={res}
                         onSelect={setActiveResource}
                         onCall={handleInitiateCall}
-                        isVerified={res.isVerified || verifiedListings[res.id]}
+                        isVerified={Boolean(res.isVerified)}
                       />
                     ))}
                   </div>

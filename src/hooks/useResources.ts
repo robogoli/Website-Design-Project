@@ -27,25 +27,39 @@ export function useResources() {
         return false;
       }
 
-      // Verified check
-      if (onlyVerified && !item.isVerified && !verifiedListings[item.id]) {
+      // Official verification check
+      if (onlyVerified && !item.isVerified) {
         return false;
       }
 
-      // Text search query
+      // Text search query with extended contact, eligibility, and language matching
       if (q) {
         const matchesName = item.name.toLowerCase().includes(q);
         const matchesDesc = item.description.toLowerCase().includes(q);
         const matchesTagline = item.tagline.toLowerCase().includes(q);
         const matchesServices = item.keyServices.some(s => s.toLowerCase().includes(q));
         const matchesAddress = item.address.toLowerCase().includes(q);
+        const matchesEligibility = item.eligibility.toLowerCase().includes(q);
+        const matchesPhone = item.phone.toLowerCase().includes(q);
+        const matchesLanguages = item.languages.some(language =>
+          language.toLowerCase().includes(q)
+        );
 
-        return matchesName || matchesDesc || matchesTagline || matchesServices || matchesAddress;
+        return (
+          matchesName ||
+          matchesDesc ||
+          matchesTagline ||
+          matchesServices ||
+          matchesAddress ||
+          matchesEligibility ||
+          matchesPhone ||
+          matchesLanguages
+        );
       }
 
       return true;
     });
-  }, [searchQuery, selectedCategory, selectedDistrict, onlyVerified, verifiedListings]);
+  }, [searchQuery, selectedCategory, selectedDistrict, onlyVerified]);
 
   const toggleVerifyResource = (id: string) => {
     setVerifiedListings(prev => ({
