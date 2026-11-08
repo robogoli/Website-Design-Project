@@ -450,17 +450,17 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 rounded-full bg-amber-700 hover:bg-amber-800 hover:scale-105 px-6 py-4 text-white shadow-xl max-w-[calc(100vw-2rem)] transition-all duration-200 cursor-pointer flex items-center gap-2.5 focus:outline-none focus:ring-4 focus:ring-amber-500/40 print:hidden group"
+          className="fixed bottom-3 right-3 sm:bottom-4 sm:right-5 z-40 rounded-full bg-amber-700 hover:bg-amber-800 hover:scale-105 px-3.5 py-2 sm:px-4 sm:py-2.5 text-white shadow-xl transition-all duration-200 cursor-pointer flex items-center gap-1.5 sm:gap-2 max-w-[calc(100vw-2rem)] focus:outline-none focus:ring-4 focus:ring-amber-500/40 print:hidden group shrink-0"
           aria-label="Open CivicBridge Interactive Guide"
         >
-          <div className="relative">
-            <MessageCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
-            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+          <div className="relative shrink-0">
+            <MessageCircle className="w-4 h-4 sm:w-4.5 sm:h-4.5 transition-transform group-hover:scale-110" />
+            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
           </div>
-          <span className="text-xs sm:text-sm font-bold tracking-wide">Ask a Neighbor</span>
+          <span className="text-xs font-bold tracking-wide whitespace-nowrap">Ask a Neighbor</span>
         </button>
       )}
 

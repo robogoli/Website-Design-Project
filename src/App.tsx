@@ -241,7 +241,7 @@ export function App() {
 
                 {/* Instant search input */}
                 <div className="pt-2 w-full max-w-5xl">
-                  <div className="relative w-full rounded-2xl bg-white border border-stone-200 shadow-sm transition-all duration-200 hover:shadow-md focus-within:ring-4 focus-within:ring-amber-400/30">
+                  <div className="relative w-full rounded-2xl bg-white border border-stone-200 shadow-sm hover:shadow-md transition-all duration-200 focus-within:ring-4 focus-within:ring-amber-400/30">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none" />
                     <input
                       type="text"
