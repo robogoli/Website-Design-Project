@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, MapPin, Clock, CheckCircle2, PhoneCall, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Phone, MapPin, Clock, CheckCircle2, PhoneCall, ShieldCheck } from 'lucide-react';
 import { ResourceItem } from '../types';
 
 interface ResourceCardProps {

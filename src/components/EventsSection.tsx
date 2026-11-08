@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, PhoneCall, Users, Coffee, Baby, Calendar } from 'lucide-react';
+import { MapPin, PhoneCall, Users, Coffee, Baby, Calendar, ShieldCheck } from 'lucide-react';
 import { CommunityEvent, DistrictType } from '../types';
 import { COMMUNITY_EVENTS } from '../data/mockData';
 
@@ -37,16 +37,8 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           Local Gatherings &amp; Community Events
         </h1>
         <p className="hero-desc">
-          Upcoming gatherings and community drives around Cumming and Forsyth County. These demonstration entries illustrate event discovery, volunteer registration, and district filtering.
+          Upcoming community drives, food box distributions, and family nights around Cumming and Forsyth County. Each event clearly shows whether its schedule and contact information have been independently verified with the organizer.
         </p>
-
-        {/* Demonstration Sample Notice */}
-        <div className="mt-3 p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2">
-          <span className="font-semibold px-2 py-0.5 rounded bg-amber-200/70 text-amber-950 uppercase tracking-wider text-[10px] shrink-0">Sample Events</span>
-          <span>
-            These listings represent simulated demonstration events for interface testing. Dates, venues, and contact numbers correspond to sample community initiatives rather than confirmed public schedules.
-          </span>
-        </div>
 
         {/* District filter */}
         <div className="flex items-center gap-1.5 flex-wrap pt-2">
@@ -84,9 +76,15 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
                     {evt.district}
                   </span>
 
-                  {evt.isSample && (
-                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-semibold">
-                      Sample Event
+                  {evt.isVerified ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                      {evt.verificationDate || 'Verified Event'}
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-300 font-medium">
+                      <span className="w-2 h-2 rounded-full bg-stone-400 shrink-0" aria-hidden="true" />
+                      Unverified Event
                     </span>
                   )}
 

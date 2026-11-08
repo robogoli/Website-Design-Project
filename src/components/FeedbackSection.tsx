@@ -88,11 +88,11 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
           Been to one of these spots recently? Leave a note. If someone changed their hours or treated your family with real care, speak up. It takes thirty seconds and saves the next neighbor a wasted trip.
         </p>
 
-        {/* Transparent client storage and demonstration disclosure */}
+        {/* Helpful note on how community comments work */}
         <div className="mt-3 p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-start gap-2 leading-relaxed">
           <Info className="w-4 h-4 text-amber-800 shrink-0 mt-0.5" />
           <div>
-            <strong>Client-Side Storage &amp; Demonstration Notice:</strong> In this static directory, newly submitted neighbor notes are safely saved in your local browser storage (localStorage). Pre-loaded demonstration notes are marked with a <span className="font-mono font-bold bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-300 text-[11px]">Sample Note</span> tag for demonstration purposes. To submit official corrections to county records, please reach out to the respective municipal department directly.
+            <strong>How Neighbor Notes Work:</strong> Notes you post here are stored on this device so you can keep track of places you visit. Sample notes are marked with a <span className="font-mono font-bold bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-300 text-[11px]">Sample Note</span> badge. To request official changes to county services, please contact that provider or county office directly.
           </div>
         </div>
       </header>

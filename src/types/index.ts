@@ -83,6 +83,9 @@ export interface CommunityEvent {
   freeRefreshments: boolean;
   childcareAvailable: boolean;
   languages: string[];
+  isVerified?: boolean;
+  verificationDate?: string;
+  verificationSource?: string;
   isSample?: boolean;
 }
 

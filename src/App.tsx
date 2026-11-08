@@ -469,13 +469,13 @@ export function App() {
             <header className="border-b border-stone-200 pb-3">
               <span className="hero-tagline flex items-center gap-1.5">
                 <Award className="w-4 h-4 text-amber-800" />
-                <span>Cumming &amp; Forsyth County Community Infrastructure</span>
+                <span>Cumming &amp; Forsyth County Community Information</span>
               </span>
               <h1 className="hero-title mt-1">
-                Copyright Compliance, Device Compatibility &amp; Technical Standards
+                Copyright Information, Device Compatibility &amp; Sources
               </h1>
               <p className="hero-desc mb-0">
-                Official substantiation of copyright provenance under 17 U.S.C. § 107 &amp; O.C.G.A. § 50-18-70, hardware viewport verification across 5 display profiles, and open web accessibility quality benchmarks.
+                Information on public data sources, open-source licenses, accessibility design standards, and device support for CivicBridge.
               </p>
             </header>
 
@@ -484,17 +484,17 @@ export function App() {
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-amber-800" />
                 <h2 className="text-base sm:text-lg font-bold font-serif text-amber-950">
-                  Civic Mission: Connecting Neighbors to Local Help
+                  Our Mission: Connecting Neighbors to Local Help
                 </h2>
               </div>
               <blockquote className="border-l-4 border-amber-800 pl-4 py-1 italic bg-white/80 text-stone-800 text-xs sm:text-sm rounded-r">
-                <p>&ldquo;Communities often have a wide range of organizations, programs, services, events, and resources that support residents and local needs. A well-organized website can present this information clearly, making it easier for users to explore available resources, understand community offerings, and access relevant information in one central location.&rdquo;</p>
+                <p>&ldquo;Communities have many organizations, programs, services, and events that support residents. This website brings that information together clearly, making it simple to find what you need in one place.&rdquo;</p>
                 <cite className="block text-[11px] not-italic text-stone-500 mt-1 font-mono">
                   Source: Forsyth County Community Service &amp; Open Access Initiative
                 </cite>
               </blockquote>
               <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                <strong>Project Scope:</strong> CivicBridge unifies 220 verified community resources across 11 core categories (at least 20 per category) for residents of <strong>Cumming and Forsyth County, Georgia</strong>. From emergency food distribution and free medical care to schools (Pre-K through university) and residential repair services, CivicBridge solves community fragmented wayfinding in a single, intuitive hub.
+                <strong>Project Scope:</strong> CivicBridge organizes 220 community resources across 11 categories (20 per category) for residents of <strong>Cumming and Forsyth County, Georgia</strong>. From emergency food pantries and community health clinics to local public schools and home repairs, CivicBridge helps neighbors quickly find local contact details and services.
               </p>
             </section>
 
@@ -504,16 +504,16 @@ export function App() {
                 <div className="flex items-center gap-2">
                   <ShieldCheck className="w-5 h-5 text-emerald-700" aria-hidden="true" />
                   <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900">
-                    Visual Copyright Compliance &amp; Intellectual Property Provenance Matrix
+                    Source Attribution &amp; Open-Source License Details
                   </h2>
                 </div>
                 <span className="text-xs font-mono font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  100% Substantiated · Open Public Records
+                  Open Public Records &amp; Free Licenses
                 </span>
               </div>
 
               <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                In accordance with federal copyright standards and open records practices, all intellectual property, libraries, media assets, fonts, and data sources utilized across CivicBridge are substantiated below with explicit legal basis and license provenance:
+                All software components, fonts, graphics, and public information sources used in CivicBridge are documented below:
               </p>
 
               <div className="civic-table-wrapper">
