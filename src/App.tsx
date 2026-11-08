@@ -56,8 +56,8 @@ export function App() {
     setOnlyVerified,
     isFiltered,
     resetFilters,
-    verifiedListings,
-    toggleVerifyResource
+    userConfirmations,
+    toggleUserConfirmation
   } = useResources();
 
   // Community feedback hook
@@ -860,8 +860,8 @@ export function App() {
           resource={activeResource}
           onClose={() => setActiveResource(null)}
           onCall={handleInitiateCall}
-          isQuickChecked={verifiedListings[activeResource.id]}
-          onQuickCheck={(id) => toggleVerifyResource(id)}
+          isQuickChecked={userConfirmations[activeResource.id]}
+          onQuickCheck={(id) => toggleUserConfirmation(id)}
           onSuggestUpdate={(name) => {
             setActiveResource(null);
             setFeedbackPrefillResource(name);

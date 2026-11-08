@@ -7,7 +7,8 @@ export function useResources() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictType>('all');
   const [onlyVerified, setOnlyVerified] = useState(false);
-  const [verifiedListings, setVerifiedListings] = useState<Record<string, boolean>>({});
+  // Visitor community confirmations stored in local state (distinct from official municipal verification)
+  const [userConfirmations, setUserConfirmations] = useState<Record<string, boolean>>({});
 
   const isFiltered = useMemo(() => {
     return searchQuery.trim() !== '' || selectedCategory !== 'all' || selectedDistrict !== 'all' || onlyVerified;
@@ -61,8 +62,8 @@ export function useResources() {
     });
   }, [searchQuery, selectedCategory, selectedDistrict, onlyVerified]);
 
-  const toggleVerifyResource = (id: string) => {
-    setVerifiedListings(prev => ({
+  const toggleUserConfirmation = (id: string) => {
+    setUserConfirmations(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
@@ -89,7 +90,10 @@ export function useResources() {
     setOnlyVerified,
     isFiltered,
     resetFilters,
-    verifiedListings,
-    toggleVerifyResource
+    userConfirmations,
+    toggleUserConfirmation,
+    // Aliases for compatibility
+    verifiedListings: userConfirmations,
+    toggleVerifyResource: toggleUserConfirmation
   };
 }
