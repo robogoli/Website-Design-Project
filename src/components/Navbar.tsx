@@ -81,14 +81,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Navigation tabs & greeting badge - always visible and open */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
-            <nav className="flex items-center gap-0.5 sm:gap-1 bg-stone-100 p-1 rounded-xl border border-stone-200" aria-label="Main Navigation">
+            <nav className="flex items-center gap-0.5 sm:gap-1 bg-stone-100 p-1 rounded-xl border border-stone-200 shadow-2xs" aria-label="Main Navigation">
               <button
                 type="button"
                 onClick={() => onSelectTab('resources')}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   currentTab === 'resources'
-                    ? 'bg-white text-stone-900 shadow-2xs border border-stone-200/60'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+                    ? 'bg-white text-stone-950 font-bold shadow-xs border border-stone-300 ring-1 ring-black/5'
+                    : 'text-stone-600 hover:text-stone-950 hover:bg-stone-200/90 font-medium'
                 }`}
                 aria-current={currentTab === 'resources' ? 'page' : undefined}
               >
@@ -99,10 +99,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTab('events')}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   currentTab === 'events'
-                    ? 'bg-white text-stone-900 shadow-2xs border border-stone-200/60'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+                    ? 'bg-white text-stone-950 font-bold shadow-xs border border-stone-300 ring-1 ring-black/5'
+                    : 'text-stone-600 hover:text-stone-950 hover:bg-stone-200/90 font-medium'
                 }`}
                 aria-current={currentTab === 'events' ? 'page' : undefined}
               >
@@ -113,10 +113,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTab('feedback')}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   currentTab === 'feedback'
-                    ? 'bg-white text-stone-900 shadow-2xs border border-stone-200/60'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+                    ? 'bg-white text-stone-950 font-bold shadow-xs border border-stone-300 ring-1 ring-black/5'
+                    : 'text-stone-600 hover:text-stone-950 hover:bg-stone-200/90 font-medium'
                 }`}
                 aria-current={currentTab === 'feedback' ? 'page' : undefined}
               >
@@ -127,10 +127,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTab('about')}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap ${
                   currentTab === 'about'
-                    ? 'bg-white text-stone-900 shadow-2xs border border-stone-200/60'
-                    : 'text-stone-600 hover:text-stone-900 hover:bg-stone-200/50'
+                    ? 'bg-white text-stone-950 font-bold shadow-xs border border-stone-300 ring-1 ring-black/5'
+                    : 'text-stone-600 hover:text-stone-950 hover:bg-stone-200/90 font-medium'
                 }`}
                 aria-current={currentTab === 'about' ? 'page' : undefined}
               >

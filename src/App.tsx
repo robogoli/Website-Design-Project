@@ -240,23 +240,23 @@ export function App() {
                 </p>
 
                 {/* Instant search input */}
-                <div className="pt-2">
-                  <div className="relative w-full max-w-3xl">
-                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
+                <div className="pt-2 w-full max-w-5xl">
+                  <div className="relative w-full rounded-2xl bg-white border border-stone-200 shadow-sm transition-all duration-200 hover:shadow-md focus-within:ring-4 focus-within:ring-amber-400/30">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400 pointer-events-none" />
                     <input
                       type="text"
                       list="civic-search-suggestions"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search clinics, pantries, mechanics, schools..."
-                      className="w-full max-w-3xl rounded-2xl bg-white px-6 py-6 pl-14 text-base sm:text-lg text-stone-900 placeholder:text-stone-400 border border-stone-200 shadow-md focus:outline-none focus:ring-4 focus:ring-amber-400/30 transition-all"
+                      className="w-full rounded-2xl bg-transparent px-6 py-5 pl-14 text-base sm:text-lg text-stone-900 placeholder:text-stone-400 focus:outline-none"
                       aria-label="Search community resources"
                     />
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-5 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-700 rounded-full"
+                        className="absolute right-5 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-700 rounded-full cursor-pointer"
                         aria-label="Clear search query"
                       >
                         <X className="w-4 h-4" />
