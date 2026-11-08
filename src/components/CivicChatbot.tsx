@@ -450,7 +450,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 rounded-full bg-amber-700 hover:bg-amber-800 px-6 py-4 text-white shadow-xl transition-all duration-200 cursor-pointer flex items-center gap-2.5 focus:outline-none focus:ring-4 focus:ring-amber-500/40 print:hidden group"
+          className="fixed bottom-6 right-6 z-50 rounded-full bg-amber-700 hover:bg-amber-800 px-6 py-4 text-white shadow-xl max-w-[calc(100vw-2rem)] transition-all duration-200 cursor-pointer flex items-center gap-2.5 focus:outline-none focus:ring-4 focus:ring-amber-500/40 print:hidden group"
           aria-label="Open CivicBridge Interactive Guide"
         >
           <div className="relative">

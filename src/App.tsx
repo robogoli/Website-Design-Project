@@ -221,8 +221,8 @@ export function App() {
         {currentTab === 'resources' && (
           <div className="civic-container space-y-6">
             {/* Hero section */}
-            <header className="hero-banner relative overflow-hidden min-h-[480px] rounded-[32px] p-8 md:p-16 flex flex-col justify-center bg-gradient-to-br from-[#71320f] to-[#4b210d] shadow-lg border border-amber-900/60">
-              <div className="relative z-10 max-w-4xl space-y-5">
+            <header className="hero-banner relative overflow-hidden bg-gradient-to-br from-[#71320f] to-[#4b210d] shadow-lg border border-amber-900/60 rounded-[32px] p-8 md:p-12 lg:p-16 pb-16 md:pb-20 flex flex-col justify-center min-h-[480px]">
+              <div className="relative z-10 max-w-5xl space-y-5">
                 <span className="inline-flex items-center gap-2 rounded-full bg-amber-100 text-amber-950 border border-amber-300 px-5 py-3 font-bold text-xs sm:text-sm shadow-xs self-start">
                   <Sparkles className="w-4 h-4 text-amber-900 shrink-0" />
                   <span>FORSYTH COUNTY COMMUNITY DIRECTORY</span>
@@ -230,18 +230,18 @@ export function App() {
 
                 <h1
                   style={{ color: '#ffffff' }}
-                  className="text-white font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight max-w-4xl"
+                  className="text-white font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight max-w-5xl"
                 >
                   Find local help in Cumming without the runaround.
                 </h1>
 
-                <p className="text-white/85 text-lg md:text-xl leading-relaxed">
+                <p className="text-white/85 text-lg md:text-xl leading-relaxed max-w-3xl">
                   Telephone numbers, hours, and addresses for emergency food pantries, free medical clinics, preschools, and home repair services across Forsyth County.
                 </p>
 
                 {/* Instant search input */}
                 <div className="pt-2">
-                  <div className="relative max-w-xl">
+                  <div className="relative w-full max-w-3xl">
                     <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-stone-400" />
                     <input
                       type="text"
@@ -249,14 +249,14 @@ export function App() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search clinics, pantries, mechanics, schools..."
-                      className="w-full rounded-2xl border border-stone-200 bg-white px-6 py-5 pl-14 text-base sm:text-lg text-stone-900 placeholder:text-stone-400 shadow-md focus:outline-none focus:ring-4 focus:ring-amber-500/30 transition-all"
+                      className="w-full max-w-3xl rounded-2xl bg-white px-6 py-6 pl-14 text-base sm:text-lg text-stone-900 placeholder:text-stone-400 border border-stone-200 shadow-md focus:outline-none focus:ring-4 focus:ring-amber-400/30 transition-all"
                       aria-label="Search community resources"
                     />
                     {searchQuery && (
                       <button
                         type="button"
                         onClick={() => setSearchQuery('')}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-700 rounded-full"
+                        className="absolute right-5 top-1/2 -translate-y-1/2 p-1.5 text-stone-400 hover:text-stone-700 rounded-full"
                         aria-label="Clear search query"
                       >
                         <X className="w-4 h-4" />
