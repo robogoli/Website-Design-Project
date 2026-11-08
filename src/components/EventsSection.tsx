@@ -37,8 +37,16 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           Local Gatherings &amp; Community Events
         </h1>
         <p className="hero-desc">
-          Things happening around Cumming and Forsyth County this month. These events are open to the public and free to attend, covering grocery distribution mornings, drive-through food boxes, family recreation days, and community health fairs.
+          Upcoming gatherings and community drives around Cumming and Forsyth County. These demonstration entries illustrate event discovery, volunteer registration, and district filtering.
         </p>
+
+        {/* Demonstration Sample Notice */}
+        <div className="mt-3 p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs text-amber-900 flex items-start gap-2">
+          <span className="font-semibold px-2 py-0.5 rounded bg-amber-200/70 text-amber-950 uppercase tracking-wider text-[10px] shrink-0">Sample Events</span>
+          <span>
+            These listings represent simulated demonstration events for interface testing. Dates, venues, and contact numbers correspond to sample community initiatives rather than confirmed public schedules.
+          </span>
+        </div>
 
         {/* District filter */}
         <div className="flex items-center gap-1.5 flex-wrap pt-2">
@@ -75,6 +83,12 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
                     {evt.district}
                   </span>
+
+                  {evt.isSample && (
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-semibold">
+                      Sample Event
+                    </span>
+                  )}
 
                   {evt.freeRefreshments && (
                     <span className="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-medium">

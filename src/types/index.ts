@@ -83,6 +83,7 @@ export interface CommunityEvent {
   freeRefreshments: boolean;
   childcareAvailable: boolean;
   languages: string[];
+  isSample?: boolean;
 }
 
 export interface MetricItem {

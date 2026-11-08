@@ -47,9 +47,13 @@ interface VerifiedRecordEntry {
   website?: string;
   eligibility: string;
   sourceUrl?: string;
+  languages?: string[];
+  wheelchairAccessible?: boolean;
+  transitAccessible?: boolean;
+  intakeRequirements?: string[];
 }
 
-// Explicit verified records whose physical address, phone, hours, and eligibility have been verified
+// Explicit verified records whose physical address, phone, hours, eligibility, and intake requirements have been checked
 const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
   'food-1': {
     isVerified: true,
@@ -57,7 +61,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Forsyth County Municipal & 501(c)(3) Audit',
     website: 'https://www.theplaceofforsyth.org',
     eligibility: 'Forsyth County residents facing food insecurity; photo ID and proof of local residency (utility bill or lease) required. Up to 2 pantry visits per month.',
-    sourceUrl: 'https://www.theplaceofforsyth.org'
+    sourceUrl: 'https://www.theplaceofforsyth.org',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['Government-issued photo ID', 'Proof of Forsyth County residency (utility bill, lease, or mortgage statement within 60 days)'],
   },
   'food-2': {
     isVerified: true,
@@ -65,7 +73,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Meals by Grace Community Directory & 501(c)(3) Record',
     website: 'https://www.mealsbygrace.org',
     eligibility: 'Forsyth County families with children referred by school social workers or experiencing acute transportation obstacles.',
-    sourceUrl: 'https://www.mealsbygrace.org'
+    sourceUrl: 'https://www.mealsbygrace.org',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: false,
+    intakeRequirements: ['Forsyth County school social worker referral or direct intake phone interview'],
   },
   'food-3': {
     isVerified: true,
@@ -73,7 +85,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Forsyth County Department of Senior Services',
     website: 'https://www.forsythco.com/Departments-Offices/Senior-Services',
     eligibility: 'Forsyth County seniors aged 60+ who are homebound due to medical disability or frail health. In-home intake evaluation required.',
-    sourceUrl: 'https://www.forsythco.com/Departments-Offices/Senior-Services'
+    sourceUrl: 'https://www.forsythco.com/Departments-Offices/Senior-Services',
+    languages: ['English'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['Proof of age (60+)', 'Forsyth County residency verification', 'In-home medical frailty/mobility assessment'],
   },
   'house-1': {
     isVerified: true,
@@ -81,7 +97,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Family Promise National Registry & Local Audit',
     website: 'https://familypromiseofforsyth.org',
     eligibility: 'Families with dependent minor children experiencing homelessness or imminent housing loss in Forsyth County. Case interview required.',
-    sourceUrl: 'https://familypromiseofforsyth.org'
+    sourceUrl: 'https://familypromiseofforsyth.org',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['Pre-screening telephone intake', 'Valid ID for adult family members', 'Drug & background screening'],
   },
   'house-2': {
     isVerified: true,
@@ -89,7 +109,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'City of Cumming Municipal Housing Authority Records',
     website: 'https://cityofcumming.net',
     eligibility: 'Low-income individuals, families, seniors, and persons with disabilities meeting HUD annual income limits for Forsyth County.',
-    sourceUrl: 'https://cityofcumming.net'
+    sourceUrl: 'https://cityofcumming.net',
+    languages: ['English'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['HUD low-income qualification documents', 'Tax return or pay stubs', 'Birth certificates for all household members'],
   },
   'house-5': {
     isVerified: true,
@@ -97,7 +121,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Georgia Department of Human Services LIHEAP Division',
     website: 'https://www.ndo.org',
     eligibility: 'Forsyth County households at or below 60% of State Median Income with an active home energy heating or cooling account.',
-    sourceUrl: 'https://www.ndo.org'
+    sourceUrl: 'https://www.ndo.org',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: false,
+    intakeRequirements: ['Most recent heating/cooling electric or gas bill', 'Proof of gross household income for past 30 days', 'Social Security cards for household members'],
   },
   'house-8': {
     isVerified: true,
@@ -105,7 +133,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Sawnee Electric Membership Corporation Hardship Program',
     website: 'https://www.sawnee.com',
     eligibility: 'Active residential members of Sawnee EMC electric cooperative experiencing documented financial hardship.',
-    sourceUrl: 'https://www.sawnee.com'
+    sourceUrl: 'https://www.sawnee.com',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: false,
+    intakeRequirements: ['Active Sawnee EMC residential account number', 'Proof of hardship or agency referral'],
   },
   'health-1': {
     isVerified: true,
@@ -113,7 +145,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Georgia Free & Charitable Clinics Association Records',
     website: 'https://www.goodshepherdclinic.org',
     eligibility: 'Uninsured Forsyth County residents aged 19-64 living at or below 200% Federal Poverty Guidelines. Appointments scheduled in advance.',
-    sourceUrl: 'https://www.goodshepherdclinic.org'
+    sourceUrl: 'https://www.goodshepherdclinic.org',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['Proof of uninsurance status', 'Proof of Forsyth County residency', 'Federal income verification (W-2, tax return, or pay stubs)'],
   },
   'health-4': {
     isVerified: true,
@@ -121,7 +157,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Georgia Department of Community Health Healthcare Licensing',
     website: 'https://www.northside.com/locations/forsyth',
     eligibility: 'Open 24/7 to any individual requiring emergency medical screening and stabilization regardless of ability to pay.',
-    sourceUrl: 'https://www.northside.com/locations/forsyth'
+    sourceUrl: 'https://www.northside.com/locations/forsyth',
+    languages: ['English', 'Spanish', 'Language line interpretation (200+ languages)'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['EMTALA screening — no pre-condition documentation required for emergency stabilization'],
   },
   'health-5': {
     isVerified: true,
@@ -129,7 +169,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Georgia Department of Public Health District 2 Portal',
     website: 'https://phdistrict2.org',
     eligibility: 'Open to all Georgia and Forsyth County residents. Immunizations, WIC, and clinical services priced on sliding fee scale.',
-    sourceUrl: 'https://phdistrict2.org/forsyth-county-health-department'
+    sourceUrl: 'https://phdistrict2.org/forsyth-county-health-department',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['Photo ID', 'Immunization records (if applicable)', 'Proof of income for sliding-scale fee tier'],
   },
   'health-10': {
     isVerified: true,
@@ -137,7 +181,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Georgia DBHDD Certified Statewide Crisis Provider',
     website: 'https://www.georgiacollaborative.com',
     eligibility: 'Immediate 24/7 telephonic and mobile crisis response for any individual or youth experiencing acute psychiatric crisis in Georgia.',
-    sourceUrl: 'https://www.georgiacollaborative.com'
+    sourceUrl: 'https://www.georgiacollaborative.com',
+    languages: ['English', 'Spanish', 'Telephonic interpretation (150+ languages)'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['Immediate telephone or mobile intake — no paperwork needed to initiate crisis support'],
   },
   'workforce-1': {
     isVerified: true,
@@ -145,7 +193,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Technical College System of Georgia Official Directory',
     website: 'https://www.laniertech.edu',
     eligibility: 'High school graduates, GED recipients, and dual-enrolled 11th/12th graders. HOPE Career Grants cover 100% tuition for qualifying technical programs.',
-    sourceUrl: 'https://www.laniertech.edu'
+    sourceUrl: 'https://www.laniertech.edu',
+    languages: ['English'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['High school diploma or GED transcript', 'TCSG admissions application', 'FAFSA / GSFAPP application for HOPE grant'],
   },
   'workforce-2': {
     isVerified: true,
@@ -153,7 +205,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Forsyth County Public Library System Directory',
     website: 'https://www.forsythpl.org',
     eligibility: 'Free library cards and public computer access for anyone who lives, works, attends school, or owns property in Forsyth County.',
-    sourceUrl: 'https://www.forsythpl.org'
+    sourceUrl: 'https://www.forsythpl.org',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: true,
+    intakeRequirements: ['Photo ID with current address or photo ID plus proof of local address/employment'],
   },
   'youth-2': {
     isVerified: true,
@@ -161,7 +217,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Georgia Department of Human Services Licensed Child Facility',
     website: 'https://baldridgelodge.org',
     eligibility: 'Young men aged 12-17 in crisis or referred by Forsyth County Juvenile Court, DFCS, or family crisis counselors.',
-    sourceUrl: 'https://baldridgelodge.org'
+    sourceUrl: 'https://baldridgelodge.org',
+    languages: ['English'],
+    wheelchairAccessible: true,
+    transitAccessible: false,
+    intakeRequirements: ['Professional referral (DFCS, juvenile court, or licensed mental health professional) and clinical assessment'],
   },
   'youth-16': {
     isVerified: true,
@@ -169,7 +229,11 @@ const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
     verificationSource: 'Georgia Commission on Family Violence Certified Shelter',
     website: undefined,
     eligibility: 'Victims of domestic violence, stalking, or intimate partner abuse and their dependent children seeking immediate confidential safe shelter.',
-    sourceUrl: 'https://www.forsythcountyfamilyhaven.info'
+    sourceUrl: 'https://www.forsythcountyfamilyhaven.info',
+    languages: ['English', 'Spanish'],
+    wheelchairAccessible: true,
+    transitAccessible: false,
+    intakeRequirements: ['Confidential 24/7 crisis hotline telephone screening for physical safety and shelter space'],
   }
 };
 
@@ -243,6 +307,14 @@ function r(
   // Move eligibility into individual confirmed records; unconfirmed default to exact requested placeholder
   const eligibility = verifiedRecord?.eligibility || customEligibility || 'Unknown — contact provider';
 
+  // Make accessibility, languages, and intake requirements specific to each listing
+  const languages = verifiedRecord?.languages || ['English (others unconfirmed)'];
+  const wheelchairAccessible = verifiedRecord?.wheelchairAccessible ?? false;
+  const transitAccessible = verifiedRecord?.transitAccessible ?? false;
+  const intakeRequirements = verifiedRecord?.intakeRequirements || [
+    'Intake requirements not confirmed — contact provider'
+  ];
+
   return {
     id,
     name,
@@ -258,11 +330,11 @@ function r(
     hours,
     eligibility,
     cost,
-    languages: ['English', 'Spanish'],
-    wheelchairAccessible: true,
-    transitAccessible: true,
+    languages,
+    wheelchairAccessible,
+    transitAccessible,
     keyServices,
-    intakeRequirements: ['Government photo ID or proof of Forsyth County residency (utility bill or lease)'],
+    intakeRequirements,
     verificationDate,
     verificationSource,
     sourceUrl,
@@ -532,6 +604,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
     freeRefreshments: true,
     childcareAvailable: true,
     languages: ['English', 'Spanish'],
+    isSample: true,
   },
   {
     id: 'evt-2',
@@ -549,6 +622,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
     freeRefreshments: false,
     childcareAvailable: false,
     languages: ['English', 'Spanish'],
+    isSample: true,
   },
   {
     id: 'evt-3',
@@ -566,6 +640,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
     freeRefreshments: true,
     childcareAvailable: true,
     languages: ['English', 'Spanish'],
+    isSample: true,
   },
   {
     id: 'evt-4',
@@ -583,6 +658,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
     freeRefreshments: true,
     childcareAvailable: true,
     languages: ['English'],
+    isSample: true,
   },
 ];
 

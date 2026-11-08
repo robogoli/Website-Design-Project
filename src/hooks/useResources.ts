@@ -91,9 +91,6 @@ export function useResources() {
     isFiltered,
     resetFilters,
     userConfirmations,
-    toggleUserConfirmation,
-    // Aliases for compatibility
-    verifiedListings: userConfirmations,
-    toggleVerifyResource: toggleUserConfirmation
+    toggleUserConfirmation
   };
 }
