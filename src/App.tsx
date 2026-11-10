@@ -21,11 +21,15 @@ import {
   BarChart3,
   BookOpen,
   Github,
-  FileText
+  FileText,
+  MessageSquare,
+  Plus,
+  Heart,
+  ThumbsUp
 } from 'lucide-react';
 
 import { ResourceItem, DistrictType } from './types';
-import { CATEGORIES, RESEARCH_CITATIONS, HERO_IMAGE } from './data/mockData';
+import { CATEGORIES, RESEARCH_CITATIONS, HERO_IMAGE, COMMUNITY_EVENTS } from './data/mockData';
 import { useResources } from './hooks/useResources';
 import { useFeedback } from './hooks/useFeedback';
 
@@ -221,6 +225,8 @@ export function App() {
           setShowWelcomeModal(true);
         }}
         onCall={handleInitiateCall}
+        eventsCount={COMMUNITY_EVENTS.length}
+        feedbackCount={allFeedbacksCount}
       />
 
       {/* Autocomplete datalist for instant search */}
@@ -429,6 +435,92 @@ export function App() {
                 )}
               </section>
             )}
+
+            {/* Public Community Voices & Recent Neighbor Notes Showcase */}
+            <section className="mt-12 bg-gradient-to-r from-amber-50/80 via-stone-50 to-amber-50/50 border border-amber-200/80 rounded-2xl p-6 sm:p-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider">
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span>Public Community Board</span>
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-900">
+                    Community Voices &amp; Recent Neighbor Tips
+                  </h2>
+                  <p className="text-xs sm:text-sm text-stone-600 max-w-2xl">
+                    Real, recent recommendations, program updates, and practical guidance posted by Forsyth County residents and visible to everyone browsing CivicBridge.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentTab('feedback')}
+                    className="btn btn-outline text-xs px-4 py-2 cursor-pointer inline-flex items-center gap-1.5"
+                  >
+                    <span>View All Notes ({allFeedbacksCount})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeedbackPrefillResource('');
+                      setCurrentTab('feedback');
+                    }}
+                    className="btn btn-primary text-xs px-4 py-2 cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Share a Note</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Showcase Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {feedbacks.slice(0, 3).map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-white border border-stone-200 rounded-xl p-4.5 shadow-2xs hover:shadow-xs transition-shadow flex flex-col justify-between space-y-3"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-xs text-amber-950 bg-amber-50/80 border border-amber-200/60 px-2 py-0.5 rounded truncate max-w-[200px]">
+                          {item.resourceName || 'Countywide Service'}
+                        </span>
+                        <span className="text-[11px] text-stone-400 font-mono shrink-0">
+                          {item.submittedAt}
+                        </span>
+                      </div>
+                      <p className="text-xs text-stone-700 leading-relaxed italic line-clamp-3">
+                        &ldquo;{item.message}&rdquo;
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-stone-100 text-xs">
+                      <span className="font-medium text-stone-800 text-[11px]">
+                        — {item.userName}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleLike(item.id)}
+                        className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded transition-colors cursor-pointer ${
+                          likedFeedbacks[item.id]
+                            ? 'text-amber-800 bg-amber-50 font-bold'
+                            : 'text-stone-500 hover:text-stone-800'
+                        }`}
+                        title="Mark helpful"
+                      >
+                        <Heart
+                          className={`w-3.5 h-3.5 ${
+                            likedFeedbacks[item.id]
+                              ? 'fill-amber-800 text-amber-800'
+                              : 'text-stone-400'
+                          }`}
+                        />
+                        <span>{item.likesCount || 0}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
         )}
 
@@ -850,6 +942,7 @@ export function App() {
           onCall={handleInitiateCall}
           isQuickChecked={userConfirmations[activeResource.id]}
           onQuickCheck={(id) => toggleUserConfirmation(id)}
+          feedbacks={feedbacks}
           onSuggestUpdate={(name) => {
             setActiveResource(null);
             setFeedbackPrefillResource(name);

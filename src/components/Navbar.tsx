@@ -17,6 +17,8 @@ interface NavbarProps {
   userName: string;
   onOpenNameModal: () => void;
   onCall: (phone: string, resourceName: string) => void;
+  eventsCount?: number;
+  feedbackCount?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -24,7 +26,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectTab,
   userName,
   onOpenNameModal,
-  onCall
+  onCall,
+  eventsCount,
+  feedbackCount
 }) => {
   return (
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200 print:hidden">
@@ -108,6 +112,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Events</span>
+                {typeof eventsCount === 'number' && (
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+                    {eventsCount}
+                  </span>
+                )}
               </button>
 
               <button
@@ -121,7 +130,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                 aria-current={currentTab === 'feedback' ? 'page' : undefined}
               >
                 <MessageSquareHeart className="w-3.5 h-3.5" />
-                <span>Neighbor Notes</span>
+                <span>Community Notes</span>
+                {typeof feedbackCount === 'number' && (
+                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                    {feedbackCount}
+                  </span>
+                )}
               </button>
 
               <button

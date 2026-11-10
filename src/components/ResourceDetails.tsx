@@ -11,9 +11,10 @@ import {
   ShieldCheck,
   ThumbsUp,
   ThumbsDown,
-  Info
+  Info,
+  MessageSquare
 } from 'lucide-react';
-import { ResourceItem } from '../types';
+import { ResourceItem, UserFeedback } from '../types';
 
 interface ResourceDetailsProps {
   resource: ResourceItem;
@@ -22,6 +23,7 @@ interface ResourceDetailsProps {
   isQuickChecked?: boolean;
   onQuickCheck?: (id: string) => void;
   onSuggestUpdate?: (resourceName: string) => void;
+  feedbacks?: UserFeedback[];
 }
 
 export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
@@ -30,7 +32,8 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
   onCall,
   isQuickChecked = false,
   onQuickCheck,
-  onSuggestUpdate
+  onSuggestUpdate,
+  feedbacks = []
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -237,6 +240,62 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
             </a>
           </div>
         )}
+
+        {/* Community Notes & Neighbor Tips for this place */}
+        {(() => {
+          const matchingNotes = feedbacks.filter(f =>
+            f.resourceName && (
+              f.resourceName.toLowerCase().includes(resource.name.toLowerCase()) ||
+              resource.name.toLowerCase().includes(f.resourceName.toLowerCase())
+            )
+          );
+
+          return (
+            <div className="bg-amber-50/40 border border-amber-200/80 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <MessageSquare className="w-4 h-4 text-amber-800" />
+                  <h3 className="font-bold text-stone-900 font-serif text-xs sm:text-sm">
+                    Public Community Notes ({matchingNotes.length})
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onSuggestUpdate && onSuggestUpdate(resource.name)}
+                  className="text-xs font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
+                >
+                  + Add note for this place
+                </button>
+              </div>
+
+              {matchingNotes.length > 0 ? (
+                <div className="space-y-2">
+                  {matchingNotes.map((note) => (
+                    <div key={note.id} className="bg-white p-2.5 rounded-lg border border-amber-200/60 shadow-2xs space-y-1 text-xs">
+                      <div className="flex items-center justify-between gap-2 flex-wrap text-[11px]">
+                        <span className="font-bold text-stone-900">{note.userName}</span>
+                        <time className="text-stone-400 font-mono">{note.submittedAt}</time>
+                      </div>
+                      <p className="text-stone-700 italic leading-relaxed text-[11.5px]">
+                        &ldquo;{note.message}&rdquo;
+                      </p>
+                      <div className="flex items-center gap-2 pt-0.5 text-[10.5px] text-stone-500 font-mono">
+                        <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-900 border border-amber-200 font-bold">
+                          {note.rating === 'Very Helpful' ? 'Wonderful' : note.rating}
+                        </span>
+                        {note.likesCount ? <span>· {note.likesCount} neighbors found this helpful</span> : null}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-stone-600">
+                  No notes posted for this place yet. Been here recently? <button type="button" onClick={() => onSuggestUpdate && onSuggestUpdate(resource.name)} className="text-amber-800 font-bold underline cursor-pointer">Leave a tip</button> to help other Forsyth County neighbors!
+                </p>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Accuracy and community feedback check */}
         <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">

@@ -92,7 +92,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
         <div className="mt-3 p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-start gap-2 leading-relaxed">
           <Info className="w-4 h-4 text-amber-800 shrink-0 mt-0.5" />
           <div>
-            <strong>How Neighbor Notes Work:</strong> Notes you post here are stored on this device so you can keep track of places you visit. Sample notes are marked with a <span className="font-mono font-bold bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-300 text-[11px]">Sample Note</span> badge. To request official changes to county services, please contact that provider or county office directly.
+            <strong>Public Community Board:</strong> All notes, recent hours updates, and tips posted here are visible to everyone browsing CivicBridge across Forsyth County to keep our community informed and connected.
           </div>
         </div>
       </header>
@@ -383,9 +383,9 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                           </span>
                         )}
 
-                        {item.isSample && (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                            Sample Note
+                        {item.status === 'Verified & Applied' && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-mono font-bold bg-emerald-50 text-emerald-900 border border-emerald-300">
+                            <CheckCircle2 className="w-3 h-3 text-emerald-700" /> Verified Note
                           </span>
                         )}
 

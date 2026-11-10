@@ -10,7 +10,17 @@ export function useFeedback() {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Keep user-created feedbacks (id starts with fb-17 or fb-16 or not in sample list)
+          const userSubmitted = parsed.filter(f => !f.isSample && f.userName !== 'Sample Demonstration Note' && !f.message.startsWith('Example Note:'));
+          if (userSubmitted.length > 0) {
+            // Merge user submissions on top of authentic initial feedbacks
+            const userIds = new Set(userSubmitted.map(u => u.id));
+            const baseList = INITIAL_COMMUNITY_FEEDBACKS.filter(b => !userIds.has(b.id));
+            return [...userSubmitted, ...baseList];
+          }
+        }
       }
     } catch {
       // Fallback to static list on storage access errors
