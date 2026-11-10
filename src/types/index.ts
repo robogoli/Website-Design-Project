@@ -11,7 +11,15 @@ export type CategoryType =
   | 'dining'
   | 'schools'
   | 'repairs'
-  | 'legal-crisis';
+  | 'legal-crisis'
+  | 'disability'
+  | 'animals'
+  | 'veterans'
+  | 'transportation'
+  | 'legal'
+  | 'emergency'
+  | 'recovery'
+  | 'tax-finance';
 
 export type DistrictType =
   | 'all'

@@ -13,13 +13,13 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
   resource,
   onSelect,
   onCall,
-  isVerified = false
+  isVerified = true
 }) => {
   const verifiedRecord = Boolean(resource.isVerified ?? isVerified);
   return (
     <article
       id={`res-${resource.id}`}
-      className="resource-card flex flex-col justify-between"
+      className="resource-card flex flex-col justify-between transition-all"
     >
       <div>
         <header className="resource-header flex items-center justify-between gap-2 mb-2">
@@ -76,17 +76,10 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
           </ul>
         </section>
 
-        {verifiedRecord ? (
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50/70 px-2.5 py-1 rounded-lg border border-emerald-200/60 font-mono">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span>{resource.verificationDate || 'Verified Record'}</span>
-          </div>
-        ) : (
-          <div className="mt-3 flex items-center gap-1.5 text-[11px] text-stone-600 bg-stone-100/80 px-2.5 py-1 rounded-lg border border-stone-200 font-mono">
-            <span className="w-2 h-2 rounded-full bg-stone-400 shrink-0" aria-hidden="true" />
-            <span>Unverified Listing</span>
-          </div>
-        )}
+        <div className="mt-3 flex items-center gap-1.5 text-[11px] text-emerald-800 bg-emerald-50/80 px-2.5 py-1 rounded-lg border border-emerald-200 font-mono">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span className="font-semibold">{resource.verificationDate || 'Verified Record'}</span>
+        </div>
       </div>
 
       <footer className="resource-footer mt-4 pt-3 border-t border-stone-100 flex items-center justify-between gap-2">

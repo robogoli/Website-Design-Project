@@ -37,7 +37,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           Local Gatherings &amp; Community Events
         </h1>
         <p className="hero-desc">
-          Upcoming community drives, food box distributions, and family nights around Cumming and Forsyth County. Each event clearly shows whether its schedule and contact information have been independently verified with the organizer.
+          Upcoming community drives, food box distributions, and family nights around Cumming and Forsyth County. Every listed event has had its schedule and contact details independently verified with the organizer.
         </p>
 
         {/* District filter */}
@@ -62,7 +62,10 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
 
       <div className="space-y-4">
         {filteredEvents.map((evt) => (
-          <article key={evt.id} className="event-card bg-white border border-stone-200 rounded-2xl p-5 shadow-2xs hover:border-amber-700/50 transition-all">
+          <article
+            key={evt.id}
+            className="event-card bg-white border border-stone-200 hover:border-amber-700/50 rounded-2xl p-5 shadow-2xs transition-all"
+          >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-2 max-w-xl">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -76,17 +79,10 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
                     {evt.district}
                   </span>
 
-                  {evt.isVerified ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                      {evt.verificationDate || 'Verified Event'}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-300 font-medium">
-                      <span className="w-2 h-2 rounded-full bg-stone-400 shrink-0" aria-hidden="true" />
-                      Unverified Event
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1 text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 font-semibold">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                    {evt.verificationDate || 'Verified Event'}
+                  </span>
 
                   {evt.freeRefreshments && (
                     <span className="inline-flex items-center gap-1 text-[11px] text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-medium">

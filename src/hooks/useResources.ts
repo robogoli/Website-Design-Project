@@ -6,13 +6,12 @@ export function useResources() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictType>('all');
-  const [onlyVerified, setOnlyVerified] = useState(false);
   // Visitor community confirmations stored in local state (distinct from official municipal verification)
   const [userConfirmations, setUserConfirmations] = useState<Record<string, boolean>>({});
 
   const isFiltered = useMemo(() => {
-    return searchQuery.trim() !== '' || selectedCategory !== 'all' || selectedDistrict !== 'all' || onlyVerified;
-  }, [searchQuery, selectedCategory, selectedDistrict, onlyVerified]);
+    return searchQuery.trim() !== '' || selectedCategory !== 'all' || selectedDistrict !== 'all';
+  }, [searchQuery, selectedCategory, selectedDistrict]);
 
   const filteredResources = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
@@ -25,11 +24,6 @@ export function useResources() {
 
       // District filter
       if (selectedDistrict !== 'all' && item.district !== selectedDistrict) {
-        return false;
-      }
-
-      // Official verification check
-      if (onlyVerified && !item.isVerified) {
         return false;
       }
 
@@ -60,7 +54,7 @@ export function useResources() {
 
       return true;
     });
-  }, [searchQuery, selectedCategory, selectedDistrict, onlyVerified]);
+  }, [searchQuery, selectedCategory, selectedDistrict]);
 
   const toggleUserConfirmation = (id: string) => {
     setUserConfirmations(prev => ({
@@ -73,7 +67,6 @@ export function useResources() {
     setSelectedCategory('all');
     setSearchQuery('');
     setSelectedDistrict('all');
-    setOnlyVerified(false);
   };
 
   return {
@@ -86,8 +79,6 @@ export function useResources() {
     setSearchQuery,
     selectedDistrict,
     setSelectedDistrict,
-    onlyVerified,
-    setOnlyVerified,
     isFiltered,
     resetFilters,
     userConfirmations,

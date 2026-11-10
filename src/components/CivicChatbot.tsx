@@ -20,6 +20,9 @@ interface CivicChatbotProps {
 const QUICK_PROMPTS = [
   '🥫 Free food pantries',
   '🩺 Free clinic & dental',
+  '🤝 Addiction & peer recovery',
+  '🌪️ Severe storm & disaster prep',
+  '💰 Free AARP tax filing',
   '🎓 Schools & colleges',
   '🔧 Car & home repairs',
   '👶 Childcare & daycare',
@@ -458,7 +461,81 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       };
     }
 
-    // 11. Generic ranked query
+    // 11. Emergency Preparedness & Disaster Recovery
+    if (
+      matchesWordBoundary(query, 'disaster') ||
+      matchesWordBoundary(query, 'storm') ||
+      matchesWordBoundary(query, 'tornado') ||
+      matchesWordBoundary(query, 'fire') ||
+      matchesWordBoundary(query, 'smoke') ||
+      matchesWordBoundary(query, 'alarm') ||
+      matchesWordBoundary(query, 'red cross') ||
+      matchesWordBoundary(query, 'ema') ||
+      matchesWordBoundary(query, 'gema') ||
+      matchesWordBoundary(query, 'shelter')
+    ) {
+      const ranked = rankResources(query, 'emergency');
+      return {
+        responseText: "Looking for severe storm shelters, fire prevention, or disaster recovery? Local emergency management and Red Cross teams serve Forsyth County. Suggested resources matching your search:",
+        matched: ranked.slice(0, 3),
+        examplePrompts: [
+          'Where are the severe storm shelters in Forsyth County?',
+          'How do I get free smoke alarm installation in Cumming?',
+          'How does the Red Cross help after a house fire?'
+        ]
+      };
+    }
+
+    // 12. Recovery & Peer Support
+    if (
+      matchesWordBoundary(query, 'recovery') ||
+      matchesWordBoundary(query, 'addiction') ||
+      matchesWordBoundary(query, 'sober') ||
+      matchesWordBoundary(query, 'rehab') ||
+      matchesWordBoundary(query, 'detox') ||
+      matchesWordBoundary(query, 'peer') ||
+      matchesWordBoundary(query, 'narcan') ||
+      matchesWordBoundary(query, 'naloxone') ||
+      matchesWordBoundary(query, 'substance') ||
+      matchesWordBoundary(query, 'alcohol')
+    ) {
+      const ranked = rankResources(query, 'recovery');
+      return {
+        responseText: "Seeking compassionate substance use recovery, peer coaching, or family support? Free, non-judgmental community programs in Cumming are ready to help. Suggested resources matching your search:",
+        matched: ranked.slice(0, 3),
+        examplePrompts: [
+          'Where can I get free peer recovery coaching in Cumming?',
+          'Immediate detox placement and JumpStart navigation',
+          'Where can I get free Naloxone (Narcan) kits in Forsyth?'
+        ]
+      };
+    }
+
+    // 13. Tax & Financial Assistance
+    if (
+      matchesWordBoundary(query, 'tax') ||
+      matchesWordBoundary(query, 'taxes') ||
+      matchesWordBoundary(query, 'aarp') ||
+      matchesWordBoundary(query, 'vita') ||
+      matchesWordBoundary(query, 'credit') ||
+      matchesWordBoundary(query, 'debt') ||
+      matchesWordBoundary(query, 'medicare') ||
+      matchesWordBoundary(query, 'ship') ||
+      matchesWordBoundary(query, 'financial')
+    ) {
+      const ranked = rankResources(query, 'tax-finance');
+      return {
+        responseText: "Need free tax preparation, Medicare plan review, or non-profit debt counseling? Certified community navigators assist Forsyth residents. Suggested resources matching your search:",
+        matched: ranked.slice(0, 3),
+        examplePrompts: [
+          'How do I make an appointment for free AARP tax filing?',
+          'Free Medicare Part D comparison for seniors in Forsyth',
+          'Nonprofit credit counseling and debt management help'
+        ]
+      };
+    }
+
+    // 14. Generic ranked query
     const rankedGeneral = rankResources(query);
     if (rankedGeneral.length > 0) {
       const topName = rankedGeneral[0].name;
@@ -522,7 +599,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                 </h2>
                 <span className="text-[11px] text-amber-200/90 flex items-center gap-1 font-mono">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                  Active · 220 Local Places in Forsyth County
+                  Active · {COMMUNITY_RESOURCES.length} Local Places in Forsyth County
                 </span>
               </div>
             </div>
@@ -577,16 +654,14 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                         >
                           <div className="flex items-start justify-between gap-1">
                             <div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-semibold text-amber-800 uppercase block">
-                                  {res.categoryLabel}
-                                </span>
-                                {res.isVerified && (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-semibold text-amber-800 uppercase block">
+                                    {res.categoryLabel}
+                                  </span>
                                   <span className="inline-flex items-center gap-0.5 text-[9.5px] text-emerald-800 font-mono font-medium">
                                     <ShieldCheck className="w-2.5 h-2.5 text-emerald-600" /> Verified
                                   </span>
-                                )}
-                              </div>
+                                </div>
                               <strong className="text-xs text-stone-900 block font-serif leading-tight mt-0.5">
                                 {res.name}
                               </strong>

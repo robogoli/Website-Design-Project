@@ -52,8 +52,6 @@ export function App() {
     setSearchQuery,
     selectedDistrict,
     setSelectedDistrict,
-    onlyVerified,
-    setOnlyVerified,
     isFiltered,
     resetFilters,
     userConfirmations,
@@ -294,7 +292,7 @@ export function App() {
                 <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide block mb-2">
                   Browse by Category:
                 </span>
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   {CATEGORIES.map((cat) => (
                     <button
                       key={cat.id}
@@ -312,7 +310,7 @@ export function App() {
                 </div>
               </div>
 
-              {/* District pills and verified toggle */}
+              {/* District pills and reset filter */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-stone-100">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide mr-1">
@@ -334,28 +332,15 @@ export function App() {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-xs font-medium text-stone-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={onlyVerified}
-                      onChange={(e) => setOnlyVerified(e.target.checked)}
-                      className="rounded text-amber-800 focus:ring-amber-500 cursor-pointer"
-                    />
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-                    <span>Verified records only</span>
-                  </label>
-
-                  {isFiltered && (
-                    <button
-                      type="button"
-                      onClick={resetFilters}
-                      className="text-xs text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer"
-                    >
-                      Reset filters
-                    </button>
-                  )}
-                </div>
+                {isFiltered && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    className="text-xs text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer self-start sm:self-auto"
+                  >
+                    Reset filters
+                  </button>
+                )}
               </div>
             </section>
 
@@ -364,39 +349,42 @@ export function App() {
               <section className="space-y-4" aria-label="Category Overview">
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold font-serif text-stone-900">
-                    Explore 220 Resources across Forsyth County
+                    Explore {allResources.length} Verified Resources across Forsyth County
                   </h2>
                   <span className="text-xs font-mono text-stone-500">
-                    20 listings per category
+                    {CATEGORIES.filter(c => c.id !== 'all').length} Categories
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  {CATEGORIES.filter(c => c.id !== 'all').map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => setSelectedCategory(cat.id)}
-                      className="p-4 bg-white border border-stone-200 hover:border-amber-700/50 rounded-2xl text-left shadow-2xs hover:shadow-xs transition-all cursor-pointer group flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-bold text-stone-900 font-serif text-sm group-hover:text-amber-800 transition-colors">
-                            {cat.label}
-                          </h3>
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
-                            20 Places
-                          </span>
+                  {CATEGORIES.filter(c => c.id !== 'all').map((cat) => {
+                    const count = allResources.filter(r => r.category === cat.id).length;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className="p-4 bg-white border border-stone-200 hover:border-amber-700/50 rounded-2xl text-left shadow-2xs hover:shadow-xs transition-all cursor-pointer group flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-bold text-stone-900 font-serif text-sm group-hover:text-amber-800 transition-colors">
+                              {cat.label}
+                            </h3>
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+                              {count} {count === 1 ? 'Place' : 'Places'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-stone-600 line-clamp-2">
+                            Verified local services, operating hours, direct phone contacts, and physical locations in Cumming &amp; Forsyth.
+                          </p>
                         </div>
-                        <p className="text-xs text-stone-600 line-clamp-2">
-                          Verified local services, operating hours, direct phone contacts, and physical locations in Cumming &amp; Forsyth.
-                        </p>
-                      </div>
-                      <span className="text-xs font-bold text-amber-800 group-hover:underline pt-3 inline-flex items-center gap-1">
-                        View Category &rarr;
-                      </span>
-                    </button>
-                  ))}
+                        <span className="text-xs font-bold text-amber-800 group-hover:underline pt-3 inline-flex items-center gap-1">
+                          View Category &rarr;
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </section>
             ) : (
@@ -494,7 +482,7 @@ export function App() {
                 </cite>
               </blockquote>
               <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-                <strong>Project Scope:</strong> CivicBridge organizes 220 community resources across 11 categories (20 per category) for residents of <strong>Cumming and Forsyth County, Georgia</strong>. From emergency food pantries and community health clinics to local public schools and home repairs, CivicBridge helps neighbors quickly find local contact details and services.
+                <strong>Project Scope:</strong> CivicBridge organizes {allResources.length} verified community resources across {CATEGORIES.filter(c => c.id !== 'all').length} civic categories for residents of <strong>Cumming and Forsyth County, Georgia</strong>. From emergency preparedness and disaster recovery, substance use peer support, and tax assistance to food pantries, free clinics, public schools, disability programs, and legal aid, CivicBridge helps neighbors quickly find verified local contact details and services.
               </p>
             </section>
 
@@ -783,9 +771,9 @@ export function App() {
 
                 <div className="p-3.5 rounded-xl border border-stone-200 bg-stone-50/60 space-y-1.5">
                   <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">3. Comprehensive Scope</span>
-                  <strong className="text-stone-900 block font-serif">220 Verified Local Resources</strong>
+                  <strong className="text-stone-900 block font-serif">{allResources.length} Verified Local Resources</strong>
                   <p className="text-stone-600 text-[11.5px] leading-relaxed">
-                    Authentic addresses, direct mobile phone links, operating hours, eligibility checklists, and offerings across all 11 community domains.
+                    Authentic addresses, direct mobile phone links, operating hours, eligibility checklists, and offerings across all {CATEGORIES.filter(c => c.id !== 'all').length} community domains.
                   </p>
                 </div>
               </div>
