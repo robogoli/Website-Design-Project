@@ -712,7 +712,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                           </div>
                         </div>
                       ))}
-                                            ))}
+                                            
 
                       {msg.matchedResources.length > 3 && (
                         <button
