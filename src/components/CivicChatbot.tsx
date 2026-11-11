@@ -108,7 +108,8 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
   const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set());
   const [explainedResources, setExplainedResources] = useState<Set<string>>(new Set());
   const [showAllResults, setShowAllResults] = useState<Set<string>>(new Set());
-
+  const [lastTopic, setLastTopic] = useState('');
+  const [lastMatchedResources, setLastMatchedResources] = useState<ResourceItem[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -146,6 +147,21 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
 
   const handleSendMessage = (textToSend?: string) => {
     const query = (textToSend || inputMessage).trim();
+    const followUpTerms = [
+  'show me more',
+  'more resources',
+  'which ones',
+  'what about',
+  'are any',
+  'do they',
+  'how about',
+  'those',
+  'them'
+];
+
+const isFollowUp = followUpTerms.some(term =>
+  query.toLowerCase().includes(term)
+);
     if (!query) return;
 
     const userMsgId = `user-${Date.now()}`;
@@ -171,7 +187,30 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
 
     // Consistent response delay handled safely with cleanup
     timerRef.current = window.setTimeout(() => {
-      const { responseText, matched, examplePrompts } = matchDirectoryQuery(query);
+      const searchQuery =
+  isFollowUp && lastTopic
+    ? `${lastTopic} ${query}`
+    : query;
+
+const result = matchDirectoryQuery(searchQuery);
+
+const responseText = result.responseText;
+const examplePrompts = result.examplePrompts;
+
+const matched =
+  result.matched && result.matched.length > 0
+    ? result.matched
+    : isFollowUp
+      ? lastMatchedResources
+      : undefined;
+
+if (!isFollowUp) {
+  setLastTopic(query);
+}
+
+if (result.matched && result.matched.length > 0) {
+  setLastMatchedResources(result.matched);
+}
       const guideMsgId = `guide-${Date.now()}`;
       const guideTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
