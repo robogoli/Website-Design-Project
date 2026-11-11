@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   MessageSquare,
   Users,
@@ -46,6 +46,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const feedRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +74,9 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
     setMessage('');
     setSuccess(true);
     setTimeout(() => setSuccess(false), 4000);
+
+    // Smooth scroll to top of feed so author immediately sees their newly posted note
+    feedRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -168,7 +172,10 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                       type="radio" 
                       name="anonymity-preference" 
                       checked={isAnonymous} 
-                      onChange={() => setIsAnonymous(true)} 
+                      onChange={() => {
+                        setIsAnonymous(true);
+                        setName('');
+                      }} 
                       className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
                     />
                     <div>
@@ -263,7 +270,16 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
               <div className="form-group">
                 <label htmlFor="fb-message" className="form-label">
                   <span>Your Note or Details:</span>
-                  <output htmlFor="fb-message" className="text-[11px] text-stone-400 font-mono">
+                  <output
+                    htmlFor="fb-message"
+                    className={`text-[11px] font-mono font-medium transition-colors ${
+                      message.length >= 480
+                        ? 'text-red-600 font-bold'
+                        : message.length >= 400
+                        ? 'text-amber-600'
+                        : 'text-stone-400'
+                    }`}
+                  >
                     {message.length}/500 chars (min 10)
                   </output>
                 </label>
@@ -358,7 +374,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
               </span>
             </div>
 
-            <div className="space-y-3.5 max-h-[780px] overflow-y-auto pr-1">
+            <div ref={feedRef} className="space-y-3.5 max-h-[780px] overflow-y-auto pr-1">
               {feedbacks.length === 0 ? (
                 <div className="text-center py-10 px-4 bg-stone-50 rounded-xl border border-dashed border-stone-200 text-xs text-stone-500">
                   No neighbor notes found in this filter yet.

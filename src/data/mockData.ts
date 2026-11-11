@@ -33,7 +33,7 @@ export const CATEGORIES = [
   { id: 'tax-finance', label: 'Tax & Financial Assistance' },
 ] as const;
 
-const CATEGORY_LABELS: Record<string, string> = {
+export const CATEGORY_LABELS: Record<string, string> = {
   all: 'All Resources',
   food: 'Food & Meals',
   housing: 'Housing & Utilities',

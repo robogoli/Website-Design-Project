@@ -44,7 +44,7 @@ export const Footer: React.FC = () => {
 
         <div className="pt-3 border-t border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-stone-400 gap-2">
           <div>
-            Serving Cumming and Forsyth County residents · Dedicated to equitable community wayfinding
+            &copy; {new Date().getFullYear()} CivicBridge · Serving Cumming and Forsyth County residents · Dedicated to equitable community wayfinding
           </div>
           <div>
             Built with Semantic HTML5, Handcrafted CSS3 &amp; React 19

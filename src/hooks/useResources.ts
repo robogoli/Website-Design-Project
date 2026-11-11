@@ -6,8 +6,15 @@ export function useResources() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictType>('all');
-  // Visitor community confirmations stored in local state (distinct from official municipal verification)
-  const [userConfirmations, setUserConfirmations] = useState<Record<string, boolean>>({});
+  // Visitor community confirmations stored in local storage for persistence across reloads
+  const [userConfirmations, setUserConfirmations] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem('civicbridge_user_confirmations');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
 
   const isFiltered = useMemo(() => {
     return searchQuery.trim() !== '' || selectedCategory !== 'all' || selectedDistrict !== 'all';
@@ -57,10 +64,15 @@ export function useResources() {
   }, [searchQuery, selectedCategory, selectedDistrict]);
 
   const toggleUserConfirmation = (id: string) => {
-    setUserConfirmations(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
+    setUserConfirmations(prev => {
+      const updated = { ...prev, [id]: !prev[id] };
+      try {
+        localStorage.setItem('civicbridge_user_confirmations', JSON.stringify(updated));
+      } catch {
+        // LocalStorage access fallback
+      }
+      return updated;
+    });
   };
 
   const resetFilters = () => {

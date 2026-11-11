@@ -1003,3 +1003,40 @@ summary:focus-visible {
   color: #0369a1;
   border: 1px solid #bae6fd;
 }
+
+/* ------------------------------------------------------------------------------
+   20. UTILITY OVERRIDES & TAILWIND V4 HELPERS
+   ------------------------------------------------------------------------------ */
+/* Prevent horizontal scroll bleed on mobile devices */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Ensure smooth line truncation for card descriptions */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+

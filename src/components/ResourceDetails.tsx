@@ -39,14 +39,28 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerElementRef = useRef<HTMLElement | null>(null);
 
+  const formatDomain = (url: string) => {
+    try {
+      return new URL(url).hostname.replace('www.', '');
+    } catch {
+      return url;
+    }
+  };
+
   // Store trigger element and focus modal on mount; restore on unmount
   useEffect(() => {
     triggerElementRef.current = document.activeElement as HTMLElement | null;
     closeButtonRef.current?.focus();
 
     return () => {
-      if (triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
+      if (
+        triggerElementRef.current &&
+        document.body.contains(triggerElementRef.current) &&
+        typeof triggerElementRef.current.focus === 'function'
+      ) {
         triggerElementRef.current.focus();
+      } else if (typeof document !== 'undefined' && document.body) {
+        document.body.focus();
       }
     };
   }, []);
@@ -235,7 +249,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
               rel="noopener noreferrer"
               className="text-amber-800 hover:text-amber-950 font-medium inline-flex items-center gap-1 underline text-[11px] font-mono break-all"
             >
-              <span>{resource.sourceUrl.replace(/^https?:\/\//, '').slice(0, 32)}...</span>
+              <span>{formatDomain(resource.sourceUrl)}</span>
               <ExternalLink className="w-3 h-3 shrink-0" />
             </a>
           </div>

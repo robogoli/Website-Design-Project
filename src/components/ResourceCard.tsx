@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Phone, MapPin, Clock, CheckCircle2, PhoneCall, ShieldCheck } from 'lucide-react';
 import { ResourceItem } from '../types';
 
@@ -9,12 +9,12 @@ interface ResourceCardProps {
   isVerified?: boolean;
 }
 
-export const ResourceCard: React.FC<ResourceCardProps> = ({
+export const ResourceCard = memo(function ResourceCard({
   resource,
   onSelect,
   onCall,
   isVerified = true
-}) => {
+}: ResourceCardProps) {
   const verifiedRecord = Boolean(resource.isVerified ?? isVerified);
   return (
     <article
@@ -107,4 +107,4 @@ export const ResourceCard: React.FC<ResourceCardProps> = ({
       </footer>
     </article>
   );
-};
+});
