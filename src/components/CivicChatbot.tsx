@@ -105,6 +105,8 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const timerRef = useRef<number | null>(null);
+  const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set());
+  const [showAllResults, setShowAllResults] = useState<Set<string>>(new Set());
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -179,7 +181,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
           sender: 'guide',
           text: responseText,
           timestamp: guideTimestamp,
-          matchedResources: matched?.slice(0, 3), // Caps suggestions to top 3 ranked listings
+          matchedResources: matched,
           examplePrompts
         }
       ]);
@@ -647,7 +649,9 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                       <span className="text-[10px] font-mono uppercase text-stone-500 block font-bold">
                         Top Ranked Matches:
                       </span>
-                      {msg.matchedResources.map((res) => (
+                      {msg.matchedResources
+                        .slice(0, showAllResults.has(msg.id) ? undefined : 3)
+                        .map((res) => (
                         <div
                           key={res.id}
                           className="p-2.5 bg-stone-50 border border-stone-200 rounded-xl hover:border-amber-700/50 transition-colors space-y-1.5"
@@ -708,6 +712,31 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                           </div>
                         </div>
                       ))}
+                                            ))}
+
+                      {msg.matchedResources.length > 3 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAllResults(prev => {
+                              const next = new Set(prev);
+                              if (next.has(msg.id)) {
+                                next.delete(msg.id);
+                              } else {
+                                next.add(msg.id);
+                              }
+                              return next;
+                            });
+                          }}
+                          className="w-full text-center text-xs font-bold text-amber-800 hover:text-amber-950 py-2 underline"
+                        >
+                          {showAllResults.has(msg.id)
+                            ? 'Show Fewer Resources'
+                            : `Show ${msg.matchedResources.length - 3} More Resources`}
+                        </button>
+                      )}
+                    </div>
+                  )}
                     </div>
                   )}
 
