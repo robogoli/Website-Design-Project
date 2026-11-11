@@ -737,9 +737,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                       )}
                     </div>
                   )}
-                    </div>
-                  )}
-
+                   
                   {msg.examplePrompts && msg.examplePrompts.length > 0 && (
                     <div className="space-y-1.5 pt-2 border-t border-stone-100">
                       <span className="text-[10.5px] font-bold text-amber-900 block flex items-center gap-1">
