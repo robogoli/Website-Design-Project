@@ -983,7 +983,31 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
 
             <div ref={messagesEndRef} />
           </div>
+          
+<div className="mx-3 mb-2 rounded-xl border-2 border-amber-300 bg-amber-50 p-3">
+  <div className="flex items-center gap-2 mb-2">
+    <Info className="h-5 w-5 text-amber-800 shrink-0" />
+    <h3 className="text-sm font-bold text-amber-950">
+      IMPORTANT: Keyword Matching Required
+    </h3>
+  </div>
 
+  <p className="text-xs text-amber-950 mb-2">
+    CivicBridge uses keyword matching to find community
+    resources. It does not understand every question like a human.
+  </p>
+
+  <p className="text-xs font-bold text-amber-950 mb-2">
+    You MUST include specific keywords related to your needs.
+  </p>
+
+  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-amber-950">
+    <p><strong>Food:</strong> groceries, pantry</p>
+    <p><strong>Housing:</strong> rent, shelter</p>
+    <p><strong>Healthcare:</strong> medical, clinic</p>
+    <p><strong>Jobs:</strong> employment, resume</p>
+  </div>
+</div>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -995,7 +1019,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
               type="text"
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Ask anything (e.g. food pantries, clinic, honest mechanic, preschool)..."
+              placeholder="Enter specific keywords (e.g. food, rent, medical, jobs)..."
               className="flex-1 text-xs py-2 px-3 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-amber-800 focus:bg-white transition-colors"
               aria-label="Type your message to the CivicBridge guide"
             />
