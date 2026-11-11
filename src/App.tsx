@@ -25,7 +25,8 @@ import {
   MessageSquare,
   Plus,
   Heart,
-  ThumbsUp
+  ThumbsUp,
+  Bell
 } from 'lucide-react';
 
 import { ResourceItem, DistrictType } from './types';
@@ -66,12 +67,37 @@ export function App() {
   const {
     feedbacks,
     allFeedbacksCount,
+    unreadFeedbackCount,
+    unreadEventsCount,
+    markFeedbackAsSeen,
+    markEventsAsSeen,
+    recentNotification,
+    dismissNotification,
     filterType,
     setFilterType,
     addFeedback,
     toggleLike,
     likedFeedbacks
   } = useFeedback();
+
+  // Automatically mark unread counts as seen when viewing the respective tab
+  useEffect(() => {
+    if (currentTab === 'feedback') {
+      markFeedbackAsSeen();
+    } else if (currentTab === 'events') {
+      markEventsAsSeen();
+    }
+  }, [currentTab, markFeedbackAsSeen, markEventsAsSeen]);
+
+  // Tab switch handler that clears badge notifications
+  const handleSelectTab = (tab: TabKey) => {
+    if (tab === 'feedback') {
+      markFeedbackAsSeen();
+    } else if (tab === 'events') {
+      markEventsAsSeen();
+    }
+    setCurrentTab(tab);
+  };
 
   // Selected resource for details modal
   const [activeResource, setActiveResource] = useState<ResourceItem | null>(null);
@@ -218,15 +244,15 @@ export function App() {
       {/* Global header navigation */}
       <Navbar
         currentTab={currentTab}
-        onSelectTab={setCurrentTab}
+        onSelectTab={handleSelectTab}
         userName={userName}
         onOpenNameModal={() => {
           setTempName(userName);
           setShowWelcomeModal(true);
         }}
         onCall={handleInitiateCall}
-        eventsCount={COMMUNITY_EVENTS.length}
-        feedbackCount={allFeedbacksCount}
+        eventsCount={unreadEventsCount}
+        feedbackCount={unreadFeedbackCount}
       />
 
       {/* Autocomplete datalist for instant search */}
@@ -454,7 +480,7 @@ export function App() {
                 <div className="flex items-center gap-2.5 shrink-0">
                   <button
                     type="button"
-                    onClick={() => setCurrentTab('feedback')}
+                    onClick={() => handleSelectTab('feedback')}
                     className="btn btn-outline text-xs px-4 py-2 cursor-pointer inline-flex items-center gap-1.5"
                   >
                     <span>View All Notes ({allFeedbacksCount})</span>
@@ -463,7 +489,7 @@ export function App() {
                     type="button"
                     onClick={() => {
                       setFeedbackPrefillResource('');
-                      setCurrentTab('feedback');
+                      handleSelectTab('feedback');
                     }}
                     className="btn btn-primary text-xs px-4 py-2 cursor-pointer inline-flex items-center gap-1.5 shadow-xs"
                   >
@@ -946,7 +972,7 @@ export function App() {
           onSuggestUpdate={(name) => {
             setActiveResource(null);
             setFeedbackPrefillResource(name);
-            setCurrentTab('feedback');
+            handleSelectTab('feedback');
           }}
         />
       )}
@@ -1147,6 +1173,61 @@ export function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Real-time live community note notification banner for everyone */}
+      {recentNotification && (
+        <aside
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 right-6 z-50 max-w-sm sm:max-w-md w-full bg-white border-2 border-amber-500 rounded-2xl p-4 shadow-2xl flex items-start gap-3.5 animate-bounce-once transition-all"
+        >
+          <div className="p-2 rounded-xl bg-amber-100 text-amber-900 shrink-0 mt-0.5">
+            <Bell className="w-5 h-5 text-amber-800 animate-pulse" />
+          </div>
+          <div className="flex-1 min-w-0 space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
+                New Community Note
+              </span>
+              <span className="text-[10px] text-stone-400 font-mono">Just now</span>
+            </div>
+            <p className="text-xs font-semibold text-stone-900 leading-tight">
+              {recentNotification.userName} shared a tip
+              {recentNotification.resourceName ? ` on ${recentNotification.resourceName}` : ''}:
+            </p>
+            <p className="text-xs text-stone-600 line-clamp-2 italic leading-relaxed">
+              &ldquo;{recentNotification.message}&rdquo;
+            </p>
+            <div className="pt-1.5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  handleSelectTab('feedback');
+                  dismissNotification();
+                }}
+                className="text-xs font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
+              >
+                View Community Notes →
+              </button>
+              <button
+                type="button"
+                onClick={dismissNotification}
+                className="text-xs text-stone-400 hover:text-stone-700 cursor-pointer"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={dismissNotification}
+            className="text-stone-400 hover:text-stone-600 p-1 rounded-md cursor-pointer"
+            aria-label="Dismiss notification"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </aside>
       )}
 
       {/* Interactive directory guide assistant */}

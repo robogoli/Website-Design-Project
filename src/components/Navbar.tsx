@@ -112,8 +112,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Events</span>
-                {typeof eventsCount === 'number' && (
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-stone-100 text-stone-700">
+                {typeof eventsCount === 'number' && eventsCount > 0 && (
+                  <span
+                    className="text-[10.5px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-950 border border-amber-500/80 shadow-2xs animate-pulse"
+                    title={`${eventsCount} new event${eventsCount === 1 ? '' : 's'}`}
+                  >
                     {eventsCount}
                   </span>
                 )}
@@ -131,8 +134,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <MessageSquareHeart className="w-3.5 h-3.5" />
                 <span>Community Notes</span>
-                {typeof feedbackCount === 'number' && (
-                  <span className="text-[10px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                {typeof feedbackCount === 'number' && feedbackCount > 0 && (
+                  <span
+                    className="text-[10.5px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-950 border border-amber-500/80 shadow-2xs animate-pulse"
+                    title={`${feedbackCount} new community note${feedbackCount === 1 ? '' : 's'}`}
+                  >
                     {feedbackCount}
                   </span>
                 )}
