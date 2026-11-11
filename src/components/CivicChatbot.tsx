@@ -110,6 +110,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
   const [showAllResults, setShowAllResults] = useState<Set<string>>(new Set());
   const [lastTopic, setLastTopic] = useState('');
   const [lastMatchedResources, setLastMatchedResources] = useState<ResourceItem[]>([]);
+  const [nextResourceIndex, setNextResourceIndex] = useState(3);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -162,6 +163,12 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
 const isFollowUp = followUpTerms.some(term =>
   query.toLowerCase().includes(term)
 );
+    const isMoreRequest = [
+  'show me more',
+  'show more',
+  'more resources',
+  'more results'
+].some(term => query.toLowerCase().includes(term));
     if (!query) return;
 
     const userMsgId = `user-${Date.now()}`;
@@ -187,29 +194,43 @@ const isFollowUp = followUpTerms.some(term =>
 
     // Consistent response delay handled safely with cleanup
     timerRef.current = window.setTimeout(() => {
-      const searchQuery =
-  isFollowUp && lastTopic
-    ? `${lastTopic} ${query}`
-    : query;
+     let responseText = '';
+let matched: ResourceItem[] | undefined;
+let examplePrompts: string[] = [];
 
-const result = matchDirectoryQuery(searchQuery);
+if (isMoreRequest) {
+  const nextResources = lastMatchedResources.slice(
+    nextResourceIndex,
+    nextResourceIndex + 3
+  );
 
-const responseText = result.responseText;
-const examplePrompts = result.examplePrompts;
+  if (nextResources.length > 0) {
+    matched = nextResources;
+    responseText = 'Here are more resources matching your search:';
+    setNextResourceIndex(prev => prev + nextResources.length);
+  } else {
+    responseText = 'You have already viewed all the matching resources. Try searching for another type of assistance.';
+  }
+} else {
+  const searchQuery =
+    isFollowUp && lastTopic
+      ? `${lastTopic} ${query}`
+      : query;
 
-const matched =
-  result.matched && result.matched.length > 0
-    ? result.matched
-    : isFollowUp
-      ? lastMatchedResources
-      : undefined;
+  const result = matchDirectoryQuery(searchQuery);
 
-if (!isFollowUp) {
-  setLastTopic(query);
-}
+  responseText = result.responseText;
+  examplePrompts = result.examplePrompts;
+  matched = result.matched;
 
-if (result.matched && result.matched.length > 0) {
-  setLastMatchedResources(result.matched);
+  if (!isFollowUp) {
+    setLastTopic(query);
+  }
+
+  if (result.matched && result.matched.length > 0) {
+    setLastMatchedResources(result.matched);
+    setNextResourceIndex(3);
+  }
 }
       const guideMsgId = `guide-${Date.now()}`;
       const guideTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
