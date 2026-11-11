@@ -682,6 +682,69 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                               <strong>Eligibility:</strong> {res.eligibility}
                             </span>
                           </div>
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExpandedResources(prev => {
+                                const next = new Set(prev);
+                                if (next.has(res.id)) {
+                                  next.delete(res.id);
+                                } else {
+                                  next.add(res.id);
+                                }
+                                return next;
+                              });
+                            }}
+                            className="text-[11px] font-bold text-amber-800 hover:text-amber-950 underline py-1"
+                          >
+                            {expandedResources.has(res.id)
+                              ? 'Show Less'
+                              : 'Learn More'}
+                          </button>
+
+                          {expandedResources.has(res.id) && (
+                            <div className="mt-2 space-y-2 text-[11px] text-stone-700 border-t border-stone-200 pt-2">
+                              <p>
+                                <strong>Description:</strong> {res.description}
+                              </p>
+
+                              <p>
+                                <strong>Address:</strong> {res.address}
+                              </p>
+
+                              <p>
+                                <strong>Hours:</strong> {res.hours}
+                              </p>
+
+                              <p>
+                                <strong>Languages:</strong>{' '}
+                                {res.languages?.join(', ') || 'Not listed'}
+                              </p>
+
+                              <p>
+                                <strong>Services:</strong>{' '}
+                                {res.keyServices?.join(', ') || 'Not listed'}
+                              </p>
+
+                              <p>
+                                <strong>Requirements:</strong>{' '}
+                                {res.intakeRequirements?.join(', ') || 'Contact provider for details'}
+                              </p>
+
+                              {res.website && (
+                                <a
+                                  href={res.website}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-block text-amber-800 font-bold underline"
+                                >
+                                  Visit Official Website
+                                </a>
+                              )}
+                            </div>
+                          )}
+
 
                           <div className="flex items-center justify-between gap-2 pt-1 border-t border-stone-200/60">
                             <a
