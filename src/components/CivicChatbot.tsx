@@ -246,7 +246,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'housing');
       return {
         responseText: "Facing housing instability or overdue utility bills? Help is available through Forsyth community programs and LIHEAP grants. Suggested resources matching your search:\n\nWhat kind of assistance do you need most?",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Emergency grant to stop an eviction notice in Forsyth',
           'Past-due Sawnee EMC or Georgia Power bill relief',
@@ -273,7 +273,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'food');
       return {
         responseText: "Need groceries this week? Multiple pantries in Cumming distribute fresh food and baby supplies. Suggested resources matching your search:\n\nWhat kind of food assistance do you need?",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Which food pantries are open on weekday evenings?',
           'Can I get food boxes delivered to my door for my kids?',
@@ -301,7 +301,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'healthcare');
       return {
         responseText: "Medical and dental care are available regardless of insurance status. Suggested resources matching your search:\n\nWhat kind of care are you looking for?",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Where can I get free tooth extractions without insurance?',
           'Free doctor visits and generic prescription refills',
@@ -323,7 +323,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'seniors');
       return {
         responseText: "Forsyth County Senior Services provides nutrition, wellness, and daytime enrichment for adults 60+. Suggested resources matching your search:",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'How do I sign up for Meals on Wheels delivery in Forsyth?',
           'Senior center daytime activities and exercise classes',
@@ -346,7 +346,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'childcare');
       return {
         responseText: "Finding dependable childcare takes care and research. Suggested resources matching your search:\n\nWhat age is your child, and what schedule do you need?",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Which daycares in Cumming accept Georgia CAPS subsidies?',
           'Are there part-time morning preschools available?',
@@ -375,7 +375,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'schools');
       return {
         responseText: "Forsyth County offers strong public education and tuition-free technical credentials. Suggested resources matching your search:\n\nWhat program or grade level are you looking into?",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Which elementary schools have dual language immersion?',
           'What degrees at Lanier Tech are 100% tuition-free?',
@@ -405,7 +405,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'repairs');
       return {
         responseText: "Car trouble or something broken at home? Suggested resources matching your search:\n\nWhat needs fixing?",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Who does emergency 24/7 plumbing leaks in Cumming?',
           'Where can I get honest brake or engine repairs?',
@@ -431,7 +431,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'sports');
       return {
         responseText: "Looking to get outside this weekend? Suggested resources matching your search:\n\nWhat kind of outing are you planning?",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Are the hiking trails at Sawnee Mountain good for beginners?',
           'Where can we swim at Lake Lanier with picnic tables?',
@@ -454,7 +454,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'workforce');
       return {
         responseText: "Looking for employment assistance or library study tools? Suggested resources matching your search:\n\nWhat kind of career or learning support do you need?",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'How do I apply for the $8,000 career training grant?',
           'Free computer access and resume review in Cumming',
@@ -479,7 +479,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'emergency');
       return {
         responseText: "Looking for severe storm shelters, fire prevention, or disaster recovery? Local emergency management and Red Cross teams serve Forsyth County. Suggested resources matching your search:",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Where are the severe storm shelters in Forsyth County?',
           'How do I get free smoke alarm installation in Cumming?',
@@ -504,7 +504,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'recovery');
       return {
         responseText: "Seeking compassionate substance use recovery, peer coaching, or family support? Free, non-judgmental community programs in Cumming are ready to help. Suggested resources matching your search:",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'Where can I get free peer recovery coaching in Cumming?',
           'Immediate detox placement and JumpStart navigation',
@@ -528,7 +528,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const ranked = rankResources(query, 'tax-finance');
       return {
         responseText: "Need free tax preparation, Medicare plan review, or non-profit debt counseling? Certified community navigators assist Forsyth residents. Suggested resources matching your search:",
-        matched: ranked.slice(0, 3),
+        matched: ranked,
         examplePrompts: [
           'How do I make an appointment for free AARP tax filing?',
           'Free Medicare Part D comparison for seniors in Forsyth',
@@ -543,7 +543,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
       const topName = rankedGeneral[0].name;
       return {
         responseText: `Suggested resources matching your search in Forsyth County:\n\nCould you tell me a little more about your actual need? For example, you could ask:`,
-        matched: rankedGeneral.slice(0, 3),
+        matched: rankedGeneral,
         examplePrompts: [
           `What are the opening hours and phone for ${topName}?`,
           `Are there free or sliding-scale options for this?`,
