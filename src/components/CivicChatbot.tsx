@@ -106,6 +106,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
   const [isTyping, setIsTyping] = useState(false);
   const timerRef = useRef<number | null>(null);
   const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set());
+  const [explainedResources, setExplainedResources] = useState<Set<string>>(new Set());
   const [showAllResults, setShowAllResults] = useState<Set<string>>(new Set());
 
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -744,7 +745,61 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
                               )}
                             </div>
                           )}
+                          
 
+                          
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setExplainedResources(prev => {
+                                const next = new Set(prev);
+                                if (next.has(res.id)) {
+                                  next.delete(res.id);
+                                } else {
+                                  next.add(res.id);
+                                }
+                                return next;
+                              });
+                            }}
+                            className="text-[11px] font-bold text-amber-800 hover:text-amber-950 underline py-1"
+                          >
+                            {explainedResources.has(res.id)
+                              ? 'Hide Explanation'
+                              : 'Explain Further'}
+                          </button>
+
+                          {explainedResources.has(res.id) && (
+                            <div className="mt-1 p-2.5 bg-amber-50 rounded-lg border border-amber-200 text-[11px] text-stone-700 space-y-1.5">
+                              <strong className="text-amber-900">
+                                How this resource may help:
+                              </strong>
+
+                              <p>
+                                {res.description || 'A detailed description is not currently available in the directory.'}
+                              </p>
+
+                              {res.keyServices?.length > 0 && (
+                                <p>
+                                  <strong>Available services:</strong>{' '}
+                                  {res.keyServices.join(', ')}.
+                                </p>
+                              )}
+
+                              <p>
+                                <strong>Cost:</strong>{' '}
+                                {res.cost || 'Contact the provider for pricing.'}
+                              </p>
+
+                              <p>
+                                <strong>Eligibility:</strong>{' '}
+                                {res.eligibility || 'Contact the provider to confirm eligibility.'}
+                              </p>
+
+                              <p className="text-stone-500 italic">
+                                Contact the organization directly to confirm current services and requirements.
+                              </p>
+                            </div>
+                          )}
 
                           <div className="flex items-center justify-between gap-2 pt-1 border-t border-stone-200/60">
                             <a
