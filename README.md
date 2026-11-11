@@ -133,7 +133,7 @@ Website-Design-Project/
 │   ├── main.tsx                  # React entry point
 │   └── index.css                 # CSS3 stylesheet, custom properties, and print styles
 ├── index.html                    # HTML5 entry document with metadata and font preconnects
-├── metadata.json                 # AI Studio descriptive metadata configuration
+├── metadata.json                 # Web app metadata configuration
 ├── package.json                  # Project dependencies and npm scripts
 ├── tsconfig.json                 # TypeScript compiler configuration
 ├── vite.config.ts                # Vite build configuration with base URL
@@ -161,7 +161,3 @@ Verified resource items explicitly record their primary source URL (`sourceUrl`)
 - **Responsive Layout**: Designed for mobile smartphones, tablets, desktop displays, and CSS3 print media.
 - **Escape Key Handling**: All dialogs and modal windows close reliably when the `Escape` key is pressed or when clicking outside the dialog.
 
----
-
-## AI Assistance Disclosure
-Google AI Studio was utilized to assist in generating boilerplate code, refining component modularity, and formatting documentation. Code structure, responsive styling, and accessibility features have been tested and verified for build integrity. All 165 community listings and local events are verified against authentic municipal and county provider directories.

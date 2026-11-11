@@ -15,6 +15,7 @@ interface ChatMessage {
 interface CivicChatbotProps {
   onSelectResource: (resource: ResourceItem) => void;
   onInitiateCall?: (phone: string, resourceName: string) => void;
+  userName?: string;
 }
 
 const QUICK_PROMPTS = [
@@ -93,14 +94,23 @@ function rankResources(query: string, categoryFilter?: string): ResourceItem[] {
     return { res, score };
   });
 
-  // Only return results with genuine relevance score threshold
-  return scored
+  const rankedResources = scored
     .filter(item => item.score >= 10)
     .sort((a, b) => b.score - a.score)
     .map(item => item.res);
+
+  // Remove duplicate resources while preserving relevance order
+  return rankedResources.filter(
+    (resource, index, resources) =>
+      resources.findIndex(item => item.id === resource.id) === index
+  );
 }
 
-export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, onInitiateCall }) => {
+export const CivicChatbot: React.FC<CivicChatbotProps> = ({
+  onSelectResource,
+  onInitiateCall,
+  userName = ''
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -148,27 +158,33 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({ onSelectResource, on
 
   const handleSendMessage = (textToSend?: string) => {
     const query = (textToSend || inputMessage).trim();
-    const followUpTerms = [
-  'show me more',
-  'more resources',
-  'which ones',
-  'what about',
-  'are any',
-  'do they',
-  'how about',
-  'those',
-  'them'
-];
+    const normalizedQuery = query.toLowerCase().trim();
 
-const isFollowUp = followUpTerms.some(term =>
-  query.toLowerCase().includes(term)
-);
     const isMoreRequest = [
-  'show me more',
-  'show more',
-  'more resources',
-  'more results'
-].some(term => query.toLowerCase().includes(term));
+      'show me more',
+      'show more',
+      'more resources',
+      'more results',
+      'next resources',
+      'next results'
+    ].some(term => normalizedQuery.includes(term));
+
+    const followUpTerms = [
+      'which ones',
+      'what about',
+      'are any',
+      'do they',
+      'how about',
+      'those',
+      'them',
+      'they',
+      'their'
+    ];
+
+    const isFollowUp =
+      isMoreRequest ||
+      followUpTerms.some(term => normalizedQuery.includes(term));
+
     if (!query) return;
 
     const userMsgId = `user-${Date.now()}`;
@@ -194,44 +210,56 @@ const isFollowUp = followUpTerms.some(term =>
 
     // Consistent response delay handled safely with cleanup
     timerRef.current = window.setTimeout(() => {
-     let responseText = '';
-let matched: ResourceItem[] | undefined;
-let examplePrompts: string[] = [];
+      let responseText = '';
+      let matched: ResourceItem[] | undefined;
+      let examplePrompts: string[] = [];
 
-if (isMoreRequest) {
-  const nextResources = lastMatchedResources.slice(
-    nextResourceIndex,
-    nextResourceIndex + 3
-  );
+      if (isMoreRequest) {
+        // Get the next three resources instead of searching again
+        const nextResources = lastMatchedResources.slice(
+          nextResourceIndex,
+          nextResourceIndex + 3
+        );
 
-  if (nextResources.length > 0) {
-    matched = nextResources;
-    responseText = 'Here are more resources matching your search:';
-    setNextResourceIndex(prev => prev + nextResources.length);
-  } else {
-    responseText = 'You have already viewed all the matching resources. Try searching for another type of assistance.';
-  }
-} else {
-  const searchQuery =
-    isFollowUp && lastTopic
-      ? `${lastTopic} ${query}`
-      : query;
+        if (nextResources.length > 0) {
+          matched = nextResources;
 
-  const result = matchDirectoryQuery(searchQuery);
+          responseText =
+            `Here are the next ${nextResources.length} resources matching your search:`;
 
-  responseText = result.responseText;
-  examplePrompts = result.examplePrompts;
-  matched = result.matched;
+          setNextResourceIndex(
+            nextResourceIndex + nextResources.length
+          );
+        } else {
+          matched = [];
 
-  if (!isFollowUp) {
-    setLastTopic(query);
-  }
+          responseText =
+            'You have viewed all the matching resources. Try searching for another type of assistance.';
+        }
 
-  if (result.matched && result.matched.length > 0) {
-    setLastMatchedResources(result.matched);
-    setNextResourceIndex(3);
-  }
-}
+      } else {
+        // Search normally or use the previous topic for a follow-up
+        const searchQuery =
+          isFollowUp && lastTopic
+            ? `${lastTopic} ${query}`
+            : query;
+
+        const result = matchDirectoryQuery(searchQuery);
+
+        responseText = result.responseText;
+        examplePrompts = result.examplePrompts || [];
+        matched = result.matched || [];
+
+        // Save the new topic and its complete results
+        if (!isFollowUp) {
+          setLastTopic(query);
+          setLastMatchedResources(result.matched || []);
+          setNextResourceIndex(3);
+        } else if (result.matched && result.matched.length > 0) {
+          setLastMatchedResources(result.matched);
+          setNextResourceIndex(3);
+        }
+      }
       const guideMsgId = `guide-${Date.now()}`;
       const guideTimestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
@@ -275,7 +303,7 @@ if (isMoreRequest) {
     ) {
       const ranked = rankResources(query, 'legal-crisis');
       const fallback = COMMUNITY_RESOURCES.filter(r => r.isEmergency);
-      const matches = (ranked.length > 0 ? ranked : fallback).slice(0, 3);
+      const matches = ranked.length > 0 ? ranked : fallback;
 
       return {
         responseText: "If you or someone you know is in immediate crisis, confidential help is available right now:\n\n• Suicide & Crisis Lifeline: Dial or text 988 (24/7 Free & Confidential)\n• Immediate Danger / Medical Emergency: Dial 911\n• Georgia Crisis & Access Line (GCAL): (800) 715-4225\n• Forsyth County Family Haven (Domestic Safety): (770) 887-1121\n• United Way Helpline: Dial 211\n\nSuggested resources matching your search:",
@@ -708,7 +736,7 @@ if (isMoreRequest) {
                   {msg.matchedResources && msg.matchedResources.length > 0 && (
                     <div className="space-y-2 pt-1.5 border-t border-stone-100">
                       <span className="text-[10px] font-mono uppercase text-stone-500 block font-bold">
-                        Top Ranked Matches:
+                        Matching Community Resources:
                       </span>
                       {msg.matchedResources
                         .slice(0, showAllResults.has(msg.id) ? undefined : 3)
