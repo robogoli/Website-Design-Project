@@ -1,12 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+// src/hooks/useFeedback.ts
+import { useState, useEffect, useCallback } from 'react';
 import { UserFeedback } from '../types';
 import { INITIAL_COMMUNITY_FEEDBACKS, COMMUNITY_EVENTS } from '../data/mockData';
-
-const STORAGE_KEY = 'civicbridge_feedbacks';
-const LIKES_STORAGE_KEY = 'civicbridge_liked_feedbacks';
-const SEEN_FEEDBACK_COUNT_KEY = 'civicbridge_seen_feedback_count';
-const SEEN_EVENTS_COUNT_KEY = 'civicbridge_seen_events_count';
-const NOTIFICATION_CHANNEL_NAME = 'civicbridge_notes_channel';
+import { supabase } from '../utils/supabase';
 
 export interface NewNoteNotification {
   id: string;
@@ -17,204 +13,107 @@ export interface NewNoteNotification {
 }
 
 export function useFeedback() {
-  const [feedbacks, setFeedbacks] = useState<UserFeedback[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Keep user-created feedbacks
-          const userSubmitted = parsed.filter(
-            f => !f.isSample && f.userName !== 'Sample Demonstration Note' && !f.message.startsWith('Example Note:')
-          );
-          if (userSubmitted.length > 0) {
-            const userIds = new Set(userSubmitted.map(u => u.id));
-            const baseList = INITIAL_COMMUNITY_FEEDBACKS.filter(b => !userIds.has(b.id));
-            return [...userSubmitted, ...baseList];
-          }
-        }
-      }
-    } catch {
-      // Fallback to static list on storage access errors
-    }
-    return INITIAL_COMMUNITY_FEEDBACKS;
-  });
-
-  const [likedFeedbacks, setLikedFeedbacks] = useState<Record<string, boolean>>(() => {
-    try {
-      const saved = localStorage.getItem(LIKES_STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch {
-      // Fallback
-    }
-    return {};
-  });
-
+  const [feedbacks, setFeedbacks] = useState<UserFeedback[]>(INITIAL_COMMUNITY_FEEDBACKS);
+  const [likedFeedbacks, setLikedFeedbacks] = useState<Record<string, boolean>>({});
   const [filterType, setFilterType] = useState<'all' | 'public' | 'anonymous'>('all');
-
-  // Track counts the user has seen so yellow badges disappear once visited
-  const [seenFeedbackCount, setSeenFeedbackCount] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem(SEEN_FEEDBACK_COUNT_KEY);
-      if (saved !== null) {
-        return Number(saved);
-      }
-    } catch {
-      // ignore
-    }
-    return 0;
-  });
-
-  const [seenEventsCount, setSeenEventsCount] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem(SEEN_EVENTS_COUNT_KEY);
-      if (saved !== null) {
-        return Number(saved);
-      }
-    } catch {
-      // ignore
-    }
-    return 0;
-  });
-
-  // Real-time toast alert when anyone adds a note
   const [recentNotification, setRecentNotification] = useState<NewNoteNotification | null>(null);
-  const broadcastChannelRef = useRef<BroadcastChannel | null>(null);
 
-  // Sync feedbacks to localStorage
+  // Fetch initial notes from Supabase and subscribe to real-time inserts
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(feedbacks));
-    } catch {
-      // Storage quota or restriction
-    }
-  }, [feedbacks]);
+    async function fetchFeedbacks() {
+      const { data, error } = await supabase
+        .from('community_feedbacks')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  // Sync likes to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify(likedFeedbacks));
-    } catch {
-      // Storage quota or restriction
-    }
-  }, [likedFeedbacks]);
-
-  // Save seen counts to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(SEEN_FEEDBACK_COUNT_KEY, String(seenFeedbackCount));
-    } catch {
-      // ignore
-    }
-  }, [seenFeedbackCount]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SEEN_EVENTS_COUNT_KEY, String(seenEventsCount));
-    } catch {
-      // ignore
-    }
-  }, [seenEventsCount]);
-
-  // Real-time synchronization across all tabs and browser windows
-  useEffect(() => {
-    let channel: BroadcastChannel | null = null;
-    try {
-      if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-        channel = new BroadcastChannel(NOTIFICATION_CHANNEL_NAME);
-        broadcastChannelRef.current = channel;
-
-        channel.onmessage = (event) => {
-          if (event.data && event.data.type === 'NEW_COMMUNITY_NOTE') {
-            const incomingNote: UserFeedback = event.data.feedback;
-            if (incomingNote && incomingNote.id) {
-              setFeedbacks(prev => {
-                if (prev.some(f => f.id === incomingNote.id)) return prev;
-                return [incomingNote, ...prev];
-              });
-
-              // Show live toast notification to everyone
-              setRecentNotification({
-                id: incomingNote.id,
-                userName: incomingNote.userName,
-                resourceName: incomingNote.resourceName,
-                message: incomingNote.message,
-                submittedAt: incomingNote.submittedAt
-              });
-            }
-          }
-        };
+      if (!error && data && data.length > 0) {
+        const formatted = data.map(item => ({
+          id: item.id,
+          userName: item.user_name,
+          resourceName: item.resource_name,
+          message: item.message,
+          isAnonymous: item.is_anonymous,
+          submittedAt: item.submitted_at,
+          status: item.status,
+          likesCount: item.likes_count
+        }));
+        setFeedbacks([...formatted, ...INITIAL_COMMUNITY_FEEDBACKS]);
       }
-    } catch {
-      // BroadcastChannel unavailable
     }
 
-    // Also listen to storage events across tabs as a resilient fallback
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
-        try {
-          const updated: UserFeedback[] = JSON.parse(e.newValue);
-          if (Array.isArray(updated)) {
-            setFeedbacks(updated);
-          }
-        } catch {
-          // ignore
+    fetchFeedbacks();
+
+    // Set up Supabase Realtime channel for instant multi-user updates
+    const channel = supabase
+      .channel('public:community_feedbacks')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'community_feedbacks' },
+        (payload) => {
+          const newItem = payload.new;
+          const incomingNote: UserFeedback = {
+            id: newItem.id,
+            userName: newItem.user_name,
+            resourceName: newItem.resource_name,
+            message: newItem.message,
+            isAnonymous: newItem.is_anonymous,
+            submittedAt: newItem.submitted_at,
+            status: newItem.status,
+            likesCount: newItem.likes_count
+          };
+
+          setFeedbacks(prev => {
+            if (prev.some(f => f.id === incomingNote.id)) return prev;
+            return [incomingNote, ...prev];
+          });
+
+          setRecentNotification({
+            id: incomingNote.id,
+            userName: incomingNote.userName,
+            resourceName: incomingNote.resourceName,
+            message: incomingNote.message,
+            submittedAt: incomingNote.submittedAt
+          });
         }
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
+      )
+      .subscribe();
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      if (channel) {
-        channel.close();
-      }
+      supabase.removeChannel(channel);
     };
   }, []);
 
-  // Mark tabs as seen to dismiss the yellow notification badges
-  const markFeedbackAsSeen = useCallback(() => {
-    setSeenFeedbackCount(feedbacks.length);
-  }, [feedbacks.length]);
+  const addFeedback = async (item: Omit<UserFeedback, 'id' | 'submittedAt' | 'status' | 'likesCount'>) => {
+    const newId = `fb-${Date.now()}`;
+    const submittedAt = new Date().toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
 
-  const markEventsAsSeen = useCallback(() => {
-    setSeenEventsCount(COMMUNITY_EVENTS.length);
-  }, []);
-
-  const dismissNotification = useCallback(() => {
-    setRecentNotification(null);
-  }, []);
-
-  const addFeedback = (item: Omit<UserFeedback, 'id' | 'submittedAt' | 'status' | 'likesCount'>) => {
     const newFeedback: UserFeedback = {
       ...item,
-      id: `fb-${Date.now()}`,
-      submittedAt: new Date().toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      }),
+      id: newId,
+      submittedAt,
       status: 'Received & Logged',
       likesCount: 0
     };
 
     setFeedbacks(prev => [newFeedback, ...prev]);
 
-    // Notify all open windows/users immediately via BroadcastChannel
-    try {
-      if (broadcastChannelRef.current) {
-        broadcastChannelRef.current.postMessage({
-          type: 'NEW_COMMUNITY_NOTE',
-          feedback: newFeedback
-        });
+    await supabase.from('community_feedbacks').insert([
+      {
+        id: newFeedback.id,
+        user_name: newFeedback.userName,
+        resource_name: newFeedback.resourceName || null,
+        message: newFeedback.message,
+        is_anonymous: newFeedback.isAnonymous,
+        submitted_at: newFeedback.submittedAt,
+        status: newFeedback.status,
+        likes_count: newFeedback.likesCount
       }
-    } catch {
-      // ignore
-    }
+    ]);
 
-    // Trigger local notification toast for the author/user as well
     setRecentNotification({
       id: newFeedback.id,
       userName: newFeedback.userName,
@@ -226,27 +125,27 @@ export function useFeedback() {
     return newFeedback;
   };
 
-  const toggleLike = (id: string) => {
+  const toggleLike = async (id: string) => {
     const isLiked = !!likedFeedbacks[id];
+    const target = feedbacks.find(f => f.id === id);
+    if (!target) return;
 
-    setLikedFeedbacks(prev => ({
-      ...prev,
-      [id]: !isLiked
-    }));
+    const newLikesCount = isLiked ? Math.max(0, target.likesCount - 1) : target.likesCount + 1;
 
+    setLikedFeedbacks(prev => ({ ...prev, [id]: !isLiked }));
     setFeedbacks(prev =>
-      prev.map(f => {
-        if (f.id === id) {
-          const currentCount = f.likesCount || 0;
-          return {
-            ...f,
-            likesCount: isLiked ? Math.max(0, currentCount - 1) : currentCount + 1
-          };
-        }
-        return f;
-      })
+      prev.map(f => (f.id === id ? { ...f, likesCount: newLikesCount } : f))
     );
+
+    await supabase
+      .from('community_feedbacks')
+      .update({ likes_count: newLikesCount })
+      .eq('id', id);
   };
+
+  const dismissNotification = useCallback(() => {
+    setRecentNotification(null);
+  }, []);
 
   const filteredFeedbacks = feedbacks.filter(fb => {
     if (filterType === 'public') return !fb.isAnonymous;
@@ -254,17 +153,13 @@ export function useFeedback() {
     return true;
   });
 
-  // Calculate unread badge counts (0 when seen)
-  const unreadFeedbackCount = Math.max(0, feedbacks.length - seenFeedbackCount);
-  const unreadEventsCount = Math.max(0, COMMUNITY_EVENTS.length - seenEventsCount);
-
   return {
     feedbacks: filteredFeedbacks,
     allFeedbacksCount: feedbacks.length,
-    unreadFeedbackCount,
-    unreadEventsCount,
-    markFeedbackAsSeen,
-    markEventsAsSeen,
+    unreadFeedbackCount: 0,
+    unreadEventsCount: 0,
+    markFeedbackAsSeen: () => {},
+    markEventsAsSeen: () => {},
     recentNotification,
     dismissNotification,
     filterType,
