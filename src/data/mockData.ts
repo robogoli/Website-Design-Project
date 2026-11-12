@@ -2687,8 +2687,7 @@ function r(
     district = 'North Forsyth';
   }
 
-  // Lookup verified record override; all listings in the directory have complete individual records
-  const verifiedRecord = VERIFIED_RECORDS[id];
+  
 
   
 // Look up the resource's individual verification record
