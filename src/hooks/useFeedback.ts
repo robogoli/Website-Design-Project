@@ -27,16 +27,18 @@ export function useFeedback() {
         .order('created_at', { ascending: false });
 
       if (!error && data && data.length > 0) {
-        const formatted = data.map(item => ({
-          id: item.id,
-          userName: item.user_name,
-          resourceName: item.resource_name,
-          message: item.message,
-          isAnonymous: item.is_anonymous,
-          submittedAt: item.submitted_at,
-          status: item.status,
-          likesCount: item.likes_count
-        }));
+        const formatted: UserFeedback[] = data.map(item => ({
+  id: item.id,
+  userName: item.user_name,
+  resourceName: item.resource_name,
+  category: item.category,
+  rating: item.rating,
+  message: item.message,
+  isAnonymous: item.is_anonymous,
+  submittedAt: item.submitted_at,
+  status: item.status,
+  likesCount: item.likes_count ?? 0
+}));
         setFeedbacks([...formatted, ...INITIAL_COMMUNITY_FEEDBACKS]);
       }
     }
@@ -52,15 +54,17 @@ export function useFeedback() {
         (payload) => {
           const newItem = payload.new;
           const incomingNote: UserFeedback = {
-            id: newItem.id,
-            userName: newItem.user_name,
-            resourceName: newItem.resource_name,
-            message: newItem.message,
-            isAnonymous: newItem.is_anonymous,
-            submittedAt: newItem.submitted_at,
-            status: newItem.status,
-            likesCount: newItem.likes_count
-          };
+  id: newItem.id,
+  userName: newItem.user_name,
+  resourceName: newItem.resource_name,
+  category: newItem.category,
+  rating: newItem.rating,
+  message: newItem.message,
+  isAnonymous: newItem.is_anonymous,
+  submittedAt: newItem.submitted_at,
+  status: newItem.status,
+  likesCount: newItem.likes_count ?? 0
+};
 
           setFeedbacks(prev => {
             if (prev.some(f => f.id === incomingNote.id)) return prev;
@@ -83,29 +87,34 @@ export function useFeedback() {
     };
   }, []);
 
-  const addFeedback = async (item: Omit<UserFeedback, 'id' | 'submittedAt' | 'status' | 'likesCount'>) => {
-    const newId = `fb-${Date.now()}`;
-    const submittedAt = new Date().toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
+  const addFeedback = async (
+  item: Omit<UserFeedback, 'id' | 'submittedAt' | 'status' | 'likesCount'>
+): Promise<UserFeedback> => {
+  const newId = `fb-${Date.now()}`;
 
-    const newFeedback: UserFeedback = {
-      ...item,
-      id: newId,
-      submittedAt,
-      status: 'Received & Logged',
-      likesCount: 0
-    };
+  const submittedAt = new Date().toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
 
-    setFeedbacks(prev => [newFeedback, ...prev]);
+  const newFeedback: UserFeedback = {
+    ...item,
+    id: newId,
+    submittedAt,
+    status: 'Received & Logged',
+    likesCount: 0
+  };
 
-    await supabase.from('community_feedbacks').insert([
+  const { error } = await supabase
+    .from('community_feedbacks')
+    .insert([
       {
         id: newFeedback.id,
         user_name: newFeedback.userName,
         resource_name: newFeedback.resourceName || null,
+        category: newFeedback.category,
+        rating: newFeedback.rating,
         message: newFeedback.message,
         is_anonymous: newFeedback.isAnonymous,
         submitted_at: newFeedback.submittedAt,
@@ -114,23 +123,36 @@ export function useFeedback() {
       }
     ]);
 
-    setRecentNotification({
-      id: newFeedback.id,
-      userName: newFeedback.userName,
-      resourceName: newFeedback.resourceName,
-      message: newFeedback.message,
-      submittedAt: newFeedback.submittedAt
-    });
+  if (error) {
+    console.error('Supabase feedback error:', error);
+    throw error;
+  }
 
-    return newFeedback;
-  };
+  setFeedbacks(prev => {
+    if (prev.some(f => f.id === newFeedback.id)) return prev;
+    return [newFeedback, ...prev];
+  });
 
+  setRecentNotification({
+    id: newFeedback.id,
+    userName: newFeedback.userName,
+    resourceName: newFeedback.resourceName,
+    message: newFeedback.message,
+    submittedAt: newFeedback.submittedAt
+  });
+
+  return newFeedback;
+};
   const toggleLike = async (id: string) => {
     const isLiked = !!likedFeedbacks[id];
     const target = feedbacks.find(f => f.id === id);
     if (!target) return;
 
-    const newLikesCount = isLiked ? Math.max(0, target.likesCount - 1) : target.likesCount + 1;
+    const currentLikesCount = target.likesCount ?? 0;
+
+const newLikesCount = isLiked
+  ? Math.max(0, currentLikesCount - 1)
+  : currentLikesCount + 1;
 
     setLikedFeedbacks(prev => ({ ...prev, [id]: !isLiked }));
     setFeedbacks(prev =>

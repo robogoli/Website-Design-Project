@@ -20,7 +20,7 @@ interface FeedbackSectionProps {
   allCount: number;
   filterType: 'all' | 'public' | 'anonymous';
   onFilterChange: (filter: 'all' | 'public' | 'anonymous') => void;
-  onSubmitFeedback: (feedback: Omit<UserFeedback, 'id' | 'submittedAt' | 'status' | 'likesCount'>) => void;
+  onSubmitFeedback: (feedback: Omit<UserFeedback, 'id' | 'submittedAt' | 'status' | 'likesCount'>) => Promise<UserFeedback>;
   onToggleLike: (id: string) => void;
   likedFeedbackIds: Record<string, boolean>;
   initialResourceName?: string;
