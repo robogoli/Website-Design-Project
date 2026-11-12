@@ -14,7 +14,6 @@ A community resource directory connecting residents of Cumming and Forsyth Count
 - [Directory Structure](#directory-structure)
 - [Data Sources & Verification](#data-sources--verification)
 - [Accessibility & Design Standards](#accessibility--design-standards)
-- [AI Assistance Disclosure](#ai-assistance-disclosure)
 
 ---
 

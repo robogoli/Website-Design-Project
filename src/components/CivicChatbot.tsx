@@ -28,7 +28,7 @@ interface CivicChatbotProps {
   userName?: string;
 }
 
-const QUICK_PROMPTS = [
+const SUGGESTED_TOPICS = [
   '🥫 Free food pantries',
   '🩺 Free clinic & dental',
   '🤝 Addiction & peer recovery',
@@ -41,54 +41,63 @@ const QUICK_PROMPTS = [
   '🆘 Crisis & urgent help'
 ];
 
-/**
- * Word-boundary matching prevents short keywords from
- * accidentally matching unrelated words.
- */
+// Word-boundary matching helper preventing short query terms from falsely matching larger words (e.g. 'care' vs 'car')
 function matchesWordBoundary(text: string, keyword: string): boolean {
+  // Apply word-boundary regular expression for short search terms 4 characters or fewer
   if (keyword.length <= 4) {
+    // Escape special regex characters in the search term safely
     const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Construct case-insensitive boundary regex
     const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    // Test if target text contains the keyword as a standalone word
     return regex.test(text);
   }
 
+  // For longer words, use standard case-insensitive substring matching
   return text.toLowerCase().includes(keyword.toLowerCase());
 }
 
-/**
- * General resource ranking.
- */
+// General resource relevance scoring algorithm ranking listings based on keyword occurrences
 function rankResources(
   query: string,
   categoryFilter?: string
 ): ResourceItem[] {
+  // Normalize search query into lowercase and trim whitespace
   const q = query.toLowerCase().trim();
+  // Split query into individual word tokens with length greater than 1
   const tokens = q.split(/\s+/).filter(t => t.length > 1);
 
+  // Score each organization in the directory against the search query
   const scored = COMMUNITY_RESOURCES.map(res => {
+    // Initialize initial relevance score at 0
     let score = 0;
 
+    // Grant 20 bonus points if resource matches the explicit category filter
     if (categoryFilter && res.category === categoryFilter) {
       score += 20;
     }
 
+    // Lowercase resource attributes for fast comparison
     const nameLower = res.name.toLowerCase();
     const tagLower = res.tagline.toLowerCase();
     const descLower = res.description.toLowerCase();
     const eligLower = res.eligibility.toLowerCase();
     const phoneLower = res.phone.toLowerCase();
 
+    // Prioritize exact full-phrase matches in title and contact details
     if (nameLower.includes(q)) score += 30;
     if (tagLower.includes(q)) score += 15;
     if (descLower.includes(q)) score += 10;
     if (eligLower.includes(q)) score += 12;
     if (phoneLower.includes(q)) score += 20;
 
+    // Match query against specific service items offered by the organization
     for (const svc of res.keyServices || []) {
       const sLower = svc.toLowerCase();
-
+      // Bonus if service contains the full query string
       if (sLower.includes(q)) score += 15;
 
+      // Check each token against service tags using word boundaries
       for (const token of tokens) {
         if (matchesWordBoundary(sLower, token)) {
           score += 6;
@@ -96,6 +105,7 @@ function rankResources(
       }
     }
 
+    // Award incremental points for individual token matches across primary fields
     for (const token of tokens) {
       if (matchesWordBoundary(nameLower, token)) score += 12;
       if (matchesWordBoundary(tagLower, token)) score += 5;
@@ -103,27 +113,26 @@ function rankResources(
       if (matchesWordBoundary(eligLower, token)) score += 5;
     }
 
+    // Return resource item paired with computed relevance score
     return { res, score };
   });
 
+  // Filter out low-relevance results and sort descending by score
   const rankedResources = scored
     .filter(item => item.score >= 10)
     .sort((a, b) => b.score - a.score)
     .map(item => item.res);
 
+  // De-duplicate resources while preserving calculated relevance ranking order
   return rankedResources.filter(
     (resource, index, resources) =>
       resources.findIndex(item => item.id === resource.id) === index
   );
 }
 
-/**
- * Food-specific ranking.
- *
- * Prioritizes human food assistance and excludes pet-food
- * resources from ordinary grocery searches.
- */
+// Specialized ranking algorithm prioritizing human food assistance and filtering out pet pantries
 function rankFoodResources(query: string): ResourceItem[] {
+  // Array of animal, shelter, and pet-related keywords used to identify pet services
   const petTerms = [
     'pet food',
     'animal services',
@@ -136,6 +145,7 @@ function rankFoodResources(query: string): ResourceItem[] {
     'humane society'
   ];
 
+  // Array of grocery, pantry, and food-assistance terms used for relevance scoring
   const groceryTerms = [
     'food',
     'grocery',
@@ -155,12 +165,16 @@ function rankFoodResources(query: string): ResourceItem[] {
     'nutrition'
   ];
 
+  // Convert incoming user question to lowercase for case-insensitive matching
   const queryLower = query.toLowerCase();
 
+  // Filter master directory ensuring only human food resources are included
   return COMMUNITY_RESOURCES
     .filter(res => {
+      // Extract category string
       const category = (res.category || '').toLowerCase();
 
+      // Aggregate all searchable text fields for this organization
       const searchableText = [
         res.name,
         res.categoryLabel,
@@ -169,17 +183,21 @@ function rankFoodResources(query: string): ResourceItem[] {
         ...(res.keyServices || [])
       ].join(' ').toLowerCase();
 
+      // Check if resource belongs to the food domain
       const isFoodCategory =
         category === 'food' ||
         (res.categoryLabel || '').toLowerCase().includes('food');
 
+      // Check if resource contains pet or animal shelter terms
       const isPetResource = petTerms.some(term =>
         searchableText.includes(term)
       );
 
+      // Return true only if it is a food resource and NOT an animal service
       return isFoodCategory && !isPetResource;
     })
     .map(res => {
+      // Combine text properties for keyword scoring
       const searchableText = [
         res.name,
         res.tagline,
@@ -187,24 +205,29 @@ function rankFoodResources(query: string): ResourceItem[] {
         ...(res.keyServices || [])
       ].join(' ').toLowerCase();
 
+      // Initialize base food score
       let score = 0;
 
+      // Add 5 points for each grocery term present in the listing
       for (const term of groceryTerms) {
         if (searchableText.includes(term)) {
           score += 5;
         }
       }
 
+      // Add 20 points if title explicitly mentions food pantry or emergency food
       if (/food pantry|food bank|emergency food/i.test(res.name)) {
         score += 20;
       }
 
+      // Add 15 points if key services include fresh groceries or food boxes
       if (/groceries|food boxes|fresh produce/i.test(
         (res.keyServices || []).join(' ')
       )) {
         score += 15;
       }
 
+      // Add 10 points if user requested emergency aid and resource handles urgent needs
       if (
         queryLower.includes('emergency') &&
         /emergency|immediate/i.test(searchableText)
@@ -212,6 +235,7 @@ function rankFoodResources(query: string): ResourceItem[] {
         score += 10;
       }
 
+      // Add 15 points if user searched for government food benefits (SNAP/EBT) and provider offers help
       if (
         queryLower.includes('snap') ||
         queryLower.includes('ebt') ||
@@ -222,10 +246,14 @@ function rankFoodResources(query: string): ResourceItem[] {
         }
       }
 
+      // Return resource paired with computed relevance score
       return { res, score };
     })
+    // Exclude resources with zero keyword hits
     .filter(item => item.score > 0)
+    // Sort descending by highest relevance score
     .sort((a, b) => b.score - a.score)
+    // Return sorted array of ResourceItem objects
     .map(item => item.res);
 }
 
@@ -878,16 +906,16 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
           </header>
 
           <div className="bg-stone-50 border-b border-stone-200 p-2 overflow-x-auto scrollbar-none flex gap-1.5 shrink-0">
-            {QUICK_PROMPTS.map((prompt, idx) => (
+            {SUGGESTED_TOPICS.map((topic, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() =>
-                  handleSendMessage(prompt.replace(/^[^\s]+\s/, ''))
+                  handleSendMessage(topic.replace(/^[^\s]+\s/, ''))
                 }
                 className="whitespace-nowrap px-2.5 py-1 text-[11px] font-medium bg-white hover:bg-amber-50 text-stone-700 hover:text-amber-900 border border-stone-200 rounded-full transition-colors cursor-pointer shrink-0"
               >
-                {prompt}
+                {topic}
               </button>
             ))}
           </div>

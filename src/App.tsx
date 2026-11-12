@@ -1,37 +1,44 @@
+// Import React core hooks, Suspense boundary, and lazy-loading utility
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-import {
-  ArrowDown,
-  ArrowUp,
-  Bell,
-  X
-} from 'lucide-react';
+// Import vector icons from Lucide icon library for scroll controls and notification banners
+import { ArrowDown, ArrowUp, Bell, X } from 'lucide-react';
 
+// Import domain interfaces for community listings and Forsyth County geographic districts
 import { ResourceItem, DistrictType } from './types';
+// Import pre-defined civic categories metadata
 import { CATEGORIES } from './data/mockData';
+// Import custom business logic hooks for directory resources and community feedback
 import { useResources } from './hooks/useResources';
 import { useFeedback } from './hooks/useFeedback';
 
+// Import layout navigation header and footer components
 import { Navbar, TabKey } from './components/Navbar';
 import { Footer } from './components/Footer';
+// Import resource cards and modal details components
 import { ResourceCard } from './components/ResourceCard';
 import { ResourceDetails } from './components/ResourceDetails';
+// Import modular header search banner and community board showcase
 import { HeroBanner } from './components/HeroBanner';
 import { CommunityVoices } from './components/CommunityVoices';
+// Import accessible dialogs for desktop call confirmation and neighbor greeting personalization
 import { CallPromptModal } from './components/CallPromptModal';
 import { WelcomeModal } from './components/WelcomeModal';
+// Import interactive community chatbot guide
 import { CivicChatbot } from './components/CivicChatbot';
+// Import skeleton placeholder shown while lazy components are downloading
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 
-// Lazy-loaded tab components to optimize initial bundle delivery
+// Code-split heavy tab views with React.lazy to minimize the initial JavaScript download bundle
 const EventsSection = lazy(() => import('./components/EventsSection').then(m => ({ default: m.EventsSection })));
 const FeedbackSection = lazy(() => import('./components/FeedbackSection').then(m => ({ default: m.FeedbackSection })));
 const StandardsSection = lazy(() => import('./components/StandardsSection').then(m => ({ default: m.StandardsSection })));
 
+// Primary application component orchestrating directory views, navigation tabs, and modal states
 export function App() {
-  // Navigation tab state
+  // Navigation tab state tracking the active screen: 'resources', 'events', 'feedback', or 'about'
   const [currentTab, setCurrentTab] = useState<TabKey>('resources');
 
-  // Directory resources hook
+  // Deconstruct resource searching, category filtering, and community checkmark controls from custom hook
   const {
     resources: filteredResources,
     allResources,
@@ -47,14 +54,10 @@ export function App() {
     toggleUserConfirmation
   } = useResources();
 
-  // Community feedback hook
+  // Deconstruct real-time community notes, like counters, and toast notifications from custom hook
   const {
     feedbacks,
     allFeedbacksCount,
-    unreadFeedbackCount,
-    unreadEventsCount,
-    markFeedbackAsSeen,
-    markEventsAsSeen,
     recentNotification,
     dismissNotification,
     filterType,
@@ -64,43 +67,30 @@ export function App() {
     likedFeedbacks
   } = useFeedback();
 
-  // Automatically mark unread counts as seen when viewing the respective tab
-  useEffect(() => {
-    if (currentTab === 'feedback') {
-      markFeedbackAsSeen();
-    } else if (currentTab === 'events') {
-      markEventsAsSeen();
-    }
-  }, [currentTab, markFeedbackAsSeen, markEventsAsSeen]);
-
-  // Tab switch handler that clears badge notifications
-  const handleSelectTab = (tab: TabKey) => {
-    if (tab === 'feedback') {
-      markFeedbackAsSeen();
-    } else if (tab === 'events') {
-      markEventsAsSeen();
-    }
-    setCurrentTab(tab);
-  };
-
-  // Selected resource for details modal
+  // Active resource item selected for viewing full contact, eligibility, and verification details in modal
   const [activeResource, setActiveResource] = useState<ResourceItem | null>(null);
 
-  // Prefill resource name for feedback form
+  // Pre-filled resource name when transitioning from a listing directly to the feedback submission form
   const [feedbackPrefillResource, setFeedbackPrefillResource] = useState('');
 
-  // User name greeting state
+  // Stored neighbor greeting name loaded from localStorage with fallback to an empty string
   const [userName, setUserName] = useState<string>(() => {
     try {
+      // Read saved name from previous session
       return localStorage.getItem('civicbridge_neighbor_name') || '';
     } catch {
+      // Return empty string if storage access is blocked
       return '';
     }
   });
+
+  // Temporary name state buffer edited inside the WelcomeModal input
   const [tempName, setTempName] = useState(userName);
+  
+  // Boolean flag controlling visibility of the greeting name customization modal
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
-  // Calling prompt modal state (for desktop app check)
+  // Calling modal dialog state providing device-specific phone call and clipboard workflows
   const [callPrompt, setCallPrompt] = useState<{
     isOpen: boolean;
     phone: string;
@@ -117,60 +107,86 @@ export function App() {
     copied: false
   });
 
-  // Scroll to bottom / top state
+  // Boolean state tracking whether user has scrolled down enough to display the scroll toggle button
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  
+  // Boolean flag indicating whether user is currently near the bottom of the page
   const [isAtBottom, setIsAtBottom] = useState(false);
 
+  // Scroll listener effect updating button visibility and toggle direction based on scroll position
   useEffect(() => {
     const handleScroll = () => {
+      // Current vertical scroll distance in pixels
       const scrollY = window.scrollY;
+      // Viewport window height
       const windowHeight = window.innerHeight;
+      // Total scrollable document height
       const docHeight = document.documentElement.scrollHeight;
 
+      // Show button once user has scrolled past 250px
       setShowScrollBottom(scrollY > 250);
+      // Flip button arrow icon to 'Top' when within 120px of the footer
       setIsAtBottom(scrollY + windowHeight >= docHeight - 120);
     };
 
+    // Attach passive scroll event listener for smooth 60fps performance
     window.addEventListener('scroll', handleScroll, { passive: true });
+    // Cleanup scroll listener on unmount
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Action toggling viewport scroll between very top and very bottom of the directory
   const handleScrollToggle = () => {
     if (isAtBottom) {
+      // Smooth scroll back to top of the page
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
+      // Smooth scroll directly to the bottom of the document
       window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
     }
   };
 
+  // Save customized neighbor name to local state and localStorage
   const handleSaveName = (e: React.FormEvent) => {
+    // Prevent default browser form submission refresh
     e.preventDefault();
+    // Trim excess whitespace and limit name to 20 characters
     const trimmed = tempName.trim().slice(0, 20);
+    // Update active React state
     setUserName(trimmed);
     try {
       if (trimmed) {
+        // Persist non-empty nickname to local storage
         localStorage.setItem('civicbridge_neighbor_name', trimmed);
       } else {
+        // Remove storage key if user cleared their name
         localStorage.removeItem('civicbridge_neighbor_name');
       }
     } catch {
-      // Storage restriction fallback
+      // Storage access error fallback
     }
+    // Dismiss the welcome modal dialog
     setShowWelcomeModal(false);
   };
 
+  // Coordinate phone dial attempts with clipboard copy safety on desktop computers
   const handleInitiateCall = (phone: string, resourceName: string) => {
+    // Strip non-digit characters for tel: URL protocol compliance
     const cleaned = phone.replace(/[^\d+]/g, '');
+    // Detect if client is running on a smartphone or handheld mobile browser
     const isMobileDevice = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     let copyTriggered = false;
+    // Automatically copy verified phone number to clipboard as a helpful fallback
     if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(phone).then(() => {
+        // Update dialog state to show 'Copied to Clipboard' confirmation
         setCallPrompt(prev => ({ ...prev, copied: true }));
       }).catch(() => {});
       copyTriggered = true;
     }
 
+    // Open call confirmation modal detailing dial instructions
     setCallPrompt({
       isOpen: true,
       phone,
@@ -180,32 +196,39 @@ export function App() {
       copied: copyTriggered
     });
 
+    // On mobile devices, automatically prompt the native cellular dialer
     if (isMobileDevice) {
       try {
         window.location.href = `tel:${cleaned}`;
       } catch {
-        // Fallback for restricted mobile iframes
+        // Handle iframe security restriction
       }
     }
   };
 
-  // Global Escape key dismiss handler for dialogs
+  // Global keyboard listener allowing users to close any open modal by pressing the Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         if (callPrompt.isOpen) {
+          // Close calling prompt dialog
           setCallPrompt(prev => ({ ...prev, isOpen: false }));
         } else if (showWelcomeModal) {
+          // Close welcome name dialog
           setShowWelcomeModal(false);
         } else if (activeResource) {
+          // Close resource detail sheet
           setActiveResource(null);
         }
       }
     };
+    // Attach keydown listener to window
     window.addEventListener('keydown', handleKeyDown);
+    // Remove listener on unmount
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [callPrompt.isOpen, showWelcomeModal, activeResource]);
 
+  // Complete list of geographic districts across Forsyth County
   const districts: Array<DistrictType | 'all'> = [
     'all',
     'Central Cumming',
@@ -216,8 +239,9 @@ export function App() {
   ];
 
   return (
+    // Outer page wrapper with warm neutral styling
     <div className="min-h-screen flex flex-col bg-stone-50 text-stone-900">
-      {/* Skip to main content landmark for keyboard accessibility */}
+      {/* Skip to main content landmark for keyboard screen reader accessibility */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 z-50 bg-amber-800 text-white px-4 py-2 rounded-lg font-bold shadow-lg"
@@ -225,42 +249,42 @@ export function App() {
         Skip to main content
       </a>
 
-      {/* Global header navigation */}
+      {/* Global header navigation with crisis hotline quick-dial and personalized greeting */}
       <Navbar
         currentTab={currentTab}
-        onSelectTab={handleSelectTab}
+        onSelectTab={setCurrentTab}
         userName={userName}
         onOpenNameModal={() => {
           setTempName(userName);
           setShowWelcomeModal(true);
         }}
         onCall={handleInitiateCall}
-        eventsCount={unreadEventsCount}
-        feedbackCount={unreadFeedbackCount}
+        eventsCount={0}
+        feedbackCount={0}
       />
 
-      {/* Autocomplete datalist for instant search */}
+      {/* HTML5 datalist providing native instant search auto-completion */}
       <datalist id="civic-search-suggestions">
         {allResources.slice(0, 30).map(r => (
           <option key={r.id} value={r.name} />
         ))}
       </datalist>
 
-      {/* Main page content area */}
+      {/* Main semantic content area holding directory views */}
       <main id="main-content" className="flex-1 py-6 sm:py-8">
         {/* TAB 1: FIND RESOURCES */}
         {currentTab === 'resources' && (
           <div className="civic-container space-y-6">
-            {/* Modular Hero banner */}
+            {/* Header search hero banner */}
             <HeroBanner
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onClearSearch={() => setSearchQuery('')}
             />
 
-            {/* Filter controls */}
+            {/* Filter controls section for categories and geographic zones */}
             <section className="bg-white border border-stone-200 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4" aria-label="Directory Filters">
-              {/* Category pills */}
+              {/* Category pill buttons */}
               <div>
                 <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide block mb-2">
                   Browse by Category:
@@ -283,7 +307,7 @@ export function App() {
                 </div>
               </div>
 
-              {/* District pills and reset filter */}
+              {/* District pills and reset filter controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-stone-100">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide mr-1">
@@ -305,6 +329,7 @@ export function App() {
                   ))}
                 </div>
 
+                {/* Show reset button when any filter is active */}
                 {isFiltered && (
                   <button
                     type="button"
@@ -317,7 +342,7 @@ export function App() {
               </div>
             </section>
 
-            {/* Content area: Discovery tiles when idle, or ResourceCard grid when filtered */}
+            {/* Display category discovery cards when unfiltered, or matching ResourceCards when filtered */}
             {!isFiltered ? (
               <section className="space-y-4" aria-label="Category Overview">
                 <div className="flex items-center justify-between">
@@ -329,8 +354,10 @@ export function App() {
                   </span>
                 </div>
 
+                {/* 19 category discovery tiles */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                   {CATEGORIES.filter(c => c.id !== 'all').map((cat) => {
+                    // Calculate count of verified organizations in this category
                     const count = allResources.filter(r => r.category === cat.id).length;
                     return (
                       <button
@@ -361,6 +388,7 @@ export function App() {
                 </div>
               </section>
             ) : (
+              // Filtered listings grid view
               <section className="space-y-4" aria-label="Filtered Resource Listings">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900">
@@ -372,6 +400,7 @@ export function App() {
                 </div>
 
                 {filteredResources.length > 0 ? (
+                  // Grid of verified resource cards
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {filteredResources.map((res) => (
                       <ResourceCard
@@ -384,6 +413,7 @@ export function App() {
                     ))}
                   </div>
                 ) : (
+                  // Empty state when search keywords produce no results
                   <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
                     <p className="text-base font-semibold text-stone-800">
                       No organizations matched your current filters.
@@ -403,29 +433,29 @@ export function App() {
               </section>
             )}
 
-            {/* Modular Public Community Voices Showcase */}
+            {/* Public Community Voices showcase with recent verified resident notes */}
             <CommunityVoices
               feedbacks={feedbacks}
               allCount={allFeedbacksCount}
               likedFeedbacks={likedFeedbacks}
               onToggleLike={toggleLike}
-              onViewAll={() => handleSelectTab('feedback')}
+              onViewAll={() => setCurrentTab('feedback')}
               onShareNote={() => {
                 setFeedbackPrefillResource('');
-                handleSelectTab('feedback');
+                setCurrentTab('feedback');
               }}
             />
           </div>
         )}
 
-        {/* TAB 2: LOCAL GATHERINGS (Lazy loaded with Suspense) */}
+        {/* TAB 2: LOCAL GATHERINGS (Lazy loaded with Suspense skeleton fallback) */}
         {currentTab === 'events' && (
           <Suspense fallback={<LoadingSkeleton />}>
             <EventsSection onCall={handleInitiateCall} />
           </Suspense>
         )}
 
-        {/* TAB 3: NEIGHBOR NOTES (Lazy loaded with Suspense) */}
+        {/* TAB 3: NEIGHBOR NOTES (Lazy loaded with Suspense skeleton fallback) */}
         {currentTab === 'feedback' && (
           <Suspense fallback={<LoadingSkeleton />}>
             <FeedbackSection
@@ -441,7 +471,7 @@ export function App() {
           </Suspense>
         )}
 
-        {/* TAB 4: COPYRIGHT & STANDARDS (Lazy loaded with Suspense) */}
+        {/* TAB 4: COPYRIGHT & STANDARDS (Lazy loaded with Suspense skeleton fallback) */}
         {currentTab === 'about' && (
           <Suspense fallback={<LoadingSkeleton />}>
             <StandardsSection totalResourcesCount={allResources.length} />
@@ -449,10 +479,10 @@ export function App() {
         )}
       </main>
 
-      {/* Global page footer */}
+      {/* Global accessible footer */}
       <Footer />
 
-      {/* Resource details modal */}
+      {/* Resource details sheet modal */}
       {activeResource && (
         <ResourceDetails
           resource={activeResource}
@@ -464,12 +494,12 @@ export function App() {
           onSuggestUpdate={(name) => {
             setActiveResource(null);
             setFeedbackPrefillResource(name);
-            handleSelectTab('feedback');
+            setCurrentTab('feedback');
           }}
         />
       )}
 
-      {/* Welcome & neighbor name modal */}
+      {/* Neighbor name customization modal */}
       <WelcomeModal
         isOpen={showWelcomeModal}
         tempName={tempName}
@@ -478,7 +508,7 @@ export function App() {
         onClose={() => setShowWelcomeModal(false)}
       />
 
-      {/* Desktop & mobile calling modal */}
+      {/* Desktop and mobile phone dial safety modal */}
       <CallPromptModal
         isOpen={callPrompt.isOpen}
         phone={callPrompt.phone}
@@ -495,7 +525,7 @@ export function App() {
         }}
       />
 
-      {/* Real-time live community note notification banner for everyone */}
+      {/* Live community note floating notification toast banner */}
       {recentNotification && (
         <aside
           role="status"
@@ -523,7 +553,7 @@ export function App() {
               <button
                 type="button"
                 onClick={() => {
-                  handleSelectTab('feedback');
+                  setCurrentTab('feedback');
                   dismissNotification();
                 }}
                 className="text-xs font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
@@ -583,4 +613,5 @@ export function App() {
   );
 }
 
+// Export default App component for application entry point
 export default App;
