@@ -1,8 +1,8 @@
 /**
  * CivicBridge — Forsyth County Community Resource Data
  *
- * Contains 213 verified community resource listings across 19 civic categories.
- * Every listed resource has been individually verified against official municipal directories and provider records.
+ * Contains 213 community resource listings across 19 civic categories.
+* Verification status is based on individual records and recorded source information.
  */
 
 import heroImage from '../assets/images/community_center_hero_1792548326116.jpg';
@@ -2690,11 +2690,28 @@ function r(
   // Lookup verified record override; all listings in the directory have complete individual records
   const verifiedRecord = VERIFIED_RECORDS[id];
 
-  const isVerified = true;
-  const verificationDate = verifiedRecord?.verificationDate || 'Verified Nov 2026';
-  const verificationSource = verifiedRecord?.verificationSource || 'Forsyth County Municipal & Provider Records Audit';
-  const website = verifiedRecord?.website;
-  const sourceUrl = verifiedRecord?.sourceUrl || customSourceUrl || 'https://www.forsythco.com';
+  
+// Look up the resource's individual verification record
+const verifiedRecord = VERIFIED_RECORDS[id];
+
+const verificationDate =
+  verifiedRecord?.verificationDate || 'Verification pending';
+
+const verificationSource =
+  verifiedRecord?.verificationSource || 'No verification source recorded';
+
+const sourceUrl =
+  verifiedRecord?.sourceUrl || customSourceUrl || '';
+
+const isVerified = Boolean(
+  verifiedRecord?.isVerified &&
+  verifiedRecord?.verificationDate &&
+  verifiedRecord?.verificationSource &&
+  sourceUrl
+);
+
+const website = verifiedRecord?.website;
+
 
   const eligibility = verifiedRecord?.eligibility || customEligibility || 'Forsyth County residents and families.';
   const languages = verifiedRecord?.languages || ['English', 'Spanish'];
