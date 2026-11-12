@@ -49,6 +49,10 @@ function matchesWordBoundary(text: string, keyword: string): boolean {
  * key services, tagline, and description.
  */
 function rankResources(query: string, categoryFilter?: string): ResourceItem[] {
+  if (categoryFilter === 'food') {
+    return rankFoodResources(query);
+  }
+
   const q = query.toLowerCase().trim();
   const tokens = q.split(/\s+/).filter(t => t.length > 1);
 
@@ -104,6 +108,118 @@ function rankResources(query: string, categoryFilter?: string): ResourceItem[] {
     (resource, index, resources) =>
       resources.findIndex(item => item.id === resource.id) === index
   );
+}
+
+function rankFoodResources(query: string): ResourceItem[] {
+  const petTerms = [
+    'pet food',
+    'animal services',
+    'animal shelter',
+    'dog food',
+    'cat food',
+    'companion pets',
+    'pet pantry',
+    'pets',
+    'humane society',
+    'planned pet',
+    'spay',
+    'neuter',
+    'veterinary',
+    'animal'
+  ];
+
+  const groceryTerms = [
+    'food',
+    'grocery',
+    'groceries',
+    'pantry',
+    'pantries',
+    'hunger',
+    'meal',
+    'meals',
+    'food bank',
+    'food assistance',
+    'emergency food',
+    'fresh produce',
+    'food boxes',
+    'snap',
+    'ebt',
+    'nutrition'
+  ];
+
+  const queryLower = query.toLowerCase();
+
+  return COMMUNITY_RESOURCES
+    .filter(res => {
+      const category = (res.category || '').toLowerCase();
+      const categoryLabel = (res.categoryLabel || '').toLowerCase();
+
+      const searchableText = [
+        res.name,
+        res.categoryLabel,
+        res.tagline,
+        res.description,
+        ...(res.keyServices || [])
+      ].join(' ').toLowerCase();
+
+      const isFoodCategory =
+        category === 'food' ||
+        categoryLabel.includes('food');
+
+      const isPetResource =
+        category === 'animals' ||
+        petTerms.some(term => searchableText.includes(term));
+
+      return isFoodCategory && !isPetResource;
+    })
+    .map(res => {
+      const searchableText = [
+        res.name,
+        res.tagline,
+        res.description,
+        ...(res.keyServices || [])
+      ].join(' ').toLowerCase();
+
+      let score = 0;
+
+      for (const term of groceryTerms) {
+        if (searchableText.includes(term)) {
+          score += 5;
+        }
+      }
+
+      if (/food pantry|food bank|emergency food/i.test(res.name)) {
+        score += 20;
+      }
+
+      if (/groceries|food boxes|fresh produce/i.test(
+        (res.keyServices || []).join(' ')
+      )) {
+        score += 15;
+      }
+
+      if (
+        queryLower.includes('emergency') &&
+        /emergency|immediate/i.test(searchableText)
+      ) {
+        score += 10;
+      }
+
+      if (
+        queryLower.includes('snap') ||
+        queryLower.includes('ebt') ||
+        queryLower.includes('food stamps')
+      ) {
+        if (/snap|ebt|food stamps/i.test(searchableText)) {
+          score += 15;
+        }
+      }
+
+      return { res, score };
+    })
+    .filter(item => item.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(item => item.res);
 }
 
 export const CivicChatbot: React.FC<CivicChatbotProps> = ({
@@ -359,7 +475,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       matchesWordBoundary(query, 'ebt') ||
       matchesWordBoundary(query, 'food stamps')
     ) {
-      const ranked = rankResources(query, 'food');
+      const ranked = rankFoodResources(query);
       return {
         responseText: "Need groceries this week? Multiple pantries in Cumming distribute fresh food and baby supplies. Suggested resources matching your search:\n\nWhat kind of food assistance do you need?",
         matched: ranked,
