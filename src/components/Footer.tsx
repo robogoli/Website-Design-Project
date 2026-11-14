@@ -1,17 +1,22 @@
+// Import React for rendering the global page footer
 import React from 'react';
+// Import Lucide icons for device badges and GitHub repository link
 import { Smartphone, Monitor, Github, ExternalLink } from 'lucide-react';
 
+// Global footer component displaying brand summary, supported devices, and repository link
 export const Footer: React.FC = () => {
   return (
+    // Footer landmark hidden when printing physical resource sheets
     <footer className="civic-footer print:hidden">
       <div className="civic-container space-y-4">
         <div className="civic-footer-inner flex flex-col md:flex-row md:items-center justify-between gap-4">
+          {/* Site title and service area description */}
           <div>
             <strong className="text-white font-serif text-base block">CivicBridge</strong>
             <span className="text-xs text-stone-300">Community Resource Directory · Forsyth County, Georgia</span>
           </div>
 
-          {/* Displays tested device form-factor badges */}
+          {/* Device compatibility badges showing verified screen targets */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="text-stone-400 font-mono text-[11px] uppercase mr-1">Responsive on:</span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-stone-800 text-stone-200 border border-stone-700 font-medium">
@@ -28,6 +33,7 @@ export const Footer: React.FC = () => {
             </span>
           </div>
 
+          {/* External link to the open-source GitHub project repository */}
           <div>
             <a
               href="https://github.com/robogoli/Website-Design-Project"
@@ -42,6 +48,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
+        {/* Bottom copyright line with dynamic year and technology attribution */}
         <div className="pt-3 border-t border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between text-xs text-stone-400 gap-2">
           <div>
             &copy; {new Date().getFullYear()} CivicBridge · Serving Cumming and Forsyth County residents · Dedicated to equitable community wayfinding

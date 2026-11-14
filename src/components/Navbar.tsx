@@ -1,4 +1,6 @@
+// Import React for rendering the global header and navigation bar
 import React from 'react';
+// Import vector icons from Lucide for brand mark, hotline call, tab navigation, and greeting badge
 import {
   Compass,
   PhoneCall,
@@ -9,32 +11,38 @@ import {
   HeartHandshake
 } from 'lucide-react';
 
+// Union type representing top-level navigation tabs across the application
 export type TabKey = 'resources' | 'events' | 'feedback' | 'about';
 
+// Props interface defining navigation callbacks and visitor greeting state
 interface NavbarProps {
+  // Currently active application view key
   currentTab: TabKey;
+  // Handler triggered when user switches navigation tabs or clicks the logo
   onSelectTab: (tab: TabKey) => void;
+  // Optional custom greeting name saved by the visitor
   userName: string;
+  // Callback opening the WelcomeModal to set or edit the visitor's name
   onOpenNameModal: () => void;
+  // Callback opening the safe call dialog for emergency hotline dialing
   onCall: (phone: string, resourceName: string) => void;
-  eventsCount?: number;
-  feedbackCount?: number;
 }
 
+// Sticky application header containing the 988 crisis ribbon, tab bar, and greeting badge
 export const Navbar: React.FC<NavbarProps> = ({
   currentTab,
   onSelectTab,
   userName,
   onOpenNameModal,
-  onCall,
-  eventsCount,
-  feedbackCount
+  onCall
 }) => {
   return (
+    // Sticky header hidden during print formatting so handouts remain clean
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200 print:hidden">
-      {/* 988 Emergency lifeline banner */}
+      {/* 24/7 Crisis & Suicide Lifeline quick-access top ribbon */}
       <div className="bg-amber-900 text-amber-50 px-4 py-1.5 text-xs">
         <div className="civic-container flex flex-wrap items-center justify-between gap-2">
+          {/* Animated status indicator and helpline prompt */}
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span className="font-medium text-[11.5px]">
@@ -42,12 +50,14 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </div>
 
+          {/* 2-1-1 informational note and direct 988 call action */}
           <div className="flex items-center gap-3 text-[11px] font-mono">
             <span>Forsyth 2-1-1: Dial 211</span>
             <span className="hidden sm:inline">|</span>
             <a
               href="tel:988"
               onClick={(e) => {
+                // Intercept anchor navigation to open the cross-device call safety dialog
                 e.preventDefault();
                 onCall('988', 'Suicide & Crisis Lifeline');
               }}
@@ -60,10 +70,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Main navigation header - always open navigation without collapse/X button */}
+      {/* Primary navigation row with brand identity, section tabs, and neighbor badge */}
       <div className="civic-container py-2.5 sm:py-3">
         <div className="flex flex-wrap items-center justify-between gap-3 w-full">
-          {/* Logo container */}
+          {/* Interactive brand logo button returning the visitor to the Resources directory */}
           <button
             type="button"
             onClick={() => onSelectTab('resources')}
@@ -83,9 +93,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </button>
 
-          {/* Navigation tabs & greeting badge - always visible and open */}
+          {/* Navigation tab strip and neighbor personalization control */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
             <nav className="flex items-center gap-0.5 sm:gap-1 bg-stone-100 p-1 rounded-xl border border-stone-200 shadow-2xs" aria-label="Main Navigation">
+              {/* Resources directory tab button */}
               <button
                 type="button"
                 onClick={() => onSelectTab('resources')}
@@ -100,6 +111,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span>Resources</span>
               </button>
 
+              {/* Local community gatherings tab button */}
               <button
                 type="button"
                 onClick={() => onSelectTab('events')}
@@ -112,16 +124,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <Calendar className="w-3.5 h-3.5" />
                 <span>Events</span>
-                {typeof eventsCount === 'number' && eventsCount > 0 && (
-                  <span
-                    className="text-[10.5px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-950 border border-amber-500/80 shadow-2xs animate-pulse"
-                    title={`${eventsCount} new event${eventsCount === 1 ? '' : 's'}`}
-                  >
-                    {eventsCount}
-                  </span>
-                )}
               </button>
 
+              {/* Community notes and feedback board tab button */}
               <button
                 type="button"
                 onClick={() => onSelectTab('feedback')}
@@ -134,16 +139,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               >
                 <MessageSquareHeart className="w-3.5 h-3.5" />
                 <span>Community Notes</span>
-                {typeof feedbackCount === 'number' && feedbackCount > 0 && (
-                  <span
-                    className="text-[10.5px] font-mono font-bold px-1.5 py-0.5 rounded-full bg-amber-400 text-amber-950 border border-amber-500/80 shadow-2xs animate-pulse"
-                    title={`${feedbackCount} new community note${feedbackCount === 1 ? '' : 's'}`}
-                  >
-                    {feedbackCount}
-                  </span>
-                )}
               </button>
 
+              {/* Copyright, sources, and accessibility standards tab button */}
               <button
                 type="button"
                 onClick={() => onSelectTab('about')}
@@ -159,7 +157,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             </nav>
 
-            {/* Greeting badge */}
+            {/* Personalized greeting button opening the WelcomeModal */}
             <button
               type="button"
               onClick={onOpenNameModal}

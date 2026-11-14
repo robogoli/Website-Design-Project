@@ -13,8 +13,6 @@ interface ResourceCardProps {
   onSelect: (resource: ResourceItem) => void;
   // Callback function invoked when visitor clicks to call the verified phone number
   onCall: (phone: string, resourceName: string) => void;
-  // Optional boolean flag indicating verification status (defaults to true)
-  isVerified?: boolean;
 }
 
 // Memoized resource card component preventing unnecessary re-renders when parent states change

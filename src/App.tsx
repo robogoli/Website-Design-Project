@@ -259,8 +259,6 @@ export function App() {
           setShowWelcomeModal(true);
         }}
         onCall={handleInitiateCall}
-        eventsCount={0}
-        feedbackCount={0}
       />
 
       {/* HTML5 datalist providing native instant search auto-completion */}
@@ -408,7 +406,6 @@ export function App() {
                         resource={res}
                         onSelect={setActiveResource}
                         onCall={handleInitiateCall}
-                        isVerified={Boolean(res.isVerified)}
                       />
                     ))}
                   </div>

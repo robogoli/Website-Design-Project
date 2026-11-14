@@ -1,5 +1,7 @@
 
+// Import React hooks for state management, DOM references, and lifecycle effects
 import React, { useState, useRef, useEffect } from 'react';
+// Import Lucide vector icons for chat widget triggers, messaging, phone links, and verified badges
 import {
   MessageCircle,
   X,
@@ -10,24 +12,38 @@ import {
   Info,
   ShieldCheck
 } from 'lucide-react';
+// Import domain type for Forsyth County community resource records
 import { ResourceItem } from '../types';
+// Import master verified directory listings array
 import { COMMUNITY_RESOURCES } from '../data/mockData';
 
+// Structure representing an individual message bubble in the guide conversation
 interface ChatMessage {
+  // Unique message identifier
   id: string;
+  // Identifies whether the message originated from the visitor or the directory guide
   sender: 'user' | 'guide';
+  // Text body displayed inside the message bubble
   text: string;
+  // Formatted local time string shown beneath the bubble
   timestamp: string;
+  // Directory listings matching the visitor's inquiry
   matchedResources?: ResourceItem[];
+  // Follow-up prompt suggestions rendered beneath guide replies
   examplePrompts?: string[];
 }
 
+// Props interface passing parent handlers and optional neighbor greeting name into CivicChatbot
 interface CivicChatbotProps {
+  // Callback opening the ResourceDetails modal for a matched listing
   onSelectResource: (resource: ResourceItem) => void;
+  // Optional callback launching the safe phone dialing modal
   onInitiateCall?: (phone: string, resourceName: string) => void;
+  // Optional visitor nickname displayed inside the initial welcome message
   userName?: string;
 }
 
+// Quick-tap category chips shown across the top of the guide drawer
 const SUGGESTED_TOPICS = [
   '🥫 Free food pantries',
   '🩺 Free clinic & dental',
@@ -257,32 +273,37 @@ function rankFoodResources(query: string): ResourceItem[] {
     .map(item => item.res);
 }
 
+// Interactive local directory guide widget helping neighbors search Forsyth County resources
 export const CivicChatbot: React.FC<CivicChatbotProps> = ({
   onSelectResource,
   onInitiateCall,
   userName = ''
 }) => {
+  // Controls whether the guide drawer is open or minimized as a floating pill
   const [isOpen, setIsOpen] = useState(false);
+  // Controlled text value typed into the bottom message composer
   const [inputMessage, setInputMessage] = useState('');
+  // Displays animated typing dots briefly while computing directory matches
   const [isTyping, setIsTyping] = useState(false);
 
+  // Stores the active reply delay timer ID for safe cleanup and cancellation
   const timerRef = useRef<number | null>(null);
 
-  const [expandedResources, setExpandedResources] =
-    useState<Set<string>>(new Set());
+  // Tracks resource IDs whose full details panel is expanded inside a chat card
+  const [expandedResources, setExpandedResources] = useState<Set<string>>(new Set());
+  // Tracks resource IDs whose plain-language summary box is expanded
+  const [explainedResources, setExplainedResources] = useState<Set<string>>(new Set());
+  // Tracks message IDs where the visitor clicked to reveal more than the first 3 matches
+  const [showAllResults, setShowAllResults] = useState<Set<string>>(new Set());
 
-  const [explainedResources, setExplainedResources] =
-    useState<Set<string>>(new Set());
-
-  const [showAllResults, setShowAllResults] =
-    useState<Set<string>>(new Set());
-
+  // Remembers the previous primary topic so follow-up questions keep context
   const [lastTopic, setLastTopic] = useState('');
-  const [lastMatchedResources, setLastMatchedResources] =
-    useState<ResourceItem[]>([]);
-
+  // Stores the full ranked list from the last query to support "show more" pagination
+  const [lastMatchedResources, setLastMatchedResources] = useState<ResourceItem[]>([]);
+  // Tracks the pagination offset when stepping through extra matched resources
   const [nextResourceIndex, setNextResourceIndex] = useState(3);
 
+  // Conversation history initialized with a helpful Forsyth County welcome prompt
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
@@ -298,18 +319,33 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
     }
   ]);
 
+  // Ref pointing to the bottom sentinel element inside the scrollable thread
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // Toggle a string ID inside any Set-backed React state hook
+  const toggleSetId = (
+    setter: React.Dispatch<React.SetStateAction<Set<string>>>,
+    id: string
+  ) => {
+    setter(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   };
 
+  // Automatically scroll to the newest message or typing indicator when drawer updates
   useEffect(() => {
     if (isOpen) {
-      scrollToBottom();
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isOpen, isTyping]);
 
+  // Clear any pending simulated typing timeout if the component unmounts
   useEffect(() => {
     return () => {
       if (timerRef.current !== null) {
@@ -318,10 +354,17 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
     };
   }, []);
 
+  // Process a visitor message, handle pagination or follow-up context, and append the directory reply
   const handleSendMessage = (textToSend?: string) => {
+    // Resolve message text from button tap parameter or form input state
     const query = (textToSend || inputMessage).trim();
-    const normalizedQuery = query.toLowerCase().trim();
+    // Ignore blank submissions
+    if (!query) return;
 
+    // Lowercase query copy for checking pagination and follow-up keywords
+    const normalizedQuery = query.toLowerCase();
+
+    // Detect requests asking for the next batch of previously matched resources
     const isMoreRequest = [
       'show me more',
       'show more',
@@ -331,6 +374,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       'next results'
     ].some(term => normalizedQuery.includes(term));
 
+    // Phrases indicating the visitor is asking a follow-up about the previous topic
     const followUpTerms = [
       'which ones',
       'what about',
@@ -343,42 +387,43 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       'their'
     ];
 
+    // Treat pagination requests or contextual pronouns as follow-up queries
     const isFollowUp =
       isMoreRequest ||
       followUpTerms.some(term => normalizedQuery.includes(term));
 
-    if (!query) return;
-
-    const userMsgId = `user-${Date.now()}`;
-
+    // Format current time for the user bubble timestamp
     const userTimestamp = new Date().toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit'
     });
 
+    // Append the visitor's message immediately and clear the composer
     setMessages(prev => [
       ...prev,
       {
-        id: userMsgId,
+        id: `user-${Date.now()}`,
         sender: 'user',
         text: query,
         timestamp: userTimestamp
       }
     ]);
-
     setInputMessage('');
     setIsTyping(true);
 
+    // Cancel any existing reply timer before scheduling the next response
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
     }
 
+    // Schedule directory lookup response after a brief natural pause
     timerRef.current = window.setTimeout(() => {
       let responseText = '';
       let matched: ResourceItem[] | undefined;
       let examplePrompts: string[] = [];
 
       if (isMoreRequest) {
+        // Slice the next three unseen resources from the saved match list
         const nextResources = lastMatchedResources.slice(
           nextResourceIndex,
           nextResourceIndex + 3
@@ -386,52 +431,47 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
 
         if (nextResources.length > 0) {
           matched = nextResources;
-
-          responseText =
-            `Here are the next ${nextResources.length} resources matching your search:`;
-
-          setNextResourceIndex(
-            nextResourceIndex + nextResources.length
-          );
+          responseText = `Here are the next ${nextResources.length} resources matching your search:`;
+          setNextResourceIndex(nextResourceIndex + nextResources.length);
         } else {
           matched = [];
-
           responseText =
             'You have viewed all the matching resources. Try searching for another type of assistance.';
         }
       } else {
+        // Combine follow-up questions with the prior topic so directory scoring stays relevant
         const searchQuery =
-          isFollowUp && lastTopic
-            ? `${lastTopic} ${query}`
-            : query;
+          isFollowUp && lastTopic ? `${lastTopic} ${query}` : query;
 
+        // Run local rule-based category and keyword matching
         const result = matchDirectoryQuery(searchQuery);
 
         responseText = result.responseText;
         examplePrompts = result.examplePrompts || [];
         matched = result.matched || [];
 
+        // Store results for subsequent pagination or follow-up filtering
         if (!isFollowUp) {
           setLastTopic(query);
-          setLastMatchedResources(result.matched || []);
+          setLastMatchedResources(matched);
           setNextResourceIndex(3);
-        } else if (result.matched && result.matched.length > 0) {
-          setLastMatchedResources(result.matched);
+        } else if (matched.length > 0) {
+          setLastMatchedResources(matched);
           setNextResourceIndex(3);
         }
       }
 
-      const guideMsgId = `guide-${Date.now()}`;
-
+      // Format timestamp for the guide response bubble
       const guideTimestamp = new Date().toLocaleTimeString([], {
         hour: '2-digit',
         minute: '2-digit'
       });
 
+      // Append formatted guide reply with matched resource cards and prompt chips
       setMessages(prev => [
         ...prev,
         {
-          id: guideMsgId,
+          id: `guide-${Date.now()}`,
           sender: 'guide',
           text: responseText,
           timestamp: guideTimestamp,
@@ -445,9 +485,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
     }, 450);
   };
 
-  /**
-   * Main directory matching engine.
-   */
+  // Route visitor text through topic rules and return ranked Forsyth County directory listings
   const matchDirectoryQuery = (
     query: string
   ): {
@@ -455,8 +493,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
     matched?: ResourceItem[];
     examplePrompts?: string[];
   } => {
-
-    // 1. Crisis and emergency support
+    // 1. Urgent crisis, safety, and emergency hotline routing
     if (
       matchesWordBoundary(query, 'crisis') ||
       matchesWordBoundary(query, 'hotline') ||
@@ -485,7 +522,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 2. Housing, rent, eviction and utility assistance
+    // 2. Housing stability, emergency shelter, rent, and utility bill assistance
     if (
       matchesWordBoundary(query, 'housing') ||
       matchesWordBoundary(query, 'shelter') ||
@@ -515,7 +552,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 3. Food pantries, groceries and SNAP/EBT
+    // 3. Human food pantries, groceries, meals, and SNAP/EBT (excludes pet food pantries)
     if (
       matchesWordBoundary(query, 'food') ||
       matchesWordBoundary(query, 'pantry') ||
@@ -544,7 +581,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 4. Healthcare, dental and Medicaid
+    // 4. Healthcare, dental clinics, prescriptions, and mental health counseling
     if (
       matchesWordBoundary(query, 'health') ||
       matchesWordBoundary(query, 'clinic') ||
@@ -574,7 +611,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 5. Senior services and Meals on Wheels
+    // 5. Senior services, Meals on Wheels, and caregiver resources
     if (
       matchesWordBoundary(query, 'senior') ||
       matchesWordBoundary(query, 'seniors') ||
@@ -598,7 +635,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 6. Childcare and daycare
+    // 6. Licensed childcare, infant/toddler daycare, and CAPS subsidy providers
     if (
       matchesWordBoundary(query, 'childcare') ||
       matchesWordBoundary(query, 'daycare') ||
@@ -623,7 +660,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 7. Education, schools and colleges
+    // 7. Public K-12 schools, preschools, Lanier Tech, and university programs
     if (
       matchesWordBoundary(query, 'school') ||
       matchesWordBoundary(query, 'schools') ||
@@ -654,7 +691,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 8. Automotive and home repairs
+    // 8. Automotive mechanics, plumbing, HVAC, and home maintenance
     if (
       matchesWordBoundary(query, 'repair') ||
       matchesWordBoundary(query, 'repairs') ||
@@ -686,7 +723,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 9. Outdoor recreation and parks
+    // 9. Parks, hiking trails, swimming facilities, and local recreation
     if (
       matchesWordBoundary(query, 'park') ||
       matchesWordBoundary(query, 'parks') ||
@@ -714,7 +751,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 10. Workforce and library
+    // 10. Employment readiness, career grants, GED prep, and public libraries
     if (
       matchesWordBoundary(query, 'job') ||
       matchesWordBoundary(query, 'jobs') ||
@@ -739,7 +776,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 11. Emergency preparedness and disaster recovery
+    // 11. Storm safety, fire alarms, and disaster recovery organizations
     if (
       matchesWordBoundary(query, 'disaster') ||
       matchesWordBoundary(query, 'storm') ||
@@ -765,7 +802,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 12. Recovery and peer support
+    // 12. Substance-use recovery programs, peer coaching, and Naloxone access
     if (
       matchesWordBoundary(query, 'recovery') ||
       matchesWordBoundary(query, 'addiction') ||
@@ -792,7 +829,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 13. Tax and financial assistance
+    // 13. Free tax preparation, Medicare SHIP counseling, and financial coaching
     if (
       matchesWordBoundary(query, 'tax') ||
       matchesWordBoundary(query, 'taxes') ||
@@ -817,7 +854,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 14. General search
+    // 14. Full-directory keyword scoring fallback when no fixed topic rule matches
     const rankedGeneral = rankResources(query);
 
     if (rankedGeneral.length > 0) {
@@ -835,7 +872,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 15. No matching results
+    // 15. Graceful empty-result guidance pointing neighbors to 2-1-1 and county info
     return {
       responseText:
         "I couldn't find a direct directory listing matching those keywords. You can try a different search or contact these referral services for additional help:\n\n• United Way: Dial 211 for community referrals\n• Forsyth County Government Information: (770) 781-2101\n\nYou can also try one of these topics:",
@@ -850,6 +887,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
 
   return (
     <>
+      {/* Floating bottom-right launcher pill shown whenever the drawer is closed */}
       {!isOpen && (
         <button
           type="button"
@@ -871,12 +909,14 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
         </button>
       )}
 
+      {/* Expanded directory guide dialog */}
       {isOpen && (
         <div
           role="dialog"
           aria-label="CivicBridge Interactive Guide"
           className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-[calc(100vw-2rem)] sm:w-[420px] h-[560px] max-h-[85vh] bg-white rounded-2xl shadow-2xl border border-stone-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200 print:hidden"
         >
+          {/* Dialog header showing guide branding, active directory count, and close button */}
           <header className="bg-amber-800 text-white px-4 py-3.5 flex items-center justify-between shrink-0 shadow-xs">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 bg-amber-700/80 rounded-lg">
@@ -905,12 +945,14 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
             </button>
           </header>
 
+          {/* Horizontally scrollable quick-topic suggestion chips */}
           <div className="bg-stone-50 border-b border-stone-200 p-2 overflow-x-auto scrollbar-none flex gap-1.5 shrink-0">
             {SUGGESTED_TOPICS.map((topic, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() =>
+                  // Strip the leading emoji prefix before running directory search
                   handleSendMessage(topic.replace(/^[^\s]+\s/, ''))
                 }
                 className="whitespace-nowrap px-2.5 py-1 text-[11px] font-medium bg-white hover:bg-amber-50 text-stone-700 hover:text-amber-900 border border-stone-200 rounded-full transition-colors cursor-pointer shrink-0"
@@ -920,40 +962,48 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
             ))}
           </div>
 
+          {/* Scrollable message thread containing bubbles, resource cards, and follow-up prompts */}
           <div className="flex-1 p-3.5 overflow-y-auto space-y-3.5 bg-stone-50/50">
-            {messages.map(msg => (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${
-                  msg.sender === 'user' ? 'items-end' : 'items-start'
-                }`}
-              >
+            {messages.map(msg => {
+              // Personalize the initial welcome greeting when the visitor has saved a name
+              const displayText =
+                msg.id === 'welcome' && userName
+                  ? msg.text.replace('Hey there!', `Hey there, ${userName}!`)
+                  : msg.text;
+
+              return (
                 <div
-                  className={`max-w-[92%] p-3 rounded-2xl text-xs leading-relaxed shadow-2xs ${
-                    msg.sender === 'user'
-                      ? 'bg-amber-800 text-white rounded-tr-none'
-                      : 'bg-white text-stone-800 border border-stone-200 rounded-tl-none space-y-2.5'
+                  key={msg.id}
+                  className={`flex flex-col ${
+                    msg.sender === 'user' ? 'items-end' : 'items-start'
                   }`}
                 >
-                  <p className="whitespace-pre-line">{msg.text}</p>
+                  <div
+                    className={`max-w-[92%] p-3 rounded-2xl text-xs leading-relaxed shadow-2xs ${
+                      msg.sender === 'user'
+                        ? 'bg-amber-800 text-white rounded-tr-none'
+                        : 'bg-white text-stone-800 border border-stone-200 rounded-tl-none space-y-2.5'
+                    }`}
+                  >
+                    {/* Message body preserving multi-line formatting */}
+                    <p className="whitespace-pre-line">{displayText}</p>
 
-                  {msg.matchedResources &&
-                    msg.matchedResources.length > 0 && (
+                    {/* Compact directory cards matching the user's inquiry */}
+                    {msg.matchedResources && msg.matchedResources.length > 0 && (
                       <div className="space-y-2 pt-1.5 border-t border-stone-100">
                         <span className="text-[10px] font-mono uppercase text-stone-500 block font-bold">
                           Matching Community Resources:
                         </span>
 
                         {msg.matchedResources
-                          .slice(
-                            0,
-                            showAllResults.has(msg.id) ? undefined : 3
-                          )
+                          .slice(0, showAllResults.has(msg.id) ? undefined : 3)
                           .map(res => (
+                            // Mini resource card embedded inside the guide reply
                             <div
                               key={res.id}
                               className="p-2.5 bg-stone-50 border border-stone-200 rounded-xl hover:border-amber-700/50 transition-colors space-y-1.5"
                             >
+                              {/* Category badge, Verified pill, title, and cost tag */}
                               <div className="flex items-start justify-between gap-1">
                                 <div>
                                   <div className="flex items-center gap-1.5">
@@ -977,42 +1027,29 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
                                 </span>
                               </div>
 
+                              {/* Eligibility callout strip */}
                               <div className="p-1.5 bg-amber-50/70 rounded-lg border border-amber-200/60 text-[10.5px] text-stone-700 flex items-start gap-1">
                                 <Info className="w-3 h-3 text-amber-800 shrink-0 mt-0.5" />
 
                                 <span className="leading-snug">
-                                  <strong>Eligibility:</strong>{' '}
-                                  {res.eligibility}
+                                  <strong>Eligibility:</strong> {res.eligibility}
                                 </span>
                               </div>
 
+                              {/* Toggle button expanding full address, hours, services, and website */}
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setExpandedResources(prev => {
-                                    const next = new Set(prev);
-
-                                    if (next.has(res.id)) {
-                                      next.delete(res.id);
-                                    } else {
-                                      next.add(res.id);
-                                    }
-
-                                    return next;
-                                  });
-                                }}
+                                onClick={() => toggleSetId(setExpandedResources, res.id)}
                                 className="text-[11px] font-bold text-amber-800 hover:text-amber-950 underline py-1"
                               >
-                                {expandedResources.has(res.id)
-                                  ? 'Show Less'
-                                  : 'Learn More'}
+                                {expandedResources.has(res.id) ? 'Show Less' : 'Learn More'}
                               </button>
 
+                              {/* Collapsible organization logistics details */}
                               {expandedResources.has(res.id) && (
                                 <div className="mt-2 space-y-2 text-[11px] text-stone-700 border-t border-stone-200 pt-2">
                                   <p>
-                                    <strong>Description:</strong>{' '}
-                                    {res.description}
+                                    <strong>Description:</strong> {res.description}
                                   </p>
 
                                   <p>
@@ -1035,8 +1072,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
 
                                   <p>
                                     <strong>Requirements:</strong>{' '}
-                                    {res.intakeRequirements?.join(', ') ||
-                                      'Contact provider for details'}
+                                    {res.intakeRequirements?.join(', ') || 'Contact provider for details'}
                                   </p>
 
                                   {res.website && (
@@ -1052,21 +1088,10 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
                                 </div>
                               )}
 
+                              {/* Toggle button expanding a plain-language summary of how the provider helps */}
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setExplainedResources(prev => {
-                                    const next = new Set(prev);
-
-                                    if (next.has(res.id)) {
-                                      next.delete(res.id);
-                                    } else {
-                                      next.add(res.id);
-                                    }
-
-                                    return next;
-                                  });
-                                }}
+                                onClick={() => toggleSetId(setExplainedResources, res.id)}
                                 className="text-[11px] font-bold text-amber-800 hover:text-amber-950 underline py-1"
                               >
                                 {explainedResources.has(res.id)
@@ -1074,6 +1099,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
                                   : 'Explain Further'}
                               </button>
 
+                              {/* Collapsible summary panel explaining key offerings, cost, and intake expectations */}
                               {explainedResources.has(res.id) && (
                                 <div className="mt-1 p-2.5 bg-amber-50 rounded-lg border border-amber-200 text-[11px] text-stone-700 space-y-1.5">
                                   <strong className="text-amber-900">
@@ -1094,23 +1120,21 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
 
                                   <p>
                                     <strong>Cost:</strong>{' '}
-                                    {res.cost ||
-                                      'Contact the provider for pricing.'}
+                                    {res.cost || 'Contact the provider for pricing.'}
                                   </p>
 
                                   <p>
                                     <strong>Eligibility:</strong>{' '}
-                                    {res.eligibility ||
-                                      'Contact the provider to confirm eligibility.'}
+                                    {res.eligibility || 'Contact the provider to confirm eligibility.'}
                                   </p>
 
                                   <p className="text-stone-500 italic">
-                                    Contact the organization directly to
-                                    confirm current services and requirements.
+                                    Contact the organization directly to confirm current services and requirements.
                                   </p>
                                 </div>
                               )}
 
+                              {/* Card footer with direct click-to-call link and full details modal trigger */}
                               <div className="flex items-center justify-between gap-2 pt-1 border-t border-stone-200/60">
                                 <a
                                   href={`tel:${res.phone.replace(/[^\d+]/g, '')}`}
@@ -1139,22 +1163,11 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
                             </div>
                           ))}
 
+                        {/* Button toggling visibility of remaining matched cards beyond the initial three */}
                         {msg.matchedResources.length > 3 && (
                           <button
                             type="button"
-                            onClick={() => {
-                              setShowAllResults(prev => {
-                                const next = new Set(prev);
-
-                                if (next.has(msg.id)) {
-                                  next.delete(msg.id);
-                                } else {
-                                  next.add(msg.id);
-                                }
-
-                                return next;
-                              });
-                            }}
+                            onClick={() => toggleSetId(setShowAllResults, msg.id)}
                             className="w-full text-center text-xs font-bold text-amber-800 hover:text-amber-950 py-2 underline"
                           >
                             {showAllResults.has(msg.id)
@@ -1165,8 +1178,8 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
                       </div>
                     )}
 
-                  {msg.examplePrompts &&
-                    msg.examplePrompts.length > 0 && (
+                    {/* Follow-up prompt buttons allowing one-tap refined searches */}
+                    {msg.examplePrompts && msg.examplePrompts.length > 0 && (
                       <div className="space-y-1.5 pt-2 border-t border-stone-100">
                         <span className="text-[10.5px] font-bold text-amber-900 block flex items-center gap-1">
                           <Sparkles className="w-3.5 h-3.5 text-amber-700" />
@@ -1189,14 +1202,17 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
                         </div>
                       </div>
                     )}
+                  </div>
+
+                  {/* Message send timestamp */}
+                  <span className="text-[9.5px] text-stone-400 font-mono mt-1 px-1">
+                    {msg.timestamp}
+                  </span>
                 </div>
+              );
+            })}
 
-                <span className="text-[9.5px] text-stone-400 font-mono mt-1 px-1">
-                  {msg.timestamp}
-                </span>
-              </div>
-            ))}
-
+            {/* Animated bouncing typing indicator displayed while looking up results */}
             {isTyping && (
               <div className="flex items-center gap-1.5 p-3 max-w-[80px] bg-white border border-stone-200 rounded-2xl rounded-tl-none">
                 <span className="w-1.5 h-1.5 bg-amber-800 rounded-full animate-bounce"></span>
@@ -1205,9 +1221,11 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
               </div>
             )}
 
+            {/* Empty anchor element targeted by automatic smooth scroll */}
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Search tips banner above the input bar */}
           <div className="mx-3 mb-2 rounded-xl border-2 border-amber-300 bg-amber-50 p-3">
             <div className="flex items-center gap-2 mb-2">
               <Info className="h-5 w-5 text-amber-800 shrink-0" />
@@ -1230,6 +1248,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
             </div>
           </div>
 
+          {/* Bottom message composer form */}
           <form
             onSubmit={e => {
               e.preventDefault();

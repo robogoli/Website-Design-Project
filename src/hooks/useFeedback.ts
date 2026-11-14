@@ -343,12 +343,6 @@ export function useFeedback() {
     feedbacks: filteredFeedbacks,
     // Total count of all loaded feedbacks
     allFeedbacksCount: feedbacks.length,
-    // Unread count indicators
-    unreadFeedbackCount: 0,
-    unreadEventsCount: 0,
-    // Handlers for clearing notifications
-    markFeedbackAsSeen: () => {},
-    markEventsAsSeen: () => {},
     // Real-time toast notification payload
     recentNotification,
     // Action to close toast banner

@@ -1,15 +1,24 @@
+// Import React and useState hook for managing district filter selection
 import React, { useState } from 'react';
+// Import Lucide icons representing venue, calling, attendees, refreshments, childcare, dates, and verification
 import { MapPin, PhoneCall, Users, Coffee, Baby, Calendar, ShieldCheck } from 'lucide-react';
-import { CommunityEvent, DistrictType } from '../types';
+// Import Forsyth County district union type for typed filter pills
+import { DistrictType } from '../types';
+// Import curated list of verified local Forsyth County community events
 import { COMMUNITY_EVENTS } from '../data/mockData';
 
+// Props interface providing a callback to launch the safe dialing modal
 interface EventsSectionProps {
+  // Invoked when the visitor clicks "Call organizer" on any event card
   onCall: (phone: string, title: string) => void;
 }
 
+// Section view displaying verified Forsyth County community gatherings filterable by district
 export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
+  // Currently selected county district filter ('all' displays every event)
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictType | 'all'>('all');
 
+  // Ordered list of Forsyth County district options for filter buttons
   const districts: Array<DistrictType | 'all'> = [
     'all',
     'Central Cumming',
@@ -19,6 +28,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
     'West Forsyth'
   ];
 
+  // Filter events matching the selected district or include all when 'all' is chosen
   const filteredEvents = COMMUNITY_EVENTS.filter((evt) => {
     if (selectedDistrict !== 'all' && evt.district !== selectedDistrict) {
       return false;
@@ -28,6 +38,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
 
   return (
     <div className="civic-container space-y-6">
+      {/* Page header introducing local gatherings and rendering district filter chips */}
       <header>
         <div className="flex items-center gap-2 text-amber-800 text-xs font-mono uppercase font-bold tracking-wider mb-1">
           <Calendar className="w-4 h-4" />
@@ -40,7 +51,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           Upcoming community drives, food box distributions, and family nights around Cumming and Forsyth County. Every listed event has had its schedule and contact details independently verified with the organizer.
         </p>
 
-        {/* District filter */}
+        {/* Horizontal row of district filter pills */}
         <div className="flex items-center gap-1.5 flex-wrap pt-2">
           <span className="text-xs text-stone-500 font-medium mr-1">District:</span>
           {districts.map((dist) => (
@@ -60,14 +71,17 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
         </div>
       </header>
 
+      {/* Vertical stack of matching community event cards */}
       <div className="space-y-4">
         {filteredEvents.map((evt) => (
+          // Individual event card article with metadata badges, venue, and organizer call button
           <article
             key={evt.id}
             className="event-card bg-white border border-stone-200 hover:border-amber-700/50 rounded-2xl p-5 shadow-2xs transition-all"
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-2 max-w-xl">
+                {/* Date, district, verification, refreshments, and childcare badges */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="event-badge-datetime inline-flex items-center gap-1.5 text-xs font-mono font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                     <time dateTime={evt.date}>{evt.date}</time>
@@ -97,6 +111,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
                   )}
                 </div>
 
+                {/* Event title and full description */}
                 <h2 className="event-title text-base sm:text-lg font-bold font-serif text-stone-900">
                   {evt.title}
                 </h2>
@@ -104,6 +119,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
                   {evt.description}
                 </p>
 
+                {/* Semantic address block displaying venue location, host organization, and attendance */}
                 <address className="flex flex-wrap items-center gap-2 text-xs text-stone-500 pt-1 not-italic">
                   <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
                   <span className="text-stone-700 font-medium">{evt.location}</span>
@@ -117,9 +133,11 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
                 </address>
               </div>
 
+              {/* Organizer phone action link launching the device-aware call modal */}
               <a
                 href={`tel:${evt.contactPhone.replace(/[^\d+]/g, '')}`}
                 onClick={(e) => {
+                  // Prevent direct navigation so the user gets clipboard copy + confirmation modal
                   e.preventDefault();
                   onCall(evt.contactPhone, evt.title);
                 }}
@@ -132,6 +150,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           </article>
         ))}
 
+        {/* Empty state shown if a selected district has zero scheduled events */}
         {filteredEvents.length === 0 && (
           <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center text-stone-500 text-xs">
             No events found in {selectedDistrict}. Try selecting &ldquo;All Districts&rdquo;.

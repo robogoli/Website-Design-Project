@@ -1,4 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+// Import React and useEffect hook for keyboard navigation listeners
+import React, { useEffect } from 'react';
+// Import Lucide icons for contact fields, verification badges, eligibility, and actions
 import {
   X,
   Phone,
@@ -14,18 +16,30 @@ import {
   Info,
   MessageSquare
 } from 'lucide-react';
+// Import domain types for the inspected resource and matching resident notes
 import { ResourceItem, UserFeedback } from '../types';
+// Import reusable focus-trap hook handling initial focus and focus restoration
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
+// Props interface specifying resource data, dialog callbacks, and community notes
 interface ResourceDetailsProps {
+  // Complete community resource record displayed inside the dialog
   resource: ResourceItem;
+  // Callback closing the details modal
   onClose: () => void;
+  // Callback initiating a verified phone call prompt
   onCall: (phone: string, resourceName: string) => void;
+  // True if the visitor has confirmed this listing's accuracy during this session
   isQuickChecked?: boolean;
+  // Callback recording a listing accuracy confirmation
   onQuickCheck?: (id: string) => void;
+  // Callback redirecting the visitor to the feedback form pre-filled with this resource
   onSuggestUpdate?: (resourceName: string) => void;
+  // Full community feedback list filtered below for notes matching this organization
   feedbacks?: UserFeedback[];
 }
 
+// Accessible modal displaying complete eligibility, intake steps, verification, and neighbor notes
 export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
   resource,
   onClose,
@@ -35,10 +49,10 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
   onSuggestUpdate,
   feedbacks = []
 }) => {
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const triggerElementRef = useRef<HTMLElement | null>(null);
+  // Attach focus-trap hook so the first focusable control receives focus and previous focus is restored on close
+  const dialogRef = useFocusTrap<HTMLDivElement>(true);
 
+  // Extract a readable hostname from an external verification URL
   const formatDomain = (url: string) => {
     try {
       return new URL(url).hostname.replace('www.', '');
@@ -47,32 +61,16 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
     }
   };
 
-  // Store trigger element and focus modal on mount; restore on unmount
-  useEffect(() => {
-    triggerElementRef.current = document.activeElement as HTMLElement | null;
-    closeButtonRef.current?.focus();
-
-    return () => {
-      if (
-        triggerElementRef.current &&
-        document.body.contains(triggerElementRef.current) &&
-        typeof triggerElementRef.current.focus === 'function'
-      ) {
-        triggerElementRef.current.focus();
-      } else if (typeof document !== 'undefined' && document.body) {
-        document.body.focus();
-      }
-    };
-  }, []);
-
-  // Keyboard focus trap & Escape key handling
+  // Trap Tab/Shift+Tab keyboard cycling inside the modal and close on Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Dismiss modal immediately if user presses Escape
       if (e.key === 'Escape') {
         onClose();
         return;
       }
 
+      // Keep Tab focus cycling within interactive controls inside the dialog
       if (e.key === 'Tab' && dialogRef.current) {
         const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -82,12 +80,14 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
 
+        // Wrap Shift+Tab from the first control back to the last control
         if (e.shiftKey) {
           if (document.activeElement === firstElement) {
             e.preventDefault();
             lastElement.focus();
           }
         } else {
+          // Wrap forward Tab from the last control back to the first control
           if (document.activeElement === lastElement) {
             e.preventDefault();
             firstElement.focus();
@@ -96,11 +96,21 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
       }
     };
 
+    // Register global keyboard listener while modal is open
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, [onClose, dialogRef]);
+
+  // Pre-filter community board notes mentioning this organization
+  const matchingNotes = feedbacks.filter(f =>
+    f.resourceName && (
+      f.resourceName.toLowerCase().includes(resource.name.toLowerCase()) ||
+      resource.name.toLowerCase().includes(f.resourceName.toLowerCase())
+    )
+  );
 
   return (
+    // Clickable backdrop closing the details sheet when clicked outside the card
     <div
       role="dialog"
       aria-modal="true"
@@ -108,13 +118,14 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
       className="modal-overlay"
       onClick={onClose}
     >
+      {/* Scrollable dialog card stopping propagation so inner clicks keep the modal open */}
       <div
         ref={dialogRef}
         className="modal-dialog space-y-4 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Top-right close button (first focusable element trapped on mount) */}
         <button
-          ref={closeButtonRef}
           type="button"
           onClick={onClose}
           className="modal-close"
@@ -123,6 +134,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           <X className="w-5 h-5" />
         </button>
 
+        {/* Header badges, organization title, summary description, and audit source */}
         <div>
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className="resource-category-tag">
@@ -154,6 +166,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           )}
         </div>
 
+        {/* Contact details card covering phone, street address, hours, and external site */}
         <address className="resource-contact-block bg-stone-50 p-3.5 rounded-xl border border-stone-200 space-y-2 not-italic">
           <div className="resource-contact-row">
             <Phone className="w-4 h-4 text-stone-400 shrink-0" aria-hidden="true" />
@@ -196,7 +209,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           )}
         </address>
 
-        {/* Provider-specific eligibility details */}
+        {/* Eligibility requirements summary box */}
         <div className="p-3 rounded-xl border space-y-1 bg-stone-50 border-stone-200">
           <h4 className="text-xs font-bold text-amber-950 font-mono uppercase flex items-center gap-1.5">
             <Info className="w-3.5 h-3.5 text-amber-800" />
@@ -207,7 +220,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           </p>
         </div>
 
-        {/* Intake requirements checklist */}
+        {/* Intake documents checklist rendered when specific requirements exist */}
         {resource.intakeRequirements && resource.intakeRequirements.length > 0 && (
           <div>
             <h4 className="text-xs font-bold text-stone-900 font-mono uppercase mb-1">
@@ -224,7 +237,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           </div>
         )}
 
-        {/* Key services offered */}
+        {/* Complete checklist of core programs and services */}
         <div>
           <h4 className="text-xs font-bold text-stone-900 font-mono uppercase mb-1">
             Services &amp; Offerings
@@ -239,7 +252,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           </ul>
         </div>
 
-        {/* Source verification link */}
+        {/* Authoritative public source domain link */}
         {resource.sourceUrl && (
           <div className="text-xs text-stone-500 pt-1 flex items-center justify-between border-t border-stone-100">
             <span className="font-mono text-[11px]">Primary Source Record:</span>
@@ -255,63 +268,53 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           </div>
         )}
 
-        {/* Community Notes & Neighbor Tips for this place */}
-        {(() => {
-          const matchingNotes = feedbacks.filter(f =>
-            f.resourceName && (
-              f.resourceName.toLowerCase().includes(resource.name.toLowerCase()) ||
-              resource.name.toLowerCase().includes(f.resourceName.toLowerCase())
-            )
-          );
-
-          return (
-            <div className="bg-amber-50/40 border border-amber-200/80 rounded-xl p-3.5 space-y-2.5">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-1.5">
-                  <MessageSquare className="w-4 h-4 text-amber-800" />
-                  <h3 className="font-bold text-stone-900 font-serif text-xs sm:text-sm">
-                    Public Community Notes ({matchingNotes.length})
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onSuggestUpdate && onSuggestUpdate(resource.name)}
-                  className="text-xs font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
-                >
-                  + Add note for this place
-                </button>
-              </div>
-
-              {matchingNotes.length > 0 ? (
-                <div className="space-y-2">
-                  {matchingNotes.map((note) => (
-                    <div key={note.id} className="bg-white p-2.5 rounded-lg border border-amber-200/60 shadow-2xs space-y-1 text-xs">
-                      <div className="flex items-center justify-between gap-2 flex-wrap text-[11px]">
-                        <span className="font-bold text-stone-900">{note.userName}</span>
-                        <time className="text-stone-400 font-mono">{note.submittedAt}</time>
-                      </div>
-                      <p className="text-stone-700 italic leading-relaxed text-[11.5px]">
-                        &ldquo;{note.message}&rdquo;
-                      </p>
-                      <div className="flex items-center gap-2 pt-0.5 text-[10.5px] text-stone-500 font-mono">
-                        <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-900 border border-amber-200 font-bold">
-                          {note.rating === 'Very Helpful' ? 'Wonderful' : note.rating}
-                        </span>
-                        {note.likesCount ? <span>· {note.likesCount} neighbors found this helpful</span> : null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-stone-600">
-                  No notes posted for this place yet. Been here recently? <button type="button" onClick={() => onSuggestUpdate && onSuggestUpdate(resource.name)} className="text-amber-800 font-bold underline cursor-pointer">Leave a tip</button> to help other Forsyth County neighbors!
-                </p>
-              )}
+        {/* Neighbor tips and community notes referencing this listing */}
+        <div className="bg-amber-50/40 border border-amber-200/80 rounded-xl p-3.5 space-y-2.5">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <MessageSquare className="w-4 h-4 text-amber-800" />
+              <h3 className="font-bold text-stone-900 font-serif text-xs sm:text-sm">
+                Public Community Notes ({matchingNotes.length})
+              </h3>
             </div>
-          );
-        })()}
+            <button
+              type="button"
+              onClick={() => onSuggestUpdate && onSuggestUpdate(resource.name)}
+              className="text-xs font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
+            >
+              + Add note for this place
+            </button>
+          </div>
 
-        {/* Accuracy and community feedback check */}
+          {matchingNotes.length > 0 ? (
+            <div className="space-y-2">
+              {matchingNotes.map((note) => (
+                // Individual neighbor note card inside the resource modal
+                <div key={note.id} className="bg-white p-2.5 rounded-lg border border-amber-200/60 shadow-2xs space-y-1 text-xs">
+                  <div className="flex items-center justify-between gap-2 flex-wrap text-[11px]">
+                    <span className="font-bold text-stone-900">{note.userName}</span>
+                    <time className="text-stone-400 font-mono">{note.submittedAt}</time>
+                  </div>
+                  <p className="text-stone-700 italic leading-relaxed text-[11.5px]">
+                    &ldquo;{note.message}&rdquo;
+                  </p>
+                  <div className="flex items-center gap-2 pt-0.5 text-[10.5px] text-stone-500 font-mono">
+                    <span className="px-1.5 py-0.2 rounded bg-amber-50 text-amber-900 border border-amber-200 font-bold">
+                      {note.rating === 'Very Helpful' ? 'Wonderful' : note.rating}
+                    </span>
+                    {note.likesCount ? <span>· {note.likesCount} neighbors found this helpful</span> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-stone-600">
+              No notes posted for this place yet. Been here recently? <button type="button" onClick={() => onSuggestUpdate && onSuggestUpdate(resource.name)} className="text-amber-800 font-bold underline cursor-pointer">Leave a tip</button> to help other Forsyth County neighbors!
+            </p>
+          )}
+        </div>
+
+        {/* One-click listing accuracy confirmation and update suggestion bar */}
         <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
           <div>
             <span className="font-semibold text-stone-800 block">Is this listing up to date?</span>
@@ -344,6 +347,7 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           )}
         </div>
 
+        {/* Sticky modal footer with Close and Call actions */}
         <footer className="pt-3 border-t border-stone-100 flex items-center justify-end gap-2">
           <button
             type="button"

@@ -1,14 +1,23 @@
+// Import React for rendering the neighbor name personalization modal
 import React from 'react';
+// Import close button icon from Lucide
 import { X } from 'lucide-react';
 
+// Props interface controlling dialog state, input value, and form handlers
 interface WelcomeModalProps {
+  // Controls whether the modal overlay is visible
   isOpen: boolean;
+  // Draft greeting name currently typed in the input field
   tempName: string;
+  // Callback updating the draft name string on each keystroke
   onTempNameChange: (name: string) => void;
+  // Form submit handler saving the name to parent state and localStorage
   onSave: (e: React.FormEvent) => void;
+  // Callback dismissing the dialog without saving changes
   onClose: () => void;
 }
 
+// Dialog allowing visitors to set a first name or nickname displayed in the header greeting
 export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   isOpen,
   tempName,
@@ -16,9 +25,11 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
   onSave,
   onClose
 }) => {
+  // Skip rendering DOM markup when the modal is closed
   if (!isOpen) return null;
 
   return (
+    // Clickable modal backdrop closing the dialog on outside click
     <div
       role="dialog"
       aria-modal="true"
@@ -26,10 +37,12 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
       className="modal-overlay"
       onClick={onClose}
     >
+      {/* Modal card container stopping clicks from reaching the backdrop */}
       <div
         className="modal-dialog max-w-sm space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Top-right close icon button */}
         <button
           type="button"
           onClick={onClose}
@@ -39,6 +52,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
           <X className="w-5 h-5" />
         </button>
 
+        {/* Friendly modal title and brief privacy explanation */}
         <div className="text-center space-y-1.5 pt-1">
           <h3 id="modal-welcome-title" className="text-xl font-bold font-serif text-stone-900">
             Glad you stopped by.
@@ -48,8 +62,10 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
           </p>
         </div>
 
+        {/* Form capturing optional neighbor nickname */}
         <form onSubmit={onSave} className="space-y-3 pt-1">
           <fieldset>
+            {/* Input label paired with live character counter */}
             <div className="flex justify-between items-center mb-1">
               <label htmlFor="welcome-name" className="text-xs font-semibold text-stone-700">
                 First name or nickname:
@@ -58,6 +74,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
                 {tempName.length}/20 chars
               </output>
             </div>
+            {/* Auto-focused text input capped at 20 characters */}
             <input
               type="text"
               id="welcome-name"
@@ -70,6 +87,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({
             />
           </fieldset>
 
+          {/* Submit and cancel action buttons */}
           <div className="flex gap-2 pt-1">
             <button
               type="submit"

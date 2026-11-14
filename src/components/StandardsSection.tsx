@@ -1,4 +1,6 @@
+// Import React for rendering the Standards, Licensing, and Accessibility documentation tab
 import React from 'react';
+// Import Lucide icons for badges, device types, print layout, metrics, and citations
 import {
   Award,
   Smartphone,
@@ -10,17 +12,25 @@ import {
   ShieldCheck,
   CheckCircle2
 } from 'lucide-react';
+// Import citation entries and category taxonomy for live summary statistics
 import { RESEARCH_CITATIONS, CATEGORIES } from '../data/mockData';
 
+// Props interface passing the dynamic total number of resources in the directory
 interface StandardsSectionProps {
+  // Number of verified directory resources (defaults to 213)
   totalResourcesCount?: number;
 }
 
+// Reference page documenting public sources, open-source licenses, device compatibility, and metrics
 export const StandardsSection: React.FC<StandardsSectionProps> = ({
   totalResourcesCount = 213
 }) => {
+  // Compute active domain category count excluding the catch-all 'all' filter
+  const categoryCount = CATEGORIES.filter(c => c.id !== 'all').length;
+
   return (
     <article className="civic-container space-y-6">
+      {/* Page header summarizing CivicBridge's attribution and design standards */}
       <header className="border-b border-stone-200 pb-3">
         <span className="hero-tagline flex items-center gap-1.5">
           <Award className="w-4 h-4 text-amber-800" />
@@ -34,7 +44,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
         </p>
       </header>
 
-      {/* Scope block */}
+      {/* Mission statement and project coverage summary */}
       <section className="bg-amber-50/70 border border-amber-200/90 rounded-2xl p-6 space-y-3 shadow-2xs">
         <div className="flex items-center gap-2">
           <Award className="w-5 h-5 text-amber-800" />
@@ -49,11 +59,11 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
           </cite>
         </blockquote>
         <p className="text-xs sm:text-sm text-stone-700 leading-relaxed">
-          <strong>Project Scope:</strong> CivicBridge organizes {totalResourcesCount} verified community resources across {CATEGORIES.filter(c => c.id !== 'all').length} civic categories for residents of <strong>Cumming and Forsyth County, Georgia</strong>. From emergency preparedness and disaster recovery, substance use peer support, and tax assistance to food pantries, free clinics, public schools, disability programs, and legal aid, CivicBridge helps neighbors quickly find verified local contact details and services.
+          <strong>Project Scope:</strong> CivicBridge organizes {totalResourcesCount} verified community resources across {categoryCount} civic categories for residents of <strong>Cumming and Forsyth County, Georgia</strong>. From emergency preparedness and disaster recovery, substance use peer support, and tax assistance to food pantries, free clinics, public schools, disability programs, and legal aid, CivicBridge helps neighbors quickly find verified local contact details and services.
         </p>
       </section>
 
-      {/* Visual copyright table */}
+      {/* Open-source software licenses and public records attribution table */}
       <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
           <div className="flex items-center gap-2">
@@ -71,6 +81,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
           All software components, fonts, graphics, and public information sources used in CivicBridge are documented below:
         </p>
 
+        {/* Scrollable attribution matrix table */}
         <div className="civic-table-wrapper">
           <table className="civic-table">
             <caption className="sr-only">Substantiated Visual Copyright Compliance Matrix</caption>
@@ -144,7 +155,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
           </table>
         </div>
 
-        {/* Fair use and DMCA */}
+        {/* Fair Use and DMCA compliance notice cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 text-xs">
           <div className="p-4 rounded-xl border border-stone-200 bg-stone-50/70 space-y-2">
             <div className="flex items-center gap-2">
@@ -168,7 +179,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
         </div>
       </section>
 
-      {/* Viewport matrix */}
+      {/* Hardware and responsive viewport compatibility showcase */}
       <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
           <div className="flex items-center gap-2">
@@ -186,7 +197,9 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
           CivicBridge is engineered and verified across physical hardware devices, rendering engines, and viewport aspect ratios to ensure equitable community access. Each form factor incorporates tailored ergonomics, touch target dimensions (&ge; 48px), and network-conscious delivery:
         </p>
 
+        {/* Responsive grid of five tested device and print form-factor cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-1">
+          {/* Card 1: iPhone viewport */}
           <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between">
               <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -212,6 +225,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
             </ul>
           </div>
 
+          {/* Card 2: Desktop viewport */}
           <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between">
               <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -237,6 +251,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
             </ul>
           </div>
 
+          {/* Card 3: Android viewport */}
           <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between">
               <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -262,6 +277,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
             </ul>
           </div>
 
+          {/* Card 4: Tablet & iPad viewport */}
           <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs">
             <div className="flex items-center justify-between">
               <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -287,6 +303,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
             </ul>
           </div>
 
+          {/* Card 5: Print stylesheet support */}
           <div className="p-4 rounded-xl border border-stone-200 bg-stone-50 hover:bg-white hover:border-amber-700/50 transition-all space-y-2.5 shadow-2xs md:col-span-2 lg:col-span-2">
             <div className="flex items-center justify-between">
               <div className="p-2.5 bg-amber-100 text-amber-900 rounded-xl">
@@ -307,7 +324,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
         </div>
       </section>
 
-      {/* Core civic standards matrix */}
+      {/* Core usability, typography, and coverage quality benchmarks */}
       <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-100 pb-3">
           <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
@@ -340,13 +357,13 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
             <span className="text-[10px] font-mono uppercase text-amber-800 font-bold block">3. Comprehensive Scope</span>
             <strong className="text-stone-900 block font-serif">{totalResourcesCount} Verified Local Resources</strong>
             <p className="text-stone-600 text-[11.5px] leading-relaxed">
-              Authentic addresses, direct mobile phone links, operating hours, eligibility checklists, and offerings across all {CATEGORIES.filter(c => c.id !== 'all').length} community domains.
+              Authentic addresses, direct mobile phone links, operating hours, eligibility checklists, and offerings across all {categoryCount} community domains.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Performance metrics */}
+      {/* Performance and contrast benchmark table */}
       <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-3">
         <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-amber-800" aria-hidden="true" />
@@ -387,7 +404,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
         </div>
       </section>
 
-      {/* Research citations */}
+      {/* Research and public policy citation cards */}
       <section className="bg-white border border-stone-200 rounded-2xl p-6 space-y-3">
         <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-amber-800" aria-hidden="true" />
@@ -395,6 +412,7 @@ export const StandardsSection: React.FC<StandardsSectionProps> = ({
         </h2>
         <div className="space-y-2 text-xs text-stone-600">
           {RESEARCH_CITATIONS.map((cite, i) => (
+            // Individual citation summary card
             <div key={cite.id} className="p-3 bg-stone-50 rounded-xl border border-stone-200">
               <strong className="text-stone-900">[{i + 1}] {cite.sourceTitle}</strong> · {cite.publishingBody} ({cite.year})
               <p className="mt-0.5">{cite.keyFinding}</p>

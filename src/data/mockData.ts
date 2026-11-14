@@ -5,11 +5,10 @@
 * Verification status is based on individual records and recorded source information.
  */
 
-import heroImage from '../assets/images/community_center_hero_1792548326116.jpg';
+// Import strongly typed interfaces for directory listings, events, citations, and feedback
 import { ResourceItem, CommunityEvent, ResearchCitation, UserFeedback, CategoryType, DistrictType } from '../types';
 
-export const HERO_IMAGE = heroImage;
-
+// Master list of civic categories rendered in navigation filters and overview tiles
 export const CATEGORIES = [
   { id: 'all', label: 'All Resources' },
   { id: 'food', label: 'Food & Meals' },
@@ -33,6 +32,7 @@ export const CATEGORIES = [
   { id: 'tax-finance', label: 'Tax & Financial Assistance' },
 ] as const;
 
+// Fast lookup dictionary mapping category identifiers to human-readable display labels
 export const CATEGORY_LABELS: Record<string, string> = {
   all: 'All Resources',
   food: 'Food & Meals',
@@ -57,20 +57,31 @@ export const CATEGORY_LABELS: Record<string, string> = {
   'legal-crisis': 'Legal Aid & Crisis',
 };
 
+// Audit metadata shape paired with directory items to document source verification and accessibility
 export interface VerifiedRecordEntry {
+  // Flags whether the listing has an audited verification entry
   isVerified: boolean;
+  // Formatted verification date label
   verificationDate: string;
+  // Authoritative public agency or directory record inspected
   verificationSource: string;
+  // Optional verified official homepage URL
   website?: string;
+  // Written eligibility summary for applicants
   eligibility: string;
+  // Optional public source URL backing the listing
   sourceUrl?: string;
+  // Languages supported by staff
   languages?: string[];
+  // Indicates wheelchair accessibility
   wheelchairAccessible?: boolean;
+  // Indicates public transit or county dial-a-ride access
   transitAccessible?: boolean;
+  // Documents or intake steps needed on arrival
   intakeRequirements?: string[];
 }
 
-// Complete verified records dictionary containing distinct, authentic verification evidence for every single resource
+// Complete verified records dictionary keyed by resource ID with independent audit metadata
 export const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
   'food-1': {
     isVerified: true,
@@ -2629,7 +2640,7 @@ export const VERIFIED_RECORDS: Record<string, VerifiedRecordEntry> = {
   },
 };
 
-// Factory helper: normalizes resource fields with standard defaults, hours, districts, and explicit verified records
+// Factory helper normalizing resource fields, resolving Forsyth County districts, and merging verification records
 function r(
   id: string,
   category: CategoryType,
@@ -2645,8 +2656,9 @@ function r(
   customEligibility?: string,
   customSourceUrl?: string
 ): ResourceItem {
-  // Map address to authentic Forsyth County geographic districts
+  // Default district assignment for central Cumming addresses
   let district: DistrictType = 'Central Cumming';
+  // Assign East Forsyth district for Lake Lanier corridor and eastern zip codes
   if (
     address.includes('30041') ||
     address.includes('Browns Bridge') ||
@@ -2656,6 +2668,7 @@ function r(
     address.includes('Buford Hwy')
   ) {
     district = 'East Forsyth';
+  // Assign West Forsyth district for rural western corridors and zip 30028
   } else if (
     address.includes('30028') ||
     address.includes('Matt Hwy') ||
@@ -2665,6 +2678,7 @@ function r(
     address.includes('Bethelview')
   ) {
     district = 'West Forsyth';
+  // Assign South Forsyth district for southern commercial corridors and Johns Creek border
   } else if (
     address.includes('30004') ||
     address.includes('30097') ||
@@ -2677,6 +2691,7 @@ function r(
     address.includes('Suwanee Dam')
   ) {
     district = 'South Forsyth';
+  // Assign North Forsyth district for Coal Mountain and Dawson-border corridors
   } else if (
     address.includes('Keith Bridge') ||
     address.includes('Dahlonega Hwy') ||
@@ -2687,37 +2702,31 @@ function r(
     district = 'North Forsyth';
   }
 
-  
+  // Look up the resource's individual audit record by unique ID
+  const verifiedRecord = VERIFIED_RECORDS[id];
+  // Resolve formatted verification date or pending status fallback
+  const verificationDate = verifiedRecord?.verificationDate || 'Verification pending';
+  // Resolve documented source name or fallback string
+  const verificationSource = verifiedRecord?.verificationSource || 'No verification source recorded';
+  // Resolve backing source URL from audit record or custom argument
+  const sourceUrl = verifiedRecord?.sourceUrl || customSourceUrl || '';
+  // Mark listing verified only when audit flag, date, source name, and source URL all exist
+  const isVerified = Boolean(
+    verifiedRecord?.isVerified &&
+    verifiedRecord?.verificationDate &&
+    verifiedRecord?.verificationSource &&
+    sourceUrl
+  );
 
-  
-// Look up the resource's individual verification record
-const verifiedRecord = VERIFIED_RECORDS[id];
-
-const verificationDate =
-  verifiedRecord?.verificationDate || 'Verification pending';
-
-const verificationSource =
-  verifiedRecord?.verificationSource || 'No verification source recorded';
-
-const sourceUrl =
-  verifiedRecord?.sourceUrl || customSourceUrl || '';
-
-const isVerified = Boolean(
-  verifiedRecord?.isVerified &&
-  verifiedRecord?.verificationDate &&
-  verifiedRecord?.verificationSource &&
-  sourceUrl
-);
-
-const website = verifiedRecord?.website;
-
-
+  // Merge verified accessibility, eligibility, and intake details with sensible defaults
+  const website = verifiedRecord?.website;
   const eligibility = verifiedRecord?.eligibility || customEligibility || 'Forsyth County residents and families.';
   const languages = verifiedRecord?.languages || ['English', 'Spanish'];
   const wheelchairAccessible = verifiedRecord?.wheelchairAccessible ?? true;
   const transitAccessible = verifiedRecord?.transitAccessible ?? true;
   const intakeRequirements = verifiedRecord?.intakeRequirements || ['Contact provider for intake requirements'];
 
+  // Return normalized ResourceItem object consumed across directory cards, modals, and search
   return {
     id,
     name,
@@ -2728,9 +2737,8 @@ const website = verifiedRecord?.website;
     address,
     district,
     phone,
-    email: undefined,
-    website,
     hours,
+    website,
     eligibility,
     cost,
     languages,
@@ -2746,6 +2754,7 @@ const website = verifiedRecord?.website;
   };
 }
 
+// Master directory of verified Forsyth County organizations built with the normalized factory helper
 export const COMMUNITY_RESOURCES: ResourceItem[] = [
 
   // Category 1: FOOD
@@ -3012,6 +3021,7 @@ export const COMMUNITY_RESOURCES: ResourceItem[] = [
   r('leg-4', 'legal', "Forsyth County Court Self-Help Center & Law Library", "Free pro se court legal forms, family law packets, computers, and legal research assistance.", "Municipal legal resource center in the Forsyth County Courthouse providing free court forms, step-by-step pro se packets for uncontested divorce and name changes, and legal reference workstations.", "101 E Courthouse Way, Suite 1014, Cumming, GA 30040", "(770) 781-2139", "Mon-Fri: 8:30 AM – 4:30 PM", "Free", ["Free Pro Se Court Packets & Forms","Divorce & Child Support Packets","Westlaw Legal Research Terminals","Court Procedure Explanations (Non-Advisory)"]),
 ];
 
+// Verified upcoming Forsyth County civic events, workshops, and mobile pantry clinics
 export const COMMUNITY_EVENTS: CommunityEvent[] = [
   {
     id: 'evt-1',
@@ -3515,6 +3525,7 @@ export const COMMUNITY_EVENTS: CommunityEvent[] = [
   },
 ];
 
+// Public health, educational, and legal research citations displayed in the Standards section
 export const RESEARCH_CITATIONS: ResearchCitation[] = [
   {
     id: 'cit-1',
@@ -3545,6 +3556,7 @@ export const RESEARCH_CITATIONS: ResearchCitation[] = [
   },
 ];
 
+// Curated seed neighbor notes rendered alongside live Supabase submissions on the Community Board
 export const INITIAL_COMMUNITY_FEEDBACKS: UserFeedback[] = [
   {
     id: 'fb-1',

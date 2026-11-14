@@ -1,4 +1,6 @@
+// Import React hooks for managing feedback form state and smooth feed scrolling
 import React, { useState, useRef } from 'react';
+// Import Lucide icons for community board controls, privacy toggle, validation alerts, and upvotes
 import {
   MessageSquare,
   Users,
@@ -13,20 +15,30 @@ import {
   ShieldCheck,
   Info
 } from 'lucide-react';
+// Import UserFeedback interface defining community note fields
 import { UserFeedback } from '../types';
 
+// Props interface defining community board data, filter state, and submission/like callbacks
 interface FeedbackSectionProps {
+  // Filtered array of community notes currently visible in the feed
   feedbacks: UserFeedback[];
+  // Total number of published notes regardless of active filter
   allCount: number;
+  // Active feed filter tab ('all', 'public', or 'anonymous')
   filterType: 'all' | 'public' | 'anonymous';
+  // Callback switching between feed filter tabs
   onFilterChange: (filter: 'all' | 'public' | 'anonymous') => void;
+  // Async callback persisting a new community note to Supabase
   onSubmitFeedback: (feedback: Omit<UserFeedback, 'id' | 'submittedAt' | 'status' | 'likesCount'>) => Promise<UserFeedback>;
+  // Callback toggling helpful upvote status for a community note ID
   onToggleLike: (id: string) => void;
+  // Lookup dictionary of note IDs upvoted by the current visitor
   likedFeedbackIds: Record<string, boolean>;
+  // Optional pre-populated organization name when navigated from ResourceDetails
   initialResourceName?: string;
-  initialCategory?: UserFeedback['category'];
 }
 
+// Community Notes page combining the submission form and live searchable neighbor feed
 export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
   feedbacks,
   allCount,
@@ -35,33 +47,47 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
   onSubmitFeedback,
   onToggleLike,
   likedFeedbackIds,
-  initialResourceName = '',
-  initialCategory = 'Accuracy & Updates'
+  initialResourceName = ''
 }) => {
+  // Toggle controlling whether the author's name is hidden as anonymous
   const [isAnonymous, setIsAnonymous] = useState(false);
+  // Author display name when posting publicly
   const [name, setName] = useState('');
-  const [category, setCategory] = useState<UserFeedback['category']>(initialCategory);
+  // Selected feedback topic category
+  const [category, setCategory] = useState<UserFeedback['category']>('Accuracy & Updates');
+  // Optional organization name referenced in the note
   const [resourceName, setResourceName] = useState(initialResourceName);
+  // Experience rating selection
   const [rating, setRating] = useState<'Very Helpful' | 'Helpful' | 'Needs Improvement'>('Very Helpful');
+  // Main message body text written by the neighbor
   const [message, setMessage] = useState('');
+  // Validation error message displayed above the form when checks fail
   const [error, setError] = useState('');
+  // Temporary success banner flag shown after submitting a note
   const [success, setSuccess] = useState(false);
+  // Ref targeting the scrollable community feed container
   const feedRef = useRef<HTMLDivElement>(null);
 
+  // Validate and submit a new community note to Supabase and update local UI state
   const handleSubmit = (e: React.FormEvent) => {
+    // Prevent native browser page reload on form submit
     e.preventDefault();
+    // Clear any prior validation error before re-checking
     setError('');
 
+    // Require a name unless the author opted into anonymous posting
     if (!isAnonymous && !name.trim()) {
       setError('Please provide a name or nickname, or select "Keep me anonymous".');
       return;
     }
 
+    // Require at least 10 characters so submitted tips contain useful context
     if (message.trim().length < 10) {
       setError('Please write at least 10 characters so other neighbors have enough context.');
       return;
     }
 
+    // Forward sanitized feedback payload to parent hook
     onSubmitFeedback({
       userName: isAnonymous ? 'A Friendly Neighbor' : name.trim(),
       isAnonymous,
@@ -71,16 +97,18 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
       message: message.trim()
     });
 
+    // Clear the message textarea and show confirmation alert for 4 seconds
     setMessage('');
     setSuccess(true);
     setTimeout(() => setSuccess(false), 4000);
 
-    // Smooth scroll to top of feed so author immediately sees their newly posted note
+    // Smoothly scroll the feed back to the top so the new note appears in view
     feedRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <div className="civic-container space-y-6">
+      {/* Page header introducing the public community board */}
       <header className="border-b border-stone-200 pb-3">
         <span className="hero-tagline">
           Community Voices &amp; Neighbor Notes
@@ -92,7 +120,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
           Been to one of these spots recently? Leave a note. If someone changed their hours or treated your family with real care, speak up. It takes thirty seconds and saves the next neighbor a wasted trip.
         </p>
 
-        {/* Helpful note on how community comments work */}
+        {/* Public visibility notice banner */}
         <div className="mt-3 p-3 bg-amber-50/80 border border-amber-200 rounded-xl text-xs text-amber-950 flex items-start gap-2 leading-relaxed">
           <Info className="w-4 h-4 text-amber-800 shrink-0 mt-0.5" />
           <div>
@@ -101,8 +129,9 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
         </div>
       </header>
 
+      {/* Two-column layout pairing the submission form with the scrollable community feed */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Submission form */}
+        {/* Left column: Community note submission form */}
         <div className="lg:col-span-5 space-y-4">
           {success && (
             <div role="status" aria-live="polite" className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center gap-2">
@@ -120,6 +149,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
               Spot a wrong phone number or had a great visit? Let folks know. You can sign your name or keep it totally anonymous.
             </p>
 
+            {/* Accessible inline validation alert */}
             {error && (
               <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
@@ -128,7 +158,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
             )}
 
             <form onSubmit={handleSubmit} noValidate className="space-y-3.5">
-              {/* Attribution choice */}
+              {/* Public name vs. anonymous privacy preference radio group */}
               <fieldset className="p-3 bg-stone-50 border border-stone-200 rounded-xl space-y-2">
                 <legend className="text-xs font-bold text-stone-900 flex items-center justify-between w-full pb-1">
                   <span className="flex items-center gap-1.5">
@@ -144,15 +174,15 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-0.5">
                   <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
-                    !isAnonymous 
-                      ? 'border-amber-800 bg-amber-50/70 text-amber-950 font-medium shadow-xs' 
+                    !isAnonymous
+                      ? 'border-amber-800 bg-amber-50/70 text-amber-950 font-medium shadow-xs'
                       : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
                   }`}>
-                    <input 
-                      type="radio" 
-                      name="anonymity-preference" 
-                      checked={!isAnonymous} 
-                      onChange={() => setIsAnonymous(false)} 
+                    <input
+                      type="radio"
+                      name="anonymity-preference"
+                      checked={!isAnonymous}
+                      onChange={() => setIsAnonymous(false)}
                       className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
                     />
                     <div>
@@ -164,18 +194,18 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                   </label>
 
                   <label className={`flex items-start gap-2.5 p-2.5 rounded-lg border text-xs cursor-pointer transition-all ${
-                    isAnonymous 
-                      ? 'border-amber-800 bg-amber-50/70 text-amber-950 font-medium shadow-xs' 
+                    isAnonymous
+                      ? 'border-amber-800 bg-amber-50/70 text-amber-950 font-medium shadow-xs'
                       : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50'
                   }`}>
-                    <input 
-                      type="radio" 
-                      name="anonymity-preference" 
-                      checked={isAnonymous} 
+                    <input
+                      type="radio"
+                      name="anonymity-preference"
+                      checked={isAnonymous}
                       onChange={() => {
                         setIsAnonymous(true);
                         setName('');
-                      }} 
+                      }}
                       className="mt-0.5 text-amber-800 focus:ring-amber-800 cursor-pointer"
                     />
                     <div>
@@ -188,6 +218,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 </div>
               </fieldset>
 
+              {/* Author name input (disabled when anonymous posting is active) */}
               <div className="form-group">
                 <label htmlFor="fb-name" className="form-label">
                   <span>{isAnonymous ? 'Your Name or Nickname (Private):' : 'Your Name or Nickname:'}</span>
@@ -214,6 +245,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 )}
               </div>
 
+              {/* Note topic category selector */}
               <div className="form-group">
                 <label htmlFor="fb-category" className="form-label">
                   <span>What kind of note is this?</span>
@@ -231,6 +263,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 </select>
               </div>
 
+              {/* Optional target resource name field */}
               <div className="form-group">
                 <label htmlFor="fb-resource" className="form-label">
                   <span>Which place is this about? (Optional):</span>
@@ -245,6 +278,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 />
               </div>
 
+              {/* Experience rating button selector */}
               <div className="form-group">
                 <span className="form-label">
                   <span>How was your experience?</span>
@@ -267,6 +301,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 </div>
               </div>
 
+              {/* Note body textarea with live character limit warning */}
               <div className="form-group">
                 <label htmlFor="fb-message" className="form-label">
                   <span>Your Note or Details:</span>
@@ -295,6 +330,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 ></textarea>
               </div>
 
+              {/* Submit button posting the note to the live board */}
               <div className="pt-2">
                 <button
                   type="submit"
@@ -308,9 +344,10 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
           </section>
         </div>
 
-        {/* Live feed */}
+        {/* Right column: Scrollable community notes feed with filter tabs */}
         <aside className="lg:col-span-7 space-y-4" aria-label="Community Feedback Board">
           <div className="bg-white border border-stone-200 rounded-2xl p-5 shadow-xs space-y-4">
+            {/* Feed header showing total note count */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-stone-100 pb-3">
               <div>
                 <div className="flex items-center gap-2">
@@ -331,7 +368,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
               </div>
             </div>
 
-            {/* Filter buttons */}
+            {/* Segmented filter control switching between All, Signed, and Anonymous notes */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
               <div className="inline-flex rounded-lg border border-stone-200 bg-stone-50 p-1 text-xs">
                 <button
@@ -374,6 +411,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
               </span>
             </div>
 
+            {/* Scrollable feed container displaying filtered community notes */}
             <div ref={feedRef} className="space-y-3.5 max-h-[780px] overflow-y-auto pr-1">
               {feedbacks.length === 0 ? (
                 <div className="text-center py-10 px-4 bg-stone-50 rounded-xl border border-dashed border-stone-200 text-xs text-stone-500">
@@ -381,10 +419,12 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                 </div>
               ) : (
                 feedbacks.map((item) => (
-                  <article 
+                  // Individual neighbor note article card
+                  <article
                     key={item.id}
                     className="p-4 rounded-xl border border-stone-200 bg-white hover:border-stone-300 transition-all space-y-2.5 shadow-2xs"
                   >
+                    {/* Author badge, verification pill, category tag, rating badge, and date */}
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {item.isAnonymous ? (
@@ -425,6 +465,7 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                       </time>
                     </div>
 
+                    {/* Referenced organization name when provided */}
                     {item.resourceName && (
                       <div className="flex items-center gap-1.5 text-xs text-stone-700">
                         <MapPin className="w-3.5 h-3.5 text-amber-800 shrink-0" />
@@ -432,10 +473,12 @@ export const FeedbackSection: React.FC<FeedbackSectionProps> = ({
                       </div>
                     )}
 
+                    {/* Resident's quoted message body */}
                     <blockquote className="text-xs sm:text-sm text-stone-800 leading-relaxed bg-stone-50 p-3 rounded-lg border border-stone-200/70">
                       &ldquo;{item.message}&rdquo;
                     </blockquote>
 
+                    {/* Card footer with upvote toggle button */}
                     <div className="flex items-center justify-between pt-1 border-t border-stone-100 text-[11px]">
                       <span className="text-stone-400 text-[11px]">Neighbor Voice</span>
                       <button
