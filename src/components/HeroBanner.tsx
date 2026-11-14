@@ -30,10 +30,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
         </span>
 
         {/* Primary Page Heading with high accessibility contrast */}
-        <h1
-          style={{ color: '#ffffff' }}
-          className="text-white font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight max-w-5xl"
-        >
+        <h1 className="text-white font-serif text-4xl md:text-5xl lg:text-6xl font-bold leading-tight max-w-5xl">
           Find local help in Cumming without the runaround.
         </h1>
 

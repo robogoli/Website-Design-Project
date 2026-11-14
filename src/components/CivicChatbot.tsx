@@ -57,6 +57,184 @@ const SUGGESTED_TOPICS = [
   '🆘 Crisis & urgent help'
 ];
 
+// Configuration describing a single keyword-matched community support topic
+interface TopicRoute {
+  // Keyword triggers matched against visitor questions
+  keywords: string[];
+  // Directory category slug passed to the general ranking function
+  category: string;
+  // Reply text explaining the category and next steps
+  responseText: string;
+  // Follow-up question buttons rendered beneath the reply
+  examplePrompts: string[];
+  // Routes food queries through rankFoodResources so pet food pantries are excluded
+  useFoodRanker?: boolean;
+  // Falls back to emergency-flagged directory listings if keyword ranking returns empty
+  fallbackEmergency?: boolean;
+}
+
+// Ordered list of 13 civic topic matchers replacing repetitive conditional branches
+const TOPIC_ROUTES: TopicRoute[] = [
+  {
+    // 1. Urgent crisis, safety, and emergency hotline triggers
+    keywords: ['crisis', 'hotline', 'suicide', 'emergency', '988', '211', 'abuse', 'violence', 'haven', 'overdose'],
+    category: 'legal-crisis',
+    fallbackEmergency: true,
+    responseText:
+      "If you or someone you know needs urgent help, these services may be useful:\n\n• Suicide & Crisis Lifeline: Dial or text 988 (24/7)\n• Immediate Danger / Medical Emergency: Dial 911\n• Georgia Crisis & Access Line (GCAL): (800) 715-4225\n• Forsyth County Family Haven: (770) 887-1121\n• United Way Helpline: Dial 211\n\nSuggested resources matching your search:",
+    examplePrompts: [
+      'How do I get emergency rent or utility help?',
+      'Where can I find a safe youth support service?',
+      'Free crisis counseling and 24/7 support'
+    ]
+  },
+  {
+    // 2. Housing stability, emergency shelter, rent, and utility bill assistance triggers
+    keywords: ['housing', 'shelter', 'rent', 'eviction', 'utility', 'utilities', 'electric', 'power bill', 'sawnee', 'gas', 'water bill', 'homeless', 'liheap'],
+    category: 'housing',
+    responseText:
+      "Looking for housing or help with utility bills? Here are community resources that may be able to help. Contact each organization to confirm current funding, availability, and eligibility.\n\nWhat kind of assistance do you need most?",
+    examplePrompts: [
+      'Emergency help with an eviction notice in Forsyth',
+      'Past-due Sawnee EMC or Georgia Power bill assistance',
+      'Transitional family shelter and housing support'
+    ]
+  },
+  {
+    // 3. Human food pantries, groceries, meals, and SNAP/EBT triggers
+    keywords: ['food', 'pantry', 'pantries', 'groceries', 'grocery', 'hunger', 'meal', 'meals', 'eat', 'snap', 'ebt', 'food stamps'],
+    category: 'food',
+    useFoodRanker: true,
+    responseText:
+      "Looking for groceries or food assistance in Forsyth County? Here are local food-assistance organizations listed in the directory. Availability, hours, inventory, and eligibility can change, so contact the organization before visiting.\n\nWhat kind of food assistance do you need?",
+    examplePrompts: [
+      'Which food pantries have evening hours?',
+      'Can I get food boxes delivered to my family?',
+      'Where can I find free baby formula and diapers in Forsyth?'
+    ]
+  },
+  {
+    // 4. Healthcare, dental clinics, prescriptions, and mental health counseling triggers
+    keywords: ['health', 'clinic', 'doctor', 'dental', 'teeth', 'dentist', 'prescription', 'mental', 'therapy', 'counseling', 'medicaid', 'peachcare', 'uninsured'],
+    category: 'healthcare',
+    responseText:
+      "Looking for medical, dental, or mental health support? Here are community resources that may help. Contact providers to confirm services, costs, and availability.\n\nWhat kind of care are you looking for?",
+    examplePrompts: [
+      'Where can I find affordable dental care?',
+      'Free doctor visits and prescription assistance',
+      'Affordable sliding-scale family doctors near Cumming'
+    ]
+  },
+  {
+    // 5. Senior services, Meals on Wheels, and caregiver resource triggers
+    keywords: ['senior', 'seniors', 'elderly', 'meals on wheels', 'aging', 'medicare', 'caregiver'],
+    category: 'seniors',
+    responseText:
+      "Looking for senior services, meal delivery, or caregiver support? Here are resources serving the community. Contact providers to confirm eligibility and availability.",
+    examplePrompts: [
+      'How do I ask about Meals on Wheels in Forsyth?',
+      'Senior center activities and exercise classes',
+      'Support services for family caregivers'
+    ]
+  },
+  {
+    // 6. Licensed childcare, infant/toddler daycare, and CAPS subsidy triggers
+    keywords: ['childcare', 'daycare', 'baby', 'infant', 'toddler', 'afterschool', 'ymca', 'caps'],
+    category: 'childcare',
+    responseText:
+      "Looking for childcare or daycare? Here are local resources to explore. Contact providers to confirm openings, costs, and eligibility.\n\nWhat age is your child, and what schedule do you need?",
+    examplePrompts: [
+      'Which daycares accept Georgia CAPS subsidies?',
+      'Are there part-time morning preschools available?',
+      'After-school programs with financial assistance'
+    ]
+  },
+  {
+    // 7. Public K-12 schools, preschools, Lanier Tech, and university triggers
+    keywords: ['school', 'schools', 'college', 'university', 'ung', 'lanier tech', 'elementary', 'middle', 'high school', 'preschool', 'pre-k', 'education', 'degree', 'hope grant'],
+    category: 'schools',
+    responseText:
+      "Looking for schools, college programs, or education support? Here are local resources to explore.\n\nWhat program or grade level are you looking into?",
+    examplePrompts: [
+      'Which elementary schools have dual language immersion?',
+      'What programs are available at Lanier Tech?',
+      'Where can I find Head Start preschool information?'
+    ]
+  },
+  {
+    // 8. Automotive mechanics, plumbing, HVAC, and home maintenance triggers
+    keywords: ['repair', 'repairs', 'auto', 'car', 'brake', 'brakes', 'plumb', 'plumbing', 'pipe', 'hvac', 'ac', 'heat', 'handyman', 'roof', 'appliance'],
+    category: 'repairs',
+    responseText:
+      "Looking for help with a vehicle or home repair? Here are local businesses and services listed in the directory. Contact providers to confirm pricing and availability.\n\nWhat needs fixing?",
+    examplePrompts: [
+      'Who offers emergency plumbing services in Cumming?',
+      'Where can I find affordable brake or engine repairs?',
+      'Handyman services for home repairs'
+    ]
+  },
+  {
+    // 9. Parks, hiking trails, swimming facilities, and local recreation triggers
+    keywords: ['park', 'parks', 'sport', 'sports', 'swim', 'pool', 'lake', 'hike', 'trail', 'nature', 'recreation'],
+    category: 'sports',
+    responseText:
+      "Looking for parks, swimming, trails, or recreation? Here are local places to explore. Check official websites for current hours, fees, and closures.\n\nWhat kind of outing are you planning?",
+    examplePrompts: [
+      'Are there beginner-friendly hiking trails?',
+      'Where can we swim at Lake Lanier?',
+      'Indoor pools and splash parks near Cumming'
+    ]
+  },
+  {
+    // 10. Employment readiness, career grants, GED prep, and public library triggers
+    keywords: ['job', 'jobs', 'career', 'work', 'resume', 'library', 'ged', 'esl'],
+    category: 'workforce',
+    responseText:
+      "Looking for job-search help, career training, or library services? Here are local resources to explore.\n\nWhat kind of career or learning support do you need?",
+    examplePrompts: [
+      'How can I find career training assistance?',
+      'Free computer access and resume help in Cumming',
+      'Adult GED preparation and English classes'
+    ]
+  },
+  {
+    // 11. Storm safety, fire alarms, and disaster recovery triggers
+    keywords: ['disaster', 'storm', 'tornado', 'fire', 'smoke', 'alarm', 'red cross', 'ema', 'gema'],
+    category: 'emergency',
+    responseText:
+      "Looking for storm preparation, fire prevention, or disaster recovery information? Here are local emergency and preparedness resources. For immediate danger, call 911.",
+    examplePrompts: [
+      'Where can I find official storm safety information?',
+      'How can I request smoke alarm installation?',
+      'How does the Red Cross help after a house fire?'
+    ]
+  },
+  {
+    // 12. Substance-use recovery programs, peer coaching, and Naloxone triggers
+    keywords: ['recovery', 'addiction', 'sober', 'rehab', 'detox', 'peer', 'narcan', 'naloxone', 'substance', 'alcohol'],
+    category: 'recovery',
+    responseText:
+      "Looking for substance-use recovery information, peer support, or family resources? Here are local organizations to explore. Contact providers to confirm current services.",
+    examplePrompts: [
+      'Where can I find peer recovery support in Cumming?',
+      'What recovery support services are available?',
+      'Where can I find information about Naloxone?'
+    ]
+  },
+  {
+    // 13. Free tax preparation, Medicare SHIP counseling, and financial coaching triggers
+    keywords: ['tax', 'taxes', 'aarp', 'vita', 'credit', 'debt', 'ship', 'financial'],
+    category: 'tax-finance',
+    responseText:
+      "Looking for free tax preparation, financial counseling, or Medicare assistance? Here are community resources to explore. Contact providers to confirm appointments and eligibility.",
+    examplePrompts: [
+      'How do I find free tax preparation?',
+      'Medicare counseling resources in Forsyth County',
+      'Nonprofit credit counseling and debt support'
+    ]
+  }
+];
+
 // Word-boundary matching helper preventing short query terms from falsely matching larger words (e.g. 'care' vs 'car')
 function matchesWordBoundary(text: string, keyword: string): boolean {
   // Apply word-boundary regular expression for short search terms 4 characters or fewer
@@ -493,370 +671,33 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
     matched?: ResourceItem[];
     examplePrompts?: string[];
   } => {
-    // 1. Urgent crisis, safety, and emergency hotline routing
-    if (
-      matchesWordBoundary(query, 'crisis') ||
-      matchesWordBoundary(query, 'hotline') ||
-      matchesWordBoundary(query, 'suicide') ||
-      matchesWordBoundary(query, 'emergency') ||
-      matchesWordBoundary(query, '988') ||
-      matchesWordBoundary(query, '211') ||
-      matchesWordBoundary(query, 'abuse') ||
-      matchesWordBoundary(query, 'violence') ||
-      matchesWordBoundary(query, 'haven') ||
-      matchesWordBoundary(query, 'overdose')
-    ) {
-      const ranked = rankResources(query, 'legal-crisis');
-      const fallback = COMMUNITY_RESOURCES.filter(r => r.isEmergency);
-      const matches = ranked.length > 0 ? ranked : fallback;
+    // Check each priority topic route sequentially until a keyword matches
+    for (const route of TOPIC_ROUTES) {
+      if (route.keywords.some(kw => matchesWordBoundary(query, kw))) {
+        // Score food queries with pet-pantry filtering, otherwise use general relevance ranking
+        const ranked = route.useFoodRanker
+          ? rankFoodResources(query)
+          : rankResources(query, route.category);
 
-      return {
-        responseText:
-          "If you or someone you know needs urgent help, these services may be useful:\n\n• Suicide & Crisis Lifeline: Dial or text 988 (24/7)\n• Immediate Danger / Medical Emergency: Dial 911\n• Georgia Crisis & Access Line (GCAL): (800) 715-4225\n• Forsyth County Family Haven: (770) 887-1121\n• United Way Helpline: Dial 211\n\nSuggested resources matching your search:",
-        matched: matches,
-        examplePrompts: [
-          'How do I get emergency rent or utility help?',
-          'Where can I find a safe youth support service?',
-          'Free crisis counseling and 24/7 support'
-        ]
-      };
+        // Fall back to emergency-flagged services when urgent crisis routes find no direct hits
+        const matches =
+          route.fallbackEmergency && ranked.length === 0
+            ? COMMUNITY_RESOURCES.filter(r => r.isEmergency)
+            : ranked;
+
+        // Return category-tailored response message, matched listings, and follow-up suggestions
+        return {
+          responseText: route.responseText,
+          matched: matches,
+          examplePrompts: route.examplePrompts
+        };
+      }
     }
 
-    // 2. Housing stability, emergency shelter, rent, and utility bill assistance
-    if (
-      matchesWordBoundary(query, 'housing') ||
-      matchesWordBoundary(query, 'shelter') ||
-      matchesWordBoundary(query, 'rent') ||
-      matchesWordBoundary(query, 'eviction') ||
-      matchesWordBoundary(query, 'utility') ||
-      matchesWordBoundary(query, 'utilities') ||
-      matchesWordBoundary(query, 'electric') ||
-      matchesWordBoundary(query, 'power bill') ||
-      matchesWordBoundary(query, 'sawnee') ||
-      matchesWordBoundary(query, 'gas') ||
-      matchesWordBoundary(query, 'water bill') ||
-      matchesWordBoundary(query, 'homeless') ||
-      matchesWordBoundary(query, 'liheap')
-    ) {
-      const ranked = rankResources(query, 'housing');
-
-      return {
-        responseText:
-          "Looking for housing or help with utility bills? Here are community resources that may be able to help. Contact each organization to confirm current funding, availability, and eligibility.\n\nWhat kind of assistance do you need most?",
-        matched: ranked,
-        examplePrompts: [
-          'Emergency help with an eviction notice in Forsyth',
-          'Past-due Sawnee EMC or Georgia Power bill assistance',
-          'Transitional family shelter and housing support'
-        ]
-      };
-    }
-
-    // 3. Human food pantries, groceries, meals, and SNAP/EBT (excludes pet food pantries)
-    if (
-      matchesWordBoundary(query, 'food') ||
-      matchesWordBoundary(query, 'pantry') ||
-      matchesWordBoundary(query, 'pantries') ||
-      matchesWordBoundary(query, 'groceries') ||
-      matchesWordBoundary(query, 'grocery') ||
-      matchesWordBoundary(query, 'hunger') ||
-      matchesWordBoundary(query, 'meal') ||
-      matchesWordBoundary(query, 'meals') ||
-      matchesWordBoundary(query, 'eat') ||
-      matchesWordBoundary(query, 'snap') ||
-      matchesWordBoundary(query, 'ebt') ||
-      matchesWordBoundary(query, 'food stamps')
-    ) {
-      const ranked = rankFoodResources(query);
-
-      return {
-        responseText:
-          "Looking for groceries or food assistance in Forsyth County? Here are local food-assistance organizations listed in the directory. Availability, hours, inventory, and eligibility can change, so contact the organization before visiting.\n\nWhat kind of food assistance do you need?",
-        matched: ranked,
-        examplePrompts: [
-          'Which food pantries have evening hours?',
-          'Can I get food boxes delivered to my family?',
-          'Where can I find free baby formula and diapers in Forsyth?'
-        ]
-      };
-    }
-
-    // 4. Healthcare, dental clinics, prescriptions, and mental health counseling
-    if (
-      matchesWordBoundary(query, 'health') ||
-      matchesWordBoundary(query, 'clinic') ||
-      matchesWordBoundary(query, 'doctor') ||
-      matchesWordBoundary(query, 'dental') ||
-      matchesWordBoundary(query, 'teeth') ||
-      matchesWordBoundary(query, 'dentist') ||
-      matchesWordBoundary(query, 'prescription') ||
-      matchesWordBoundary(query, 'mental') ||
-      matchesWordBoundary(query, 'therapy') ||
-      matchesWordBoundary(query, 'counseling') ||
-      matchesWordBoundary(query, 'medicaid') ||
-      matchesWordBoundary(query, 'peachcare') ||
-      matchesWordBoundary(query, 'uninsured')
-    ) {
-      const ranked = rankResources(query, 'healthcare');
-
-      return {
-        responseText:
-          "Looking for medical, dental, or mental health support? Here are community resources that may help. Contact providers to confirm services, costs, and availability.\n\nWhat kind of care are you looking for?",
-        matched: ranked,
-        examplePrompts: [
-          'Where can I find affordable dental care?',
-          'Free doctor visits and prescription assistance',
-          'Affordable sliding-scale family doctors near Cumming'
-        ]
-      };
-    }
-
-    // 5. Senior services, Meals on Wheels, and caregiver resources
-    if (
-      matchesWordBoundary(query, 'senior') ||
-      matchesWordBoundary(query, 'seniors') ||
-      matchesWordBoundary(query, 'elderly') ||
-      matchesWordBoundary(query, 'meals on wheels') ||
-      matchesWordBoundary(query, 'aging') ||
-      matchesWordBoundary(query, 'medicare') ||
-      matchesWordBoundary(query, 'caregiver')
-    ) {
-      const ranked = rankResources(query, 'seniors');
-
-      return {
-        responseText:
-          "Looking for senior services, meal delivery, or caregiver support? Here are resources serving the community. Contact providers to confirm eligibility and availability.",
-        matched: ranked,
-        examplePrompts: [
-          'How do I ask about Meals on Wheels in Forsyth?',
-          'Senior center activities and exercise classes',
-          'Support services for family caregivers'
-        ]
-      };
-    }
-
-    // 6. Licensed childcare, infant/toddler daycare, and CAPS subsidy providers
-    if (
-      matchesWordBoundary(query, 'childcare') ||
-      matchesWordBoundary(query, 'daycare') ||
-      matchesWordBoundary(query, 'baby') ||
-      matchesWordBoundary(query, 'infant') ||
-      matchesWordBoundary(query, 'toddler') ||
-      matchesWordBoundary(query, 'afterschool') ||
-      matchesWordBoundary(query, 'ymca') ||
-      matchesWordBoundary(query, 'caps')
-    ) {
-      const ranked = rankResources(query, 'childcare');
-
-      return {
-        responseText:
-          "Looking for childcare or daycare? Here are local resources to explore. Contact providers to confirm openings, costs, and eligibility.\n\nWhat age is your child, and what schedule do you need?",
-        matched: ranked,
-        examplePrompts: [
-          'Which daycares accept Georgia CAPS subsidies?',
-          'Are there part-time morning preschools available?',
-          'After-school programs with financial assistance'
-        ]
-      };
-    }
-
-    // 7. Public K-12 schools, preschools, Lanier Tech, and university programs
-    if (
-      matchesWordBoundary(query, 'school') ||
-      matchesWordBoundary(query, 'schools') ||
-      matchesWordBoundary(query, 'college') ||
-      matchesWordBoundary(query, 'university') ||
-      matchesWordBoundary(query, 'ung') ||
-      matchesWordBoundary(query, 'lanier tech') ||
-      matchesWordBoundary(query, 'elementary') ||
-      matchesWordBoundary(query, 'middle') ||
-      matchesWordBoundary(query, 'high school') ||
-      matchesWordBoundary(query, 'preschool') ||
-      matchesWordBoundary(query, 'pre-k') ||
-      matchesWordBoundary(query, 'education') ||
-      matchesWordBoundary(query, 'degree') ||
-      matchesWordBoundary(query, 'hope grant')
-    ) {
-      const ranked = rankResources(query, 'schools');
-
-      return {
-        responseText:
-          "Looking for schools, college programs, or education support? Here are local resources to explore.\n\nWhat program or grade level are you looking into?",
-        matched: ranked,
-        examplePrompts: [
-          'Which elementary schools have dual language immersion?',
-          'What programs are available at Lanier Tech?',
-          'Where can I find Head Start preschool information?'
-        ]
-      };
-    }
-
-    // 8. Automotive mechanics, plumbing, HVAC, and home maintenance
-    if (
-      matchesWordBoundary(query, 'repair') ||
-      matchesWordBoundary(query, 'repairs') ||
-      matchesWordBoundary(query, 'auto') ||
-      matchesWordBoundary(query, 'car') ||
-      matchesWordBoundary(query, 'brake') ||
-      matchesWordBoundary(query, 'brakes') ||
-      matchesWordBoundary(query, 'plumb') ||
-      matchesWordBoundary(query, 'plumbing') ||
-      matchesWordBoundary(query, 'pipe') ||
-      matchesWordBoundary(query, 'hvac') ||
-      matchesWordBoundary(query, 'ac') ||
-      matchesWordBoundary(query, 'heat') ||
-      matchesWordBoundary(query, 'handyman') ||
-      matchesWordBoundary(query, 'roof') ||
-      matchesWordBoundary(query, 'appliance')
-    ) {
-      const ranked = rankResources(query, 'repairs');
-
-      return {
-        responseText:
-          "Looking for help with a vehicle or home repair? Here are local businesses and services listed in the directory. Contact providers to confirm pricing and availability.\n\nWhat needs fixing?",
-        matched: ranked,
-        examplePrompts: [
-          'Who offers emergency plumbing services in Cumming?',
-          'Where can I find affordable brake or engine repairs?',
-          'Handyman services for home repairs'
-        ]
-      };
-    }
-
-    // 9. Parks, hiking trails, swimming facilities, and local recreation
-    if (
-      matchesWordBoundary(query, 'park') ||
-      matchesWordBoundary(query, 'parks') ||
-      matchesWordBoundary(query, 'sport') ||
-      matchesWordBoundary(query, 'sports') ||
-      matchesWordBoundary(query, 'swim') ||
-      matchesWordBoundary(query, 'pool') ||
-      matchesWordBoundary(query, 'lake') ||
-      matchesWordBoundary(query, 'hike') ||
-      matchesWordBoundary(query, 'trail') ||
-      matchesWordBoundary(query, 'nature') ||
-      matchesWordBoundary(query, 'recreation')
-    ) {
-      const ranked = rankResources(query, 'sports');
-
-      return {
-        responseText:
-          "Looking for parks, swimming, trails, or recreation? Here are local places to explore. Check official websites for current hours, fees, and closures.\n\nWhat kind of outing are you planning?",
-        matched: ranked,
-        examplePrompts: [
-          'Are there beginner-friendly hiking trails?',
-          'Where can we swim at Lake Lanier?',
-          'Indoor pools and splash parks near Cumming'
-        ]
-      };
-    }
-
-    // 10. Employment readiness, career grants, GED prep, and public libraries
-    if (
-      matchesWordBoundary(query, 'job') ||
-      matchesWordBoundary(query, 'jobs') ||
-      matchesWordBoundary(query, 'career') ||
-      matchesWordBoundary(query, 'work') ||
-      matchesWordBoundary(query, 'resume') ||
-      matchesWordBoundary(query, 'library') ||
-      matchesWordBoundary(query, 'ged') ||
-      matchesWordBoundary(query, 'esl')
-    ) {
-      const ranked = rankResources(query, 'workforce');
-
-      return {
-        responseText:
-          "Looking for job-search help, career training, or library services? Here are local resources to explore.\n\nWhat kind of career or learning support do you need?",
-        matched: ranked,
-        examplePrompts: [
-          'How can I find career training assistance?',
-          'Free computer access and resume help in Cumming',
-          'Adult GED preparation and English classes'
-        ]
-      };
-    }
-
-    // 11. Storm safety, fire alarms, and disaster recovery organizations
-    if (
-      matchesWordBoundary(query, 'disaster') ||
-      matchesWordBoundary(query, 'storm') ||
-      matchesWordBoundary(query, 'tornado') ||
-      matchesWordBoundary(query, 'fire') ||
-      matchesWordBoundary(query, 'smoke') ||
-      matchesWordBoundary(query, 'alarm') ||
-      matchesWordBoundary(query, 'red cross') ||
-      matchesWordBoundary(query, 'ema') ||
-      matchesWordBoundary(query, 'gema')
-    ) {
-      const ranked = rankResources(query, 'emergency');
-
-      return {
-        responseText:
-          "Looking for storm preparation, fire prevention, or disaster recovery information? Here are local emergency and preparedness resources. For immediate danger, call 911.",
-        matched: ranked,
-        examplePrompts: [
-          'Where can I find official storm safety information?',
-          'How can I request smoke alarm installation?',
-          'How does the Red Cross help after a house fire?'
-        ]
-      };
-    }
-
-    // 12. Substance-use recovery programs, peer coaching, and Naloxone access
-    if (
-      matchesWordBoundary(query, 'recovery') ||
-      matchesWordBoundary(query, 'addiction') ||
-      matchesWordBoundary(query, 'sober') ||
-      matchesWordBoundary(query, 'rehab') ||
-      matchesWordBoundary(query, 'detox') ||
-      matchesWordBoundary(query, 'peer') ||
-      matchesWordBoundary(query, 'narcan') ||
-      matchesWordBoundary(query, 'naloxone') ||
-      matchesWordBoundary(query, 'substance') ||
-      matchesWordBoundary(query, 'alcohol')
-    ) {
-      const ranked = rankResources(query, 'recovery');
-
-      return {
-        responseText:
-          "Looking for substance-use recovery information, peer support, or family resources? Here are local organizations to explore. Contact providers to confirm current services.",
-        matched: ranked,
-        examplePrompts: [
-          'Where can I find peer recovery support in Cumming?',
-          'What recovery support services are available?',
-          'Where can I find information about Naloxone?'
-        ]
-      };
-    }
-
-    // 13. Free tax preparation, Medicare SHIP counseling, and financial coaching
-    if (
-      matchesWordBoundary(query, 'tax') ||
-      matchesWordBoundary(query, 'taxes') ||
-      matchesWordBoundary(query, 'aarp') ||
-      matchesWordBoundary(query, 'vita') ||
-      matchesWordBoundary(query, 'credit') ||
-      matchesWordBoundary(query, 'debt') ||
-      matchesWordBoundary(query, 'ship') ||
-      matchesWordBoundary(query, 'financial')
-    ) {
-      const ranked = rankResources(query, 'tax-finance');
-
-      return {
-        responseText:
-          "Looking for free tax preparation, financial counseling, or Medicare assistance? Here are community resources to explore. Contact providers to confirm appointments and eligibility.",
-        matched: ranked,
-        examplePrompts: [
-          'How do I find free tax preparation?',
-          'Medicare counseling resources in Forsyth County',
-          'Nonprofit credit counseling and debt support'
-        ]
-      };
-    }
-
-    // 14. Full-directory keyword scoring fallback when no fixed topic rule matches
+    // Run full-directory keyword scoring when no specific topic rule matched
     const rankedGeneral = rankResources(query);
 
+    // Return ranked matches if one or more directory entries scored high enough
     if (rankedGeneral.length > 0) {
       const topName = rankedGeneral[0].name;
 
@@ -872,7 +713,7 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
       };
     }
 
-    // 15. Graceful empty-result guidance pointing neighbors to 2-1-1 and county info
+    // Return fallback referral helplines when no directory listings matched
     return {
       responseText:
         "I couldn't find a direct directory listing matching those keywords. You can try a different search or contact these referral services for additional help:\n\n• United Way: Dial 211 for community referrals\n• Forsyth County Government Information: (770) 781-2101\n\nYou can also try one of these topics:",

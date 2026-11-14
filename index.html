@@ -1,31 +1,40 @@
+<!-- Declare HTML5 document standard -->
 <!doctype html>
+<!-- Set primary document language to English for screen readers -->
 <html lang="en">
   <head>
+    <!-- Use UTF-8 character encoding across all community listings and symbols -->
     <meta charset="UTF-8" />
+    <!-- Ensure responsive scaling across mobile phones, tablets, and desktop screens -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Primary browser tab title for CivicBridge Forsyth County -->
     <title>CivicBridge | Forsyth County Community Resource Directory · Cumming, GA</title>
+    <!-- Search engine summary describing local directory listings and verification details -->
     <meta name="description" content="Explore community resources in Cumming and Forsyth County, Georgia. Listings include verification information where available." />
+    <!-- Search indexing keywords covering Cumming and Forsyth County community programs -->
     <meta name="keywords" content="Forsyth County resources, Cumming GA directory, food pantries Cumming, clinics Forsyth County, community resources, CivicBridge, Georgia civic resources" />
+    <!-- Attribution metadata identifying the civic community project author -->
     <meta name="author" content="Forsyth County CivicBridge Community Project" />
-    
-    <!-- Favicon & PWA Theme -->
+
+    <!-- Browser tab SVG icon and mobile browser chrome accent color -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#92400e" />
 
-    <!-- Open Graph Social Share Cards -->
+    <!-- Open Graph and Twitter social link preview tags -->
     <meta property="og:title" content="CivicBridge | Forsyth County Community Resource Directory" />
     <meta property="og:description" content="Community resource directory for Cumming &amp; Forsyth County, Georgia. Listings include verification information where available." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
 
-    <!-- Google Web Fonts Preconnect -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Preconnect to Google Fonts servers before requesting typography stylesheets -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Load Plus Jakarta Sans body font, Lora display serif font, and JetBrains Mono metadata font -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   </head>
+  <!-- Apply warm Stone background, dark high-contrast text, font smoothing, and amber selection highlight -->
   <body class="bg-stone-50 text-stone-900 antialiased selection:bg-amber-200 selection:text-stone-900">
-    
-    <!-- Fallback accessibility landmark for non-JS / search indexing -->
+    <!-- Accessible fallback directory notice displayed if JavaScript is disabled -->
     <noscript>
       <div style="padding: 1.5rem; background: #fff; border-bottom: 2px solid #92400e; font-family: sans-serif;">
         <h1 style="color: #92400e; font-size: 1.5rem; margin-bottom: 0.5rem;">CivicBridge · Forsyth County Community Resource Directory</h1>
@@ -38,8 +47,9 @@
       </div>
     </noscript>
 
-    <!-- Main React Mount Point -->
+    <!-- Root container mounted by React 19 in src/main.tsx -->
     <div id="root"></div>
+    <!-- Load bundled TypeScript React application entry point -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

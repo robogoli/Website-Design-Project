@@ -1,70 +1,58 @@
-/* ==============================================================================
-   CIVICBRIDGE CUMMING - ADVANCED CSS3 STYLESHEET
-   Cumming & Forsyth County Community Infrastructure
-   Standard: HTML5 Semantic Structure & Handcrafted CSS3 Styling
-   ============================================================================== */
-
+/* Import Tailwind CSS v4 utility engine and default layers */
 @import "tailwindcss";
 
-/* ------------------------------------------------------------------------------
-   1. CSS3 CUSTOM PROPERTIES (DESIGN SYSTEM TOKENS)
-   ------------------------------------------------------------------------------ */
+/* Define root CSS custom properties for colors, fonts, shadows, radii, and transitions */
 :root {
-  /* Brand Palette */
-  --color-primary: #92400e;          /* Civic Amber 800 */
-  --color-primary-dark: #78350f;     /* Civic Amber 900 */
-  --color-primary-light: #fef3c7;    /* Civic Amber 100 */
-  --color-primary-focus: #b45309;    /* Civic Amber 700 */
+  /* Primary civic amber palette tokens */
+  --color-primary: #92400e;
+  --color-primary-dark: #78350f;
 
-  /* Neutral Surface & Text Palette */
-  --color-bg-body: #fafaf9;          /* Stone 50 */
-  --color-surface-card: #ffffff;     /* Pure White */
-  --color-surface-subtle: #f5f5f4;   /* Stone 100 */
-  --color-text-main: #1c1917;        /* Stone 900 (High contrast >= 12:1) */
-  --color-text-muted: #57534e;       /* Stone 600 (Accessible >= 4.5:1) */
-  --color-text-light: #78716c;       /* Stone 500 */
-  --color-border: #e7e5e4;           /* Stone 200 */
-  --color-border-dark: #d6d3d1;      /* Stone 300 */
+  /* Warm neutral page backgrounds, card surfaces, text hierarchy, and borders */
+  --color-bg-body: #fafaf9;
+  --color-surface-card: #ffffff;
+  --color-surface-subtle: #f5f5f4;
+  --color-text-main: #1c1917;
+  --color-text-muted: #57534e;
+  --color-text-light: #78716c;
+  --color-border: #e7e5e4;
+  --color-border-dark: #d6d3d1;
 
-  /* Status Colors */
-  --color-success: #15803d;          /* Green 700 */
-  --color-success-bg: #dcfce7;       /* Green 100 */
-  --color-urgent: #991b1b;           /* Red 800 */
-  --color-urgent-bg: #fee2e2;        /* Red 100 */
-
-  /* Typography */
+  /* Web typography stacks loaded via index.html */
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-serif: 'Lora', Georgia, 'Times New Roman', serif;
   --font-mono: 'JetBrains Mono', SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Elevation Shadows */
+  /* Elevation shadows for subtle cards, hover states, and modal overlays */
   --shadow-subtle: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.09), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
   --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 
-  /* Geometry & Transitions */
-  --radius-sm: 0.375rem;             /* 6px */
-  --radius-md: 0.625rem;             /* 10px */
-  --radius-lg: 0.875rem;             /* 14px */
-  --radius-xl: 1.25rem;              /* 20px */
-  --radius-full: 9999px;
+  /* Shared border radii and easing timing curve */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
   --transition-smooth: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ------------------------------------------------------------------------------
-   2. HTML5 SEMANTIC BASE & RESET
-   ------------------------------------------------------------------------------ */
+/* Enforce border-box sizing across every element and pseudo-element */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
+/* Enable smooth anchor scrolling and preserve 16px base accessibility sizing */
 html {
   font-size: 16px;
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
 }
 
+/* Prevent unintended horizontal overflow across mobile viewports */
+html, body {
+  overflow-x: hidden;
+}
+
+/* Configure full-height flex column layout and base typography on document body */
 body {
   font-family: var(--font-sans);
   background-color: var(--color-bg-body);
@@ -77,6 +65,7 @@ body {
   flex-direction: column;
 }
 
+/* Render semantic section headings in Lora serif font with bold weight */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-serif);
   font-weight: 700;
@@ -84,56 +73,41 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 0;
 }
 
+/* Override heading color inside the dark gradient hero banner for WCAG contrast */
 .hero-banner h1,
 .hero-banner .hero-title {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
+/* Remove default browser italics from address blocks */
 address {
   font-style: normal;
   display: block;
 }
 
+/* Keep clock and date figures aligned horizontally */
 time {
   font-variant-numeric: tabular-nums;
 }
 
-figure {
-  margin: 0;
-}
-
-figcaption {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
+/* Clear default margins and borders around semantic form fieldsets */
 fieldset {
   border: none;
   padding: 0;
   margin: 0;
 }
 
-legend {
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: var(--color-text-main);
-  margin-bottom: 0.5rem;
-}
-
-/* Accessible Keyboard Focus Indicators */
+/* Show a high-visibility amber focus ring for keyboard navigation */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible,
-summary:focus-visible {
+textarea:focus-visible {
   outline: 3px solid #d97706;
   outline-offset: 3px;
 }
 
-/* ------------------------------------------------------------------------------
-   3. STRUCTURAL CONTAINERS & LAYOUT
-   ------------------------------------------------------------------------------ */
+/* Center primary page sections with consistent horizontal padding */
 .civic-container {
   width: 100%;
   max-width: 66rem;
@@ -143,153 +117,7 @@ summary:focus-visible {
   padding-right: 1rem;
 }
 
-.civic-grid-2col {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 1.25rem;
-}
-
-/* ------------------------------------------------------------------------------
-   4. EMERGENCY CRISIS HOTLINE RIBBON
-   ------------------------------------------------------------------------------ */
-.crisis-banner {
-  background-color: var(--color-primary-dark);
-  color: #ffffff;
-  font-size: 0.78rem;
-  font-weight: 500;
-  padding: 0.45rem 1rem;
-  text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.crisis-banner-inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  max-width: 66rem;
-  margin: 0 auto;
-}
-
-.crisis-banner a {
-  color: #ffffff;
-  font-weight: 700;
-  text-decoration: underline;
-  transition: var(--transition-smooth);
-}
-
-.crisis-banner a:hover {
-  color: #fef08a;
-}
-
-/* ------------------------------------------------------------------------------
-   5. HEADER & NAVIGATION STYLES
-   ------------------------------------------------------------------------------ */
-.civic-header {
-  background-color: #ffffff;
-  border-bottom: 1px solid var(--color-border);
-  position: sticky;
-  top: 0;
-  z-index: 40;
-  box-shadow: var(--shadow-subtle);
-}
-
-.civic-header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 0.85rem;
-  padding-bottom: 0.85rem;
-  gap: 1rem;
-}
-
-.civic-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-}
-
-.civic-brand-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  font-weight: 700;
-  box-shadow: 0 2px 4px rgba(146, 64, 14, 0.25);
-}
-
-.civic-brand-title {
-  font-family: var(--font-serif);
-  font-size: 1.25rem;
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--color-text-main);
-  display: block;
-}
-
-.civic-brand-sub {
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
-  display: block;
-}
-
-.civic-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.civic-nav-link {
-  font-family: var(--font-sans);
-  font-size: 0.875rem;
-  font-weight: 600;
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-md);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: var(--transition-smooth);
-}
-
-.civic-nav-link:hover {
-  color: var(--color-text-main);
-  background-color: var(--color-surface-subtle);
-}
-
-.civic-nav-link--active {
-  background-color: var(--color-primary-light);
-  color: var(--color-primary-dark);
-  border-color: rgba(146, 64, 14, 0.2);
-  font-weight: 700;
-}
-
-/* ------------------------------------------------------------------------------
-   6. HERO WELCOME SECTION
-   ------------------------------------------------------------------------------ */
-.hero-card {
-  background-color: var(--color-surface-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  padding: 1.75rem 2rem;
-  box-shadow: var(--shadow-subtle);
-  position: relative;
-  overflow: hidden;
-}
-
+/* Monospace uppercase section eyebrow label */
 .hero-tagline {
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -301,12 +129,14 @@ summary:focus-visible {
   margin-bottom: 0.35rem;
 }
 
+/* Responsive display heading scale for section headers */
 .hero-title {
   font-size: 1.85rem;
   line-height: 1.2;
   margin-bottom: 0.5rem;
 }
 
+/* Constrained readable line width for section intro paragraphs */
 .hero-desc {
   font-size: 0.9rem;
   color: var(--color-text-muted);
@@ -314,106 +144,7 @@ summary:focus-visible {
   margin-bottom: 1.25rem;
 }
 
-/* ------------------------------------------------------------------------------
-   7. SEARCH BAR & FORM CONTROLS
-   ------------------------------------------------------------------------------ */
-.search-wrapper {
-  position: relative;
-  width: 100%;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.85rem 1rem 0.85rem 2.75rem;
-  font-size: 0.95rem;
-  font-family: var(--font-sans);
-  background-color: var(--color-surface-subtle);
-  border: 1px solid var(--color-border-dark);
-  border-radius: var(--radius-lg);
-  color: var(--color-text-main);
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
-  transition: var(--transition-smooth);
-}
-
-.search-input:focus {
-  background-color: #ffffff;
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(146, 64, 14, 0.15);
-  outline: none;
-}
-
-.search-icon-adornment {
-  position: absolute;
-  left: 1rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--color-text-light);
-  pointer-events: none;
-}
-
-.search-clear-btn {
-  position: absolute;
-  right: 0.85rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: var(--color-text-light);
-  cursor: pointer;
-  padding: 0.25rem;
-  border-radius: var(--radius-full);
-}
-
-.search-clear-btn:hover {
-  color: var(--color-text-main);
-}
-
-/* ------------------------------------------------------------------------------
-   8. CATEGORY FILTER PILLS
-   ------------------------------------------------------------------------------ */
-.filter-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.category-pill {
-  font-family: var(--font-sans);
-  font-size: 0.78rem;
-  font-weight: 600;
-  padding: 0.45rem 0.85rem;
-  border-radius: var(--radius-md);
-  background-color: #ffffff;
-  border: 1px solid var(--color-border);
-  color: var(--color-text-main);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  transition: var(--transition-smooth);
-}
-
-.category-pill:hover {
-  background-color: var(--color-surface-subtle);
-  border-color: var(--color-border-dark);
-}
-
-.category-pill--active {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #ffffff;
-  font-weight: 700;
-  box-shadow: 0 2px 4px rgba(146, 64, 14, 0.2);
-}
-
-.category-pill--active:hover {
-  background-color: var(--color-primary-dark);
-  border-color: var(--color-primary-dark);
-}
-
-/* ------------------------------------------------------------------------------
-   9. RESOURCE CARDS (SEMANTIC HTML5 <article>)
-   ------------------------------------------------------------------------------ */
+/* Card surface styling for individual community resource listings */
 .resource-card {
   background-color: var(--color-surface-card);
   border: 1px solid var(--color-border);
@@ -427,12 +158,14 @@ summary:focus-visible {
   position: relative;
 }
 
+/* Subtle lift and darker border on pointer hover over resource cards */
 .resource-card:hover {
   border-color: var(--color-border-dark);
   box-shadow: var(--shadow-card);
   transform: translateY(-2px);
 }
 
+/* Flex row aligning category tag, district, and cost badge inside a card header */
 .resource-header {
   display: flex;
   align-items: flex-start;
@@ -441,6 +174,7 @@ summary:focus-visible {
   margin-bottom: 0.5rem;
 }
 
+/* Uppercase monospace label highlighting the organization's civic category */
 .resource-category-tag {
   font-size: 0.72rem;
   font-weight: 700;
@@ -450,6 +184,7 @@ summary:focus-visible {
   font-family: var(--font-mono);
 }
 
+/* Compact fee-tier badge displayed in resource card headers and modals */
 .resource-cost-badge {
   font-size: 0.72rem;
   font-weight: 600;
@@ -460,6 +195,7 @@ summary:focus-visible {
   color: var(--color-text-muted);
 }
 
+/* Resource organization title inside card grid */
 .resource-title {
   font-size: 1.15rem;
   line-height: 1.25;
@@ -467,6 +203,7 @@ summary:focus-visible {
   color: var(--color-text-main);
 }
 
+/* Concise one-line mission summary below the resource title */
 .resource-tagline {
   font-size: 0.8rem;
   color: var(--color-text-muted);
@@ -474,7 +211,7 @@ summary:focus-visible {
   margin-bottom: 0.85rem;
 }
 
-/* Address & Contact Block in Card */
+/* Divider-separated block containing phone, street address, and service hours */
 .resource-contact-block {
   padding-top: 0.75rem;
   margin-top: 0.5rem;
@@ -486,12 +223,14 @@ summary:focus-visible {
   gap: 0.35rem;
 }
 
+/* Single horizontal row pairing a small icon with contact text */
 .resource-contact-row {
   display: flex;
   align-items: center;
   gap: 0.45rem;
 }
 
+/* High-contrast underlined monospace telephone link */
 .resource-contact-link {
   color: var(--color-text-main);
   font-family: var(--font-mono);
@@ -499,15 +238,17 @@ summary:focus-visible {
   text-decoration: underline;
 }
 
+/* Highlight telephone link in brand amber when hovered */
 .resource-contact-link:hover {
   color: var(--color-primary);
 }
 
-/* Services / Offerings list */
+/* Top spacing wrapper for the services offered checklist */
 .offerings-section {
   margin-top: 0.75rem;
 }
 
+/* Monospace uppercase label preceding the bulleted services list */
 .offerings-heading {
   font-family: var(--font-mono);
   font-size: 0.68rem;
@@ -518,6 +259,7 @@ summary:focus-visible {
   display: block;
 }
 
+/* Two-column compact checklist layout for key services on larger screens */
 .offerings-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -527,6 +269,7 @@ summary:focus-visible {
   margin: 0;
 }
 
+/* Truncate individual service tags cleanly to prevent uneven card stretching */
 .offering-item {
   font-size: 0.72rem;
   color: var(--color-text-muted);
@@ -538,26 +281,7 @@ summary:focus-visible {
   text-overflow: ellipsis;
 }
 
-.offering-bullet {
-  width: 4px;
-  height: 4px;
-  border-radius: var(--radius-full);
-  background-color: var(--color-primary);
-  flex-shrink: 0;
-}
-
-.resource-actions-bar {
-  margin-top: 1rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--color-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* ------------------------------------------------------------------------------
-   10. EVENT CARDS
-   ------------------------------------------------------------------------------ */
+/* Card surface styling for local community event rows */
 .event-card {
   background-color: var(--color-surface-card);
   border: 1px solid var(--color-border);
@@ -570,11 +294,13 @@ summary:focus-visible {
   transition: var(--transition-smooth);
 }
 
+/* Darken border and deepen shadow when hovering an event card */
 .event-card:hover {
   border-color: var(--color-border-dark);
   box-shadow: var(--shadow-card);
 }
 
+/* Monospace amber date and time badge on event cards */
 .event-badge-datetime {
   font-family: var(--font-mono);
   font-size: 0.75rem;
@@ -583,20 +309,20 @@ summary:focus-visible {
   margin-bottom: 0.25rem;
 }
 
+/* Event headline typography sizing */
 .event-title {
   font-size: 1.25rem;
   margin-bottom: 0.35rem;
 }
 
+/* Readable muted event summary copy */
 .event-description {
   font-size: 0.85rem;
   color: var(--color-text-muted);
   line-height: 1.5;
 }
 
-/* ------------------------------------------------------------------------------
-   11. BUTTONS & INTERACTIVE ELEMENTS
-   ------------------------------------------------------------------------------ */
+/* Base pill/rounded button geometry shared across primary and outline actions */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -613,95 +339,30 @@ summary:focus-visible {
   transition: var(--transition-smooth);
 }
 
+/* Solid amber primary action button with white label */
 .btn-primary {
   background-color: var(--color-primary);
   color: #ffffff;
 }
 
+/* Darken primary button surface on hover */
 .btn-primary:hover {
   background-color: var(--color-primary-dark);
 }
 
-.btn-secondary {
-  background-color: var(--color-surface-subtle);
-  border-color: var(--color-border);
-  color: var(--color-text-main);
-}
-
-.btn-secondary:hover {
-  background-color: #e5e5e5;
-  border-color: var(--color-border-dark);
-}
-
+/* Bordered transparent secondary button style */
 .btn-outline {
   background-color: transparent;
   border-color: var(--color-border-dark);
   color: var(--color-text-main);
 }
 
+/* Soft neutral background highlight when hovering outline buttons */
 .btn-outline:hover {
   background-color: var(--color-surface-subtle);
 }
 
-.btn-link {
-  background: none;
-  border: none;
-  padding: 0;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.btn-link:hover {
-  color: var(--color-primary-dark);
-}
-
-/* ------------------------------------------------------------------------------
-   12. HTML5 <details> & <summary> STYLING (COLLAPSIBLE ACCORDION)
-   ------------------------------------------------------------------------------ */
-.civic-details {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background-color: var(--color-surface-card);
-  margin-bottom: 0.75rem;
-  overflow: hidden;
-  transition: var(--transition-smooth);
-}
-
-.civic-details[open] {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-subtle);
-}
-
-.civic-summary {
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 0.75rem 1rem;
-  cursor: pointer;
-  background-color: var(--color-surface-subtle);
-  user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.civic-summary:hover {
-  background-color: #ededec;
-}
-
-.civic-details-content {
-  padding: 1rem;
-  font-size: 0.82rem;
-  color: var(--color-text-muted);
-  line-height: 1.55;
-  border-top: 1px solid var(--color-border);
-}
-
-/* ------------------------------------------------------------------------------
-   13. DATA TABLES & SPECIFICATIONS
-   ------------------------------------------------------------------------------ */
+/* Scrollable rounded frame wrapping wide specification and licensing tables */
 .civic-table-wrapper {
   overflow-x: auto;
   border: 1px solid var(--color-border);
@@ -710,6 +371,7 @@ summary:focus-visible {
   background-color: #ffffff;
 }
 
+/* Full-width collapsed table layout for Standards documentation */
 .civic-table {
   width: 100%;
   border-collapse: collapse;
@@ -717,6 +379,7 @@ summary:focus-visible {
   font-size: 0.8rem;
 }
 
+/* Table header cells with monospace uppercase column titles */
 .civic-table th {
   background-color: var(--color-surface-subtle);
   color: var(--color-text-main);
@@ -728,19 +391,19 @@ summary:focus-visible {
   border-bottom: 1px solid var(--color-border);
 }
 
+/* Standard table data cells separated by hairline horizontal borders */
 .civic-table td {
   padding: 0.65rem 0.85rem;
   border-bottom: 1px solid var(--color-border);
   color: var(--color-text-muted);
 }
 
+/* Omit bottom divider line on the final row of tables */
 .civic-table tr:last-child td {
   border-bottom: none;
 }
 
-/* ------------------------------------------------------------------------------
-   14. MODAL DIALOGS
-   ------------------------------------------------------------------------------ */
+/* Full-viewport blurred backdrop centering active modal sheets */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -754,6 +417,7 @@ summary:focus-visible {
   animation: fadeIn 0.15s ease-out;
 }
 
+/* Centered elevated dialog container with smooth vertical scroll support */
 .modal-dialog {
   background-color: #ffffff;
   border-radius: var(--radius-xl);
@@ -768,6 +432,7 @@ summary:focus-visible {
   animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Top-right circular close icon button inside modals */
 .modal-close {
   position: absolute;
   top: 1rem;
@@ -781,39 +446,31 @@ summary:focus-visible {
   transition: var(--transition-smooth);
 }
 
+/* Highlight close button background when hovered */
 .modal-close:hover {
   color: var(--color-text-main);
   background-color: var(--color-surface-subtle);
 }
 
-/* ------------------------------------------------------------------------------
-   15. CSS3 KEYFRAME ANIMATIONS
-   ------------------------------------------------------------------------------ */
+/* Fade-in keyframe animation for modal overlays */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
+/* Gentle upward entrance animation for modal cards */
 @keyframes slideUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(12px) scale(0.98); 
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0) scale(1); 
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes pulseHighlight {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-  100% { transform: scale(1); }
-}
-
-/* ------------------------------------------------------------------------------
-   16. FOOTER STYLES
-   ------------------------------------------------------------------------------ */
+/* Dark high-contrast global footer anchored at the bottom of the flex column */
 .civic-footer {
   background-color: #1c1917;
   color: #a8a29e;
@@ -823,6 +480,7 @@ summary:focus-visible {
   margin-top: auto;
 }
 
+/* Centered vertical stack layout on mobile screens for footer content */
 .civic-footer-inner {
   display: flex;
   flex-direction: column;
@@ -832,6 +490,7 @@ summary:focus-visible {
   text-align: center;
 }
 
+/* Switch footer inner layout to horizontal row on tablet and desktop widths */
 @media (min-width: 641px) {
   .civic-footer-inner {
     flex-direction: row;
@@ -839,60 +498,33 @@ summary:focus-visible {
   }
 }
 
-/* ------------------------------------------------------------------------------
-   17. CSS3 MEDIA QUERIES (MULTI-DEVICE RESPONSIVENESS)
-   ------------------------------------------------------------------------------ */
-
-/* Mobile Phones (up to 640px) */
+/* Collapse card service checklist to one column and scale titles down on small phones */
 @media screen and (max-width: 640px) {
   .hero-title {
     font-size: 1.45rem;
   }
-  .hero-card {
-    padding: 1.25rem 1rem;
-  }
-  .civic-grid-2col {
-    grid-template-columns: 1fr;
-  }
   .offerings-grid {
     grid-template-columns: 1fr;
   }
-  .civic-header-inner {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .civic-nav {
-    width: 100%;
-    justify-content: space-between;
-  }
-  .civic-nav-link {
-    padding: 0.35rem 0.5rem;
-    font-size: 0.78rem;
-  }
 }
 
-/* Tablets (641px to 1024px) */
+/* Adjust section title scale for medium tablet screens */
 @media screen and (min-width: 641px) and (max-width: 1024px) {
   .hero-title {
     font-size: 1.7rem;
   }
-  .civic-grid-2col {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 
-/* Large Screens (1025px and up) */
+/* Increase section title scale for wide desktop displays */
 @media screen and (min-width: 1025px) {
   .hero-title {
     font-size: 2.1rem;
   }
 }
 
-/* ------------------------------------------------------------------------------
-   18. CSS3 PRINT MEDIA STYLESHEET
-   ------------------------------------------------------------------------------ */
+/* Format clean monochrome caseworker handouts when printing directory pages */
 @media print {
-  header, footer, nav, button, input, .crisis-banner, .filter-toolbar, .modal-overlay {
+  header, footer, nav, button, input, .modal-overlay {
     display: none !important;
   }
   body {
@@ -908,21 +540,7 @@ summary:focus-visible {
   }
 }
 
-/* ------------------------------------------------------------------------------
-   19. COMMUNITY FEEDBACK & RESPONSE CHECK STYLES
-   ------------------------------------------------------------------------------ */
-.feedback-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-@media (min-width: 840px) {
-  .feedback-grid {
-    grid-template-columns: 3fr 2fr;
-  }
-}
-
+/* Card shell surrounding the Community Notes submission form */
 .feedback-card {
   background-color: var(--color-surface-card);
   border: 1px solid var(--color-border);
@@ -931,6 +549,7 @@ summary:focus-visible {
   box-shadow: var(--shadow-subtle);
 }
 
+/* Vertical spacing stack for each labeled form input group */
 .form-group {
   display: flex;
   flex-direction: column;
@@ -938,6 +557,7 @@ summary:focus-visible {
   margin-bottom: 1rem;
 }
 
+/* Form field label row aligning field title and character counter or hint */
 .form-label {
   font-size: 0.8rem;
   font-weight: 700;
@@ -947,6 +567,7 @@ summary:focus-visible {
   align-items: center;
 }
 
+/* Standardized text input, select dropdown, and textarea styling */
 .form-control {
   width: 100%;
   padding: 0.65rem 0.85rem;
@@ -959,84 +580,10 @@ summary:focus-visible {
   transition: var(--transition-smooth);
 }
 
+/* Highlight active form input with white surface and soft amber focus halo */
 .form-control:focus {
   background-color: #ffffff;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(146, 64, 14, 0.15);
   outline: none;
 }
-
-.response-check-receipt {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  animation: slideUp 0.25s ease-out;
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-full);
-  font-size: 0.72rem;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  text-transform: uppercase;
-}
-
-.status-badge--received {
-  background-color: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
-}
-
-.status-badge--verified {
-  background-color: #dcfce7;
-  color: #15803d;
-  border: 1px solid #bbf7d0;
-}
-
-.status-badge--review {
-  background-color: #e0f2fe;
-  color: #0369a1;
-  border: 1px solid #bae6fd;
-}
-
-/* ------------------------------------------------------------------------------
-   20. UTILITY OVERRIDES & TAILWIND V4 HELPERS
-   ------------------------------------------------------------------------------ */
-/* Prevent horizontal scroll bleed on mobile devices */
-html, body {
-  overflow-x: hidden;
-}
-
-/* Ensure smooth line truncation for card descriptions */
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-3 {
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Screen reader only utility class */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
-}
-

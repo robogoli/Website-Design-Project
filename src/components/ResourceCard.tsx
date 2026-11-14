@@ -1,5 +1,5 @@
-// Import React and memo for rendering optimization of individual directory listing cards
-import React, { memo } from 'react';
+// Import memo for rendering optimization of individual directory listing cards
+import { memo } from 'react';
 // Import vector icons from Lucide for phone, address pin, operating hours, and verified badges
 import { Phone, MapPin, Clock, CheckCircle2, PhoneCall, ShieldCheck } from 'lucide-react';
 // Import domain interface definition for directory items

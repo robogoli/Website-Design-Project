@@ -127,7 +127,7 @@ export const CallPromptModal: React.FC<CallPromptModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="btn btn-ghost text-xs justify-center py-3 text-stone-500 hover:text-stone-800 cursor-pointer"
+            className="btn bg-transparent hover:bg-stone-100 text-xs justify-center py-3 text-stone-500 hover:text-stone-800 cursor-pointer"
           >
             Close
           </button>

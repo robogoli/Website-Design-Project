@@ -24,6 +24,48 @@ const TEST_NOTE_IDS = new Set([
   'fb-1794518713218'
 ]);
 
+// Shape of a row stored in the Supabase community_feedbacks PostgreSQL table
+interface FeedbackRow {
+  // Primary unique feedback record ID
+  id: string;
+  // Display name stored in PostgreSQL
+  user_name: string;
+  // Optional organization name referenced by the note
+  resource_name?: string | null;
+  // Selected feedback topic category
+  category: UserFeedback['category'];
+  // Experience rating tag
+  rating: UserFeedback['rating'];
+  // Submitted neighbor note text
+  message: string;
+  // True when author chose anonymous attribution
+  is_anonymous?: boolean;
+  // Human-readable date label recorded at submit time
+  submitted_at: string;
+  // Moderation workflow badge
+  status: UserFeedback['status'];
+  // Aggregate helpful vote count
+  likes_count?: number | null;
+}
+
+// Convert a snake_case Supabase table row into a camelCase UserFeedback object
+function mapFeedbackRow(item: FeedbackRow): UserFeedback {
+  return {
+    id: item.id,
+    userName: item.user_name,
+    // Omit null resource names so optional checks behave consistently
+    resourceName: item.resource_name || undefined,
+    category: item.category,
+    rating: item.rating,
+    message: item.message,
+    isAnonymous: item.is_anonymous,
+    submittedAt: item.submitted_at,
+    status: item.status,
+    // Default null like counts cleanly to zero
+    likesCount: item.likes_count ?? 0
+  };
+}
+
 // Helper function to detect and filter test submissions from being shown on the live community board
 function isTestFeedback(item: { id?: string; message?: string }): boolean {
   // If the ID matches a known test entry, exclude it
@@ -122,22 +164,11 @@ export function useFeedback() {
       // Process and format the database rows if query was successful
       if (!error && data && active) {
         // Filter out any historical test submissions
-        const liveFeedbacks = data.filter(
+        const liveFeedbacks = (data as FeedbackRow[]).filter(
           item => !isTestFeedback({ id: item.id, message: item.message })
         );
         // Map database column names (snake_case) to application types (camelCase)
-        const formatted: UserFeedback[] = liveFeedbacks.map(item => ({
-          id: item.id,
-          userName: item.user_name,
-          resourceName: item.resource_name,
-          category: item.category,
-          rating: item.rating,
-          message: item.message,
-          isAnonymous: item.is_anonymous,
-          submittedAt: item.submitted_at,
-          status: item.status,
-          likesCount: item.likes_count ?? 0
-        }));
+        const formatted: UserFeedback[] = liveFeedbacks.map(mapFeedbackRow);
 
         // Combine live cloud notes with verified baseline community notes
         setFeedbacks([...formatted, ...INITIAL_COMMUNITY_FEEDBACKS]);
@@ -156,23 +187,12 @@ export function useFeedback() {
         { event: 'INSERT', schema: 'public', table: 'community_feedbacks' },
         (payload) => {
           // Extract the new row data from the database event payload
-          const newItem = payload.new;
+          const newItem = payload.new as FeedbackRow;
           // Ignore if payload matches test criteria
           if (isTestFeedback({ id: newItem.id, message: newItem.message })) return;
 
           // Format new database record into standard frontend UserFeedback structure
-          const incomingNote: UserFeedback = {
-            id: newItem.id,
-            userName: newItem.user_name,
-            resourceName: newItem.resource_name,
-            category: newItem.category,
-            rating: newItem.rating,
-            message: newItem.message,
-            isAnonymous: newItem.is_anonymous,
-            submittedAt: newItem.submitted_at,
-            status: newItem.status,
-            likesCount: newItem.likes_count ?? 0
-          };
+          const incomingNote = mapFeedbackRow(newItem);
 
           // Prepend the new note to local feedback state avoiding duplicates
           setFeedbacks(prev => {
