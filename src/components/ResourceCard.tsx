@@ -1,7 +1,7 @@
 // Import memo for rendering optimization of individual directory listing cards
 import { memo } from 'react';
-// Import vector icons from Lucide for phone, address pin, operating hours, and verified badges
-import { Phone, MapPin, Clock, CheckCircle2, PhoneCall, ShieldCheck } from 'lucide-react';
+// Import vector icons from Lucide for phone, address pin, operating hours, verified badges, and starring
+import { Phone, MapPin, Clock, CheckCircle2, PhoneCall, ShieldCheck, Star } from 'lucide-react';
 // Import domain interface definition for directory items
 import { ResourceItem } from '../types';
 
@@ -13,6 +13,10 @@ interface ResourceCardProps {
   onSelect: (resource: ResourceItem) => void;
   // Callback function invoked when visitor clicks to call the verified phone number
   onCall: (phone: string, resourceName: string) => void;
+  // Indicates whether the visitor has starred this resource for quick reference
+  isStarred?: boolean;
+  // Optional callback toggling the starred bookmark status for this resource
+  onToggleStar?: (id: string) => void;
 }
 
 // Memoized resource card component preventing unnecessary re-renders when parent states change
@@ -20,15 +24,19 @@ export const ResourceCard = memo(function ResourceCard({
   resource,
   onSelect,
   onCall,
+  isStarred = false,
+  onToggleStar,
 }: ResourceCardProps) {
   return (
     // Semantic HTML article landmark representing an independent, reusable community directory card
     <article
       id={`res-${resource.id}`}
-      className="resource-card flex flex-col justify-between transition-all"
+      className={`resource-card flex flex-col justify-between transition-all ${
+        isStarred ? 'ring-1 ring-amber-400/70 border-amber-300' : ''
+      }`}
     >
       <div>
-        {/* Card header holding civic category tag, county district, and cost badge */}
+        {/* Card header holding civic category tag, county district, cost badge, and star toggle */}
         <header className="resource-header flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-1.5 flex-wrap">
             {/* Category badge */}
@@ -38,8 +46,32 @@ export const ResourceCard = memo(function ResourceCard({
               {resource.district}
             </span>
           </div>
-          {/* Cost badge (e.g. Free, Sliding Scale, Subsidized) */}
-          <span className="resource-cost-badge shrink-0">{resource.cost}</span>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Cost badge (e.g. Free, Sliding Scale, Subsidized) */}
+            <span className="resource-cost-badge">{resource.cost}</span>
+
+            {/* Interactive star toggle button bookmarking the resource in localStorage */}
+            {onToggleStar && (
+              <button
+                type="button"
+                onClick={() => onToggleStar(resource.id)}
+                aria-pressed={isStarred}
+                aria-label={isStarred ? `Remove star from ${resource.name}` : `Star ${resource.name}`}
+                title={isStarred ? 'Remove star' : 'Star resource'}
+                className={`p-1.5 rounded-lg border transition-colors cursor-pointer ${
+                  isStarred
+                    ? 'bg-amber-50 border-amber-300 text-amber-600 hover:bg-amber-100'
+                    : 'bg-white border-stone-200 text-stone-400 hover:text-amber-600 hover:border-amber-300'
+                }`}
+              >
+                <Star
+                  className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-500 text-amber-600' : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+            )}
+          </div>
         </header>
 
         {/* Organization name rendered in readable serif font */}

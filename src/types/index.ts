@@ -107,10 +107,6 @@ export interface CommunityEvent {
   organizer: string;
   // Phone number for RSVP or organizer inquiries
   contactPhone: string;
-  // Current registered participant count
-  attendeeCount: number;
-  // Maximum venue participant capacity
-  maxCapacity: number;
   // Indicates whether complimentary food or beverages are provided
   freeRefreshments: boolean;
   // Indicates whether on-site childcare is offered during the event

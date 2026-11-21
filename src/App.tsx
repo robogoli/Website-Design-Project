@@ -1,7 +1,7 @@
 // Import React core hooks, Suspense boundary, and lazy-loading utility
 import React, { useState, useEffect, Suspense, lazy } from 'react';
-// Import vector icons from Lucide icon library for scroll controls and notification banners
-import { ArrowDown, ArrowUp, Bell, X } from 'lucide-react';
+// Import vector icons from Lucide icon library for scroll controls, starring, and notification banners
+import { ArrowDown, ArrowUp, Bell, Star, X } from 'lucide-react';
 
 // Import domain interfaces for community listings and Forsyth County geographic districts
 import { ResourceItem, DistrictType } from './types';
@@ -38,7 +38,7 @@ export function App() {
   // Navigation tab state tracking the active screen: 'resources', 'events', 'feedback', or 'about'
   const [currentTab, setCurrentTab] = useState<TabKey>('resources');
 
-  // Deconstruct resource searching, category filtering, and community checkmark controls from custom hook
+  // Deconstruct resource searching, category filtering, starring, recency sort, and community checkmark controls from custom hook
   const {
     resources: filteredResources,
     allResources,
@@ -48,10 +48,18 @@ export function App() {
     setSearchQuery,
     selectedDistrict,
     setSelectedDistrict,
+    showStarredOnly,
+    setShowStarredOnly,
+    sortByRecent,
+    setSortByRecent,
     isFiltered,
     resetFilters,
     userConfirmations,
-    toggleUserConfirmation
+    toggleUserConfirmation,
+    starredResources,
+    starredList,
+    starredCount,
+    toggleStarResource
   } = useResources();
 
   // Deconstruct real-time community notes, like counters, and toast notifications from custom hook
@@ -305,7 +313,7 @@ export function App() {
                 </div>
               </div>
 
-              {/* District pills and reset filter controls */}
+              {/* District pills, starred filter, recency sort, and reset controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-stone-100">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide mr-1">
@@ -327,18 +335,87 @@ export function App() {
                   ))}
                 </div>
 
-                {/* Show reset button when any filter is active */}
-                {isFiltered && (
+                {/* Starred bookmarks filter, verification recency toggle, and reset link */}
+                <div className="flex items-center gap-2 flex-wrap">
                   <button
                     type="button"
-                    onClick={resetFilters}
-                    className="text-xs text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer self-start sm:self-auto"
+                    onClick={() => setShowStarredOnly(prev => !prev)}
+                    aria-pressed={showStarredOnly}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
+                      showStarredOnly
+                        ? 'bg-amber-100 text-amber-950 border-amber-400 shadow-2xs'
+                        : 'bg-white hover:bg-amber-50 text-stone-700 border-stone-300'
+                    }`}
                   >
-                    Reset filters
+                    <Star
+                      className={`w-3.5 h-3.5 ${
+                        showStarredOnly || starredCount > 0
+                          ? 'fill-amber-500 text-amber-600'
+                          : 'text-stone-400'
+                      }`}
+                      aria-hidden="true"
+                    />
+                    <span>Starred ({starredCount})</span>
                   </button>
-                )}
+
+                  <label
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border border-stone-200 bg-stone-50 hover:bg-stone-100 text-stone-700 transition-colors cursor-pointer select-none"
+                    title="Sort listings with the most recently verified dates first"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={sortByRecent}
+                      onChange={(e) => setSortByRecent(e.target.checked)}
+                      className="w-3.5 h-3.5 accent-amber-800 rounded cursor-pointer"
+                    />
+                    <span>Recently verified first</span>
+                  </label>
+
+                  {/* Show reset button when any filter is active */}
+                  {isFiltered && (
+                    <button
+                      type="button"
+                      onClick={resetFilters}
+                      className="text-xs text-amber-800 hover:text-amber-950 font-bold underline cursor-pointer"
+                    >
+                      Reset filters
+                    </button>
+                  )}
+                </div>
               </div>
             </section>
+
+            {/* Quick-access grid showing visitor's starred resources above categories when unfiltered */}
+            {!isFiltered && starredList.length > 0 && (
+              <section className="space-y-3" aria-label="Your Starred Resources">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <h2 className="text-base sm:text-lg font-bold font-serif text-stone-900 flex items-center gap-2">
+                    <Star className="w-4 h-4 fill-amber-500 text-amber-600" aria-hidden="true" />
+                    <span>Your Starred Resources ({starredList.length})</span>
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setShowStarredOnly(true)}
+                    className="text-xs font-bold text-amber-800 hover:text-amber-950 underline cursor-pointer"
+                  >
+                    Filter to Starred Only &rarr;
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {starredList.map((res) => (
+                    <ResourceCard
+                      key={`starred-${res.id}`}
+                      resource={res}
+                      onSelect={setActiveResource}
+                      onCall={handleInitiateCall}
+                      isStarred={true}
+                      onToggleStar={toggleStarResource}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* Display category discovery cards when unfiltered, or matching ResourceCards when filtered */}
             {!isFiltered ? (
@@ -406,17 +483,23 @@ export function App() {
                         resource={res}
                         onSelect={setActiveResource}
                         onCall={handleInitiateCall}
+                        isStarred={!!starredResources[res.id]}
+                        onToggleStar={toggleStarResource}
                       />
                     ))}
                   </div>
                 ) : (
-                  // Empty state when search keywords produce no results
+                  // Empty state when search keywords or starred-only filter produce no results
                   <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
                     <p className="text-base font-semibold text-stone-800">
-                      No organizations matched your current filters.
+                      {showStarredOnly
+                        ? 'No starred resources match your current filters.'
+                        : 'No organizations matched your current filters.'}
                     </p>
                     <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                      Try searching with fewer keywords, selecting &ldquo;All Districts&rdquo;, or resetting your filters.
+                      {showStarredOnly
+                        ? 'Click the star icon on any resource card or modal to save your favorite local contacts here.'
+                        : 'Try searching with fewer keywords, selecting “All Districts”, or resetting your filters.'}
                     </p>
                     <button
                       type="button"
@@ -487,6 +570,8 @@ export function App() {
           onCall={handleInitiateCall}
           isQuickChecked={userConfirmations[activeResource.id]}
           onQuickCheck={(id) => toggleUserConfirmation(id)}
+          isStarred={!!starredResources[activeResource.id]}
+          onToggleStar={toggleStarResource}
           feedbacks={feedbacks}
           onSuggestUpdate={(name) => {
             setActiveResource(null);
@@ -582,6 +667,8 @@ export function App() {
         onSelectResource={(res) => setActiveResource(res)}
         onInitiateCall={handleInitiateCall}
         userName={userName}
+        starredResources={starredResources}
+        onToggleStar={toggleStarResource}
       />
 
       {/* Quick scroll toggle button (top/bottom) */}

@@ -10,7 +10,8 @@ import {
   ArrowUpRight,
   Phone,
   Info,
-  ShieldCheck
+  ShieldCheck,
+  Star
 } from 'lucide-react';
 // Import domain type for Forsyth County community resource records
 import { ResourceItem } from '../types';
@@ -41,6 +42,10 @@ interface CivicChatbotProps {
   onInitiateCall?: (phone: string, resourceName: string) => void;
   // Optional visitor nickname displayed inside the initial welcome message
   userName?: string;
+  // Optional lookup map of resource IDs starred by the visitor
+  starredResources?: Record<string, boolean>;
+  // Optional callback toggling the starred status of a resource
+  onToggleStar?: (id: string) => void;
 }
 
 // Quick-tap category chips shown across the top of the guide drawer
@@ -455,7 +460,9 @@ function rankFoodResources(query: string): ResourceItem[] {
 export const CivicChatbot: React.FC<CivicChatbotProps> = ({
   onSelectResource,
   onInitiateCall,
-  userName = ''
+  userName = '',
+  starredResources = {},
+  onToggleStar
 }) => {
   // Controls whether the guide drawer is open or minimized as a floating pill
   const [isOpen, setIsOpen] = useState(false);
@@ -863,9 +870,31 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
                                   </strong>
                                 </div>
 
-                                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-stone-200/70 text-stone-700 shrink-0">
-                                  {res.cost}
-                                </span>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-stone-200/70 text-stone-700">
+                                    {res.cost}
+                                  </span>
+
+                                  {onToggleStar && (
+                                    <button
+                                      type="button"
+                                      onClick={() => onToggleStar(res.id)}
+                                      aria-pressed={!!starredResources[res.id]}
+                                      aria-label={starredResources[res.id] ? `Remove star from ${res.name}` : `Star ${res.name}`}
+                                      title={starredResources[res.id] ? 'Remove star' : 'Star resource'}
+                                      className={`p-1 rounded border transition-colors cursor-pointer ${
+                                        starredResources[res.id]
+                                          ? 'bg-amber-50 border-amber-300 text-amber-600'
+                                          : 'bg-white border-stone-200 text-stone-400 hover:text-amber-600'
+                                      }`}
+                                    >
+                                      <Star
+                                        className={`w-3 h-3 ${starredResources[res.id] ? 'fill-amber-500 text-amber-600' : ''}`}
+                                        aria-hidden="true"
+                                      />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
 
                               {/* Eligibility callout strip */}

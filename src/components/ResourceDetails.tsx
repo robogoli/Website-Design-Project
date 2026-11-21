@@ -14,7 +14,8 @@ import {
   ThumbsUp,
   ThumbsDown,
   Info,
-  MessageSquare
+  MessageSquare,
+  Star
 } from 'lucide-react';
 // Import domain types for the inspected resource and matching resident notes
 import { ResourceItem, UserFeedback } from '../types';
@@ -33,6 +34,10 @@ interface ResourceDetailsProps {
   isQuickChecked?: boolean;
   // Callback recording a listing accuracy confirmation
   onQuickCheck?: (id: string) => void;
+  // True if the visitor has starred this listing for quick reference
+  isStarred?: boolean;
+  // Callback toggling the starred bookmark status for this listing
+  onToggleStar?: (id: string) => void;
   // Callback redirecting the visitor to the feedback form pre-filled with this resource
   onSuggestUpdate?: (resourceName: string) => void;
   // Full community feedback list filtered below for notes matching this organization
@@ -46,6 +51,8 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
   onCall,
   isQuickChecked = false,
   onQuickCheck,
+  isStarred = false,
+  onToggleStar,
   onSuggestUpdate,
   feedbacks = []
 }) => {
@@ -347,26 +354,49 @@ export const ResourceDetails: React.FC<ResourceDetailsProps> = ({
           )}
         </div>
 
-        {/* Sticky modal footer with Close and Call actions */}
-        <footer className="pt-3 border-t border-stone-100 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn btn-outline text-xs cursor-pointer"
-          >
-            Close
-          </button>
-          <a
-            href={`tel:${resource.phone.replace(/[^\d+]/g, '')}`}
-            onClick={(e) => {
-              e.preventDefault();
-              onCall(resource.phone, resource.name);
-            }}
-            className="btn btn-primary text-xs inline-flex items-center gap-1.5 cursor-pointer"
-          >
-            <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Call {resource.phone}</span>
-          </a>
+        {/* Sticky modal footer with Star, Close, and Call actions */}
+        <footer className="pt-3 border-t border-stone-100 flex items-center justify-between gap-2 flex-wrap">
+          {onToggleStar ? (
+            <button
+              type="button"
+              onClick={() => onToggleStar(resource.id)}
+              aria-pressed={isStarred}
+              className={`btn text-xs inline-flex items-center gap-1.5 cursor-pointer border ${
+                isStarred
+                  ? 'bg-amber-50 border-amber-300 text-amber-900 hover:bg-amber-100'
+                  : 'btn-outline'
+              }`}
+            >
+              <Star
+                className={`w-3.5 h-3.5 ${isStarred ? 'fill-amber-500 text-amber-600' : 'text-stone-400'}`}
+                aria-hidden="true"
+              />
+              <span>{isStarred ? 'Starred' : 'Star Resource'}</span>
+            </button>
+          ) : (
+            <span />
+          )}
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn btn-outline text-xs cursor-pointer"
+            >
+              Close
+            </button>
+            <a
+              href={`tel:${resource.phone.replace(/[^\d+]/g, '')}`}
+              onClick={(e) => {
+                e.preventDefault();
+                onCall(resource.phone, resource.name);
+              }}
+              className="btn btn-primary text-xs inline-flex items-center gap-1.5 cursor-pointer"
+            >
+              <PhoneCall className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Call {resource.phone}</span>
+            </a>
+          </div>
         </footer>
       </div>
     </div>

@@ -1,7 +1,7 @@
 // Import React and useState hook for managing district filter selection
 import React, { useState } from 'react';
-// Import Lucide icons representing venue, calling, attendees, refreshments, childcare, dates, and verification
-import { MapPin, PhoneCall, Users, Coffee, Baby, Calendar, ShieldCheck } from 'lucide-react';
+// Import Lucide icons representing venue, calling, refreshments, childcare, dates, and verification
+import { MapPin, PhoneCall, Coffee, Baby, Calendar, ShieldCheck } from 'lucide-react';
 // Import Forsyth County district union type for typed filter pills
 import { DistrictType } from '../types';
 // Import curated list of verified local Forsyth County community events
@@ -13,10 +13,68 @@ interface EventsSectionProps {
   onCall: (phone: string, title: string) => void;
 }
 
-// Section view displaying verified Forsyth County community gatherings filterable by district
+// Parse an event display date string (e.g., "Saturday, Nov 21, 2026") into a local midnight Date
+function parseEventDate(dateStr: string): Date | null {
+  // Remove leading weekday prefix so Date.parse interprets month/day/year reliably
+  const withoutWeekday = dateStr.replace(/^[A-Za-z]+,\s*/, '').trim();
+  const parsed = new Date(`${withoutWeekday} 00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// Parse an event's starting clock time (e.g., "8:30 AM – 10:30 AM") into minutes since midnight
+function parseEventStartMinutes(timeStr: string): number {
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return 0;
+  let hours = parseInt(match[1], 10) % 12;
+  const minutes = parseInt(match[2], 10);
+  if (match[3].toUpperCase() === 'PM') hours += 12;
+  return hours * 60 + minutes;
+}
+
+// Compute a concise recency status badge comparing an event date against today's local date
+function getEventRecencyBadge(dateStr: string): { label: string; style: string; isPast: boolean } | null {
+  const eventDate = parseEventDate(dateStr);
+  if (!eventDate) return null;
+
+  // Normalize today's local date to midnight for clean calendar-day comparison
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diffDays = Math.round((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) {
+    return {
+      label: 'Past Event',
+      style: 'bg-stone-100 text-stone-600 border-stone-200',
+      isPast: true
+    };
+  }
+  if (diffDays === 0) {
+    return {
+      label: 'Happening Today',
+      style: 'bg-amber-100 text-amber-950 border-amber-300',
+      isPast: false
+    };
+  }
+  if (diffDays <= 7) {
+    return {
+      label: 'This Week',
+      style: 'bg-sky-50 text-sky-900 border-sky-200',
+      isPast: false
+    };
+  }
+  return {
+    label: 'Upcoming',
+    style: 'bg-stone-50 text-stone-700 border-stone-200',
+    isPast: false
+  };
+}
+
+// Section view displaying verified Forsyth County community gatherings filterable by district and recency
 export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
   // Currently selected county district filter ('all' displays every event)
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictType | 'all'>('all');
+  // Toggle hiding past events when viewing upcoming gatherings
+  const [upcomingOnly, setUpcomingOnly] = useState(true);
 
   // Ordered list of Forsyth County district options for filter buttons
   const districts: Array<DistrictType | 'all'> = [
@@ -28,13 +86,25 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
     'West Forsyth'
   ];
 
-  // Filter events matching the selected district or include all when 'all' is chosen
-  const filteredEvents = COMMUNITY_EVENTS.filter((evt) => {
-    if (selectedDistrict !== 'all' && evt.district !== selectedDistrict) {
-      return false;
-    }
-    return true;
-  });
+  // Filter events matching district/recency and sort chronologically with nearest upcoming dates first
+  const filteredEvents = COMMUNITY_EVENTS
+    .filter((evt) => {
+      if (selectedDistrict !== 'all' && evt.district !== selectedDistrict) {
+        return false;
+      }
+      if (upcomingOnly) {
+        const badge = getEventRecencyBadge(evt.date);
+        if (badge?.isPast) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      // Order chronologically from most recent (nearest) date down to farthest away date
+      const timeA = parseEventDate(a.date)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+      const timeB = parseEventDate(b.date)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+      if (timeA !== timeB) return timeA - timeB;
+      return parseEventStartMinutes(a.time) - parseEventStartMinutes(b.time);
+    });
 
   return (
     <div className="civic-container space-y-6">
@@ -51,29 +121,46 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           Upcoming community drives, food box distributions, and family nights around Cumming and Forsyth County. Every listed event has had its schedule and contact details independently verified with the organizer.
         </p>
 
-        {/* Horizontal row of district filter pills */}
-        <div className="flex items-center gap-1.5 flex-wrap pt-2">
-          <span className="text-xs text-stone-500 font-medium mr-1">District:</span>
-          {districts.map((dist) => (
-            <button
-              key={dist}
-              type="button"
-              onClick={() => setSelectedDistrict(dist)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
-                selectedDistrict === dist
-                  ? 'bg-amber-800 text-white font-semibold shadow-2xs'
-                  : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
-              }`}
-            >
-              {dist === 'all' ? 'All Districts' : dist}
-            </button>
-          ))}
+        {/* Horizontal row of district filter pills and upcoming-events toggle */}
+        <div className="flex items-center justify-between gap-2 flex-wrap pt-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-xs text-stone-500 font-medium mr-1">District:</span>
+            {districts.map((dist) => (
+              <button
+                key={dist}
+                type="button"
+                onClick={() => setSelectedDistrict(dist)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                  selectedDistrict === dist
+                    ? 'bg-amber-800 text-white font-semibold shadow-2xs'
+                    : 'bg-stone-100 hover:bg-stone-200 text-stone-700'
+                }`}
+              >
+                {dist === 'all' ? 'All Districts' : dist}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setUpcomingOnly(prev => !prev)}
+            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
+              upcomingOnly
+                ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
+                : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'
+            }`}
+          >
+            {upcomingOnly ? 'Showing Upcoming & Today' : 'Showing All Dates'}
+          </button>
         </div>
       </header>
 
       {/* Vertical stack of matching community event cards */}
       <div className="space-y-4">
-        {filteredEvents.map((evt) => (
+        {filteredEvents.map((evt) => {
+          // Determine calendar recency pill relative to the visitor's current date
+          const recencyBadge = getEventRecencyBadge(evt.date);
+          return (
           // Individual event card article with metadata badges, venue, and organizer call button
           <article
             key={evt.id}
@@ -81,13 +168,19 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-2 max-w-xl">
-                {/* Date, district, verification, refreshments, and childcare badges */}
+                {/* Date, recency status, district, verification, refreshments, and childcare badges */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="event-badge-datetime inline-flex items-center gap-1.5 text-xs font-mono font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
                     <time dateTime={evt.date}>{evt.date}</time>
                     <span>·</span>
                     <span>{evt.time}</span>
                   </div>
+
+                  {recencyBadge && (
+                    <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border ${recencyBadge.style}`}>
+                      {recencyBadge.label}
+                    </span>
+                  )}
 
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-stone-100 text-stone-700 border border-stone-200">
                     {evt.district}
@@ -119,17 +212,12 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
                   {evt.description}
                 </p>
 
-                {/* Semantic address block displaying venue location, host organization, and attendance */}
+                {/* Semantic address block displaying venue location and host organization */}
                 <address className="flex flex-wrap items-center gap-2 text-xs text-stone-500 pt-1 not-italic">
                   <MapPin className="w-3.5 h-3.5 text-stone-400 shrink-0" aria-hidden="true" />
                   <span className="text-stone-700 font-medium">{evt.location}</span>
                   <span aria-hidden="true">·</span>
                   <span>Organized by {evt.organizer}</span>
-                  <span aria-hidden="true">·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Users className="w-3 h-3 text-stone-400" />
-                    <span>{evt.attendeeCount} / {evt.maxCapacity} registered</span>
-                  </span>
                 </address>
               </div>
 
@@ -148,7 +236,8 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
               </a>
             </div>
           </article>
-        ))}
+          );
+        })}
 
         {/* Empty state shown if a selected district has zero scheduled events */}
         {filteredEvents.length === 0 && (

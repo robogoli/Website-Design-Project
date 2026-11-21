@@ -5,7 +5,16 @@ import { CategoryType, DistrictType } from '../types';
 // Import the comprehensive 213 verified community resources data array
 import { COMMUNITY_RESOURCES } from '../data/mockData';
 
-// Custom hook that encapsulates all directory filtering, text querying, and user verification logic
+// Parse a formatted verification date label (e.g., "Verified Nov 21, 2026") into a comparable timestamp
+function parseVerificationTimestamp(verificationDate?: string): number {
+  if (!verificationDate) return 0;
+  // Strip the leading "Verified " prefix before parsing the calendar date
+  const cleaned = verificationDate.replace(/^Verified\s+/i, '').trim();
+  const parsed = Date.parse(cleaned);
+  return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+// Custom hook that encapsulates directory filtering, recency sorting, resource starring, and user verification logic
 export function useResources() {
   // Active civic category filter state ('all' displays every category)
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'all'>('all');
@@ -15,6 +24,12 @@ export function useResources() {
   
   // Geographic zone filter state across Forsyth County ('all' or specific county district)
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictType>('all');
+
+  // Toggle restricting directory results to resources starred by the current visitor
+  const [showStarredOnly, setShowStarredOnly] = useState(false);
+
+  // Checkbox flag allowing visitors to optionally sort listings by most recently verified first
+  const [sortByRecent, setSortByRecent] = useState(false);
   
   // Persistent map of resources the current visitor has checked or marked as confirmed
   const [userConfirmations, setUserConfirmations] = useState<Record<string, boolean>>(() => {
@@ -29,19 +44,41 @@ export function useResources() {
     }
   });
 
+  // Persistent map of resources bookmarked/starred by the current visitor
+  const [starredResources, setStarredResources] = useState<Record<string, boolean>>(() => {
+    try {
+      // Read saved starred resource IDs from localStorage
+      const saved = localStorage.getItem('civicbridge_starred_resources');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      // Fall back to an empty dictionary if browser storage is unavailable
+      return {};
+    }
+  });
+
   // Derived boolean flag checking whether any filter or search query is currently active
   const isFiltered = useMemo(() => {
-    // True if a keyword search, category selection, or district filter has been applied
-    return searchQuery.trim() !== '' || selectedCategory !== 'all' || selectedDistrict !== 'all';
-  }, [searchQuery, selectedCategory, selectedDistrict]);
+    // True if a keyword search, category selection, district filter, or starred filter is active
+    return (
+      searchQuery.trim() !== '' ||
+      selectedCategory !== 'all' ||
+      selectedDistrict !== 'all' ||
+      showStarredOnly
+    );
+  }, [searchQuery, selectedCategory, selectedDistrict, showStarredOnly]);
 
-  // Memoized array of filtered resources recalculated only when search or filter criteria change
+  // Memoized array of filtered and sorted resources recalculated when filters or stars change
   const filteredResources = useMemo(() => {
     // Normalize user search query into lowercase and trim whitespace
     const q = searchQuery.toLowerCase().trim();
 
     // Filter the primary community resources master list against active criteria
-    return COMMUNITY_RESOURCES.filter(item => {
+    const matches = COMMUNITY_RESOURCES.filter(item => {
+      // Restrict to starred items when the starred-only filter is enabled
+      if (showStarredOnly && !starredResources[item.id]) {
+        return false;
+      }
+
       // Filter out resources whose category does not match the active selection
       if (selectedCategory !== 'all' && item.category !== selectedCategory) {
         return false;
@@ -89,7 +126,29 @@ export function useResources() {
       // Include all resources that passed category and district filters when query is empty
       return true;
     });
-  }, [searchQuery, selectedCategory, selectedDistrict]);
+
+    // Sort listings by most recent verification date only when the visitor checks the option
+    if (sortByRecent) {
+      return [...matches].sort(
+        (a, b) =>
+          parseVerificationTimestamp(b.verificationDate) -
+          parseVerificationTimestamp(a.verificationDate)
+      );
+    }
+
+    return matches;
+  }, [searchQuery, selectedCategory, selectedDistrict, showStarredOnly, starredResources, sortByRecent]);
+
+  // Precomputed list of starred resources sorted by verification recency for quick access
+  const starredList = useMemo(() => {
+    return COMMUNITY_RESOURCES
+      .filter(item => starredResources[item.id])
+      .sort(
+        (a, b) =>
+          parseVerificationTimestamp(b.verificationDate) -
+          parseVerificationTimestamp(a.verificationDate)
+      );
+  }, [starredResources]);
 
   // Handler allowing a user to toggle community verification checkmark on an organization
   const toggleUserConfirmation = (id: string) => {
@@ -106,6 +165,26 @@ export function useResources() {
     });
   };
 
+  // Handler allowing a user to star or unstar a resource for quick bookmark access
+  const toggleStarResource = (id: string) => {
+    setStarredResources(prev => {
+      // Copy previous star map and toggle the requested listing ID
+      const updated = { ...prev };
+      if (updated[id]) {
+        delete updated[id];
+      } else {
+        updated[id] = true;
+      }
+      try {
+        // Persist starred resource IDs to browser localStorage
+        localStorage.setItem('civicbridge_starred_resources', JSON.stringify(updated));
+      } catch {
+        // Ignore storage quota or privacy-mode write restrictions
+      }
+      return updated;
+    });
+  };
+
   // Reset all filters back to default values to view the entire countywide directory
   const resetFilters = () => {
     // Reset category dropdown / tabs back to all
@@ -114,6 +193,10 @@ export function useResources() {
     setSearchQuery('');
     // Reset district selection back to all
     setSelectedDistrict('all');
+    // Clear the starred-only filter toggle
+    setShowStarredOnly(false);
+    // Return listing sort order back to normal
+    setSortByRecent(false);
   };
 
   // Expose state variables and manipulation methods to consuming components
@@ -136,6 +219,14 @@ export function useResources() {
     selectedDistrict,
     // Setter function to update the selected district
     setSelectedDistrict,
+    // Whether only starred listings are currently displayed
+    showStarredOnly,
+    // Setter toggling the starred-only filter
+    setShowStarredOnly,
+    // Checkbox state controlling whether recently verified listings appear first
+    sortByRecent,
+    // Setter toggling the recently-verified sort checkbox
+    setSortByRecent,
     // Boolean indicator for showing reset buttons and result counts
     isFiltered,
     // Action to clear all filters simultaneously
@@ -143,6 +234,14 @@ export function useResources() {
     // Dictionary of user verification status per resource
     userConfirmations,
     // Action to toggle a resource's verified checkmark
-    toggleUserConfirmation
+    toggleUserConfirmation,
+    // Dictionary of visitor-starred resource IDs
+    starredResources,
+    // Filtered array of starred ResourceItem records
+    starredList,
+    // Total number of starred resources saved by the visitor
+    starredCount: starredList.length,
+    // Action to star or unstar a resource
+    toggleStarResource
   };
 }
