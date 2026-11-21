@@ -7,9 +7,10 @@ import { ArrowDown, ArrowUp, Bell, Star, X } from 'lucide-react';
 import { ResourceItem, DistrictType } from './types';
 // Import pre-defined civic categories metadata
 import { CATEGORIES } from './data/mockData';
-// Import custom business logic hooks for directory resources and community feedback
+// Import custom business logic hooks for directory resources, community feedback, and browser stats
 import { useResources } from './hooks/useResources';
 import { useFeedback } from './hooks/useFeedback';
+import { useSiteStats } from './hooks/useSiteStats';
 // Import typo-recovery category suggestions helper
 import { suggestSearchCorrections } from './utils/resourceSearch';
 
@@ -80,6 +81,15 @@ export function App() {
     toggleLike,
     likedFeedbacks
   } = useFeedback();
+
+  // Deconstruct cross-browser unique viewer counter and site-wide like state
+  const {
+    uniqueViews,
+    likesCount,
+    hasLiked,
+    isUpdatingLike,
+    toggleSiteLike
+  } = useSiteStats();
 
   // Active resource item selected for viewing full contact, eligibility, and verification details in modal
   const [activeResource, setActiveResource] = useState<ResourceItem | null>(null);
@@ -263,7 +273,7 @@ export function App() {
         Skip to main content
       </a>
 
-      {/* Global header navigation with crisis hotline quick-dial and personalized greeting */}
+      {/* Global header navigation with crisis hotline quick-dial, greeting, view counter, and like button */}
       <Navbar
         currentTab={currentTab}
         onSelectTab={setCurrentTab}
@@ -273,6 +283,11 @@ export function App() {
           setShowWelcomeModal(true);
         }}
         onCall={handleInitiateCall}
+        uniqueViews={uniqueViews}
+        likesCount={likesCount}
+        hasLiked={hasLiked}
+        isUpdatingLike={isUpdatingLike}
+        onToggleSiteLike={toggleSiteLike}
       />
 
       {/* HTML5 datalist providing native autocomplete across all categories and verified listings */}
