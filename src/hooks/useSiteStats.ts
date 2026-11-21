@@ -105,10 +105,10 @@ export function useSiteStats() {
   }, []);
 
   return {
-    viewCount,
-    likeCount,
-    hasLiked,
-    isLoading,
-    toggleLike,
-  };
+  uniqueViews: viewCount,
+  likesCount: likeCount,
+  hasLiked,
+  isUpdatingLike: isLoading,
+  toggleSiteLike: toggleLike,
+};
 }
