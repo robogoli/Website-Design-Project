@@ -121,9 +121,29 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           Upcoming community drives, food box distributions, and family nights around Cumming and Forsyth County. Every listed event has had its schedule and contact details independently verified with the organizer.
         </p>
 
-        {/* Horizontal row of district filter pills and upcoming-events toggle */}
-        <div className="flex items-center justify-between gap-2 flex-wrap pt-2">
-          <div className="flex items-center gap-1.5 flex-wrap">
+        {/* Responsive district filter: select dropdown on mobile, pill buttons on md+ screens */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2">
+          {/* Compact district dropdown shown on smaller screens */}
+          <div className="md:hidden w-full sm:w-auto sm:min-w-[220px]">
+            <label htmlFor="events-mobile-district" className="sr-only">
+              Filter events by district
+            </label>
+            <select
+              id="events-mobile-district"
+              value={selectedDistrict}
+              onChange={(e) => setSelectedDistrict(e.target.value as DistrictType | 'all')}
+              className="form-control py-2 text-xs font-semibold bg-white"
+            >
+              {districts.map((dist) => (
+                <option key={dist} value={dist}>
+                  {dist === 'all' ? 'All Districts' : dist}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Horizontal pill strip shown on medium and desktop viewports */}
+          <div className="hidden md:flex items-center gap-1.5 flex-wrap">
             <span className="text-xs text-stone-500 font-medium mr-1">District:</span>
             {districts.map((dist) => (
               <button
@@ -144,7 +164,7 @@ export const EventsSection: React.FC<EventsSectionProps> = ({ onCall }) => {
           <button
             type="button"
             onClick={() => setUpcomingOnly(prev => !prev)}
-            className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer ${
+            className={`px-3 py-1.5 sm:py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer self-start sm:self-auto ${
               upcomingOnly
                 ? 'bg-emerald-50 text-emerald-900 border-emerald-300'
                 : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'

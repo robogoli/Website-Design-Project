@@ -14,9 +14,11 @@ import {
   Star
 } from 'lucide-react';
 // Import domain type for Forsyth County community resource records
-import { ResourceItem } from '../types';
+import { CategoryType, ResourceItem } from '../types';
 // Import master verified directory listings array
 import { COMMUNITY_RESOURCES } from '../data/mockData';
+// Import shared typo-tolerant, synonym-aware relevance scorer and immediate autocorrect helper
+import { scoreResourceMatch, inferMatchingCategories, autocorrectQuery } from '../utils/resourceSearch';
 
 // Structure representing an individual message bubble in the guide conversation
 interface ChatMessage {
@@ -67,7 +69,7 @@ interface TopicRoute {
   // Keyword triggers matched against visitor questions
   keywords: string[];
   // Directory category slug passed to the general ranking function
-  category: string;
+  category: CategoryType;
   // Reply text explaining the category and next steps
   responseText: string;
   // Follow-up question buttons rendered beneath the reply
@@ -237,96 +239,137 @@ const TOPIC_ROUTES: TopicRoute[] = [
       'Medicare counseling resources in Forsyth County',
       'Nonprofit credit counseling and debt support'
     ]
+  },
+  {
+    // 14. Local restaurants, cafes, family dining, and eateries triggers
+    keywords: ['restaurant', 'restaurants', 'resturant', 'resturants', 'dining', 'diner', 'cafe', 'bistro', 'eat out', 'takeout', 'lunch', 'dinner'],
+    category: 'dining',
+    responseText:
+      "Looking for local restaurants or family dining spots around Cumming and Forsyth County? Here are community restaurants listed in the directory:",
+    examplePrompts: [
+      'Family-friendly restaurants near downtown Cumming',
+      'Casual lunch and dinner spots in Forsyth',
+      'Where can I get free groceries or food boxes?'
+    ]
+  },
+  {
+    // 15. Public transit, Access Forsyth Dial-A-Ride, and medical ride triggers
+    keywords: ['transit', 'bus', 'ride', 'rides', 'transportation', 'dial-a-ride', 'van', 'shuttle'],
+    category: 'transportation',
+    responseText:
+      "Looking for local rides, wheelchair-accessible transit, or Access Forsyth Dial-A-Ride information? Here are transportation resources in Forsyth County:",
+    examplePrompts: [
+      'How do I book Access Forsyth Dial-A-Ride?',
+      'Rides to medical appointments in Cumming',
+      'Wheelchair accessible transportation options'
+    ]
+  },
+  {
+    // 16. Military veterans, VA benefits, and PTSD peer counseling triggers
+    keywords: ['veteran', 'veterans', 'military', 'va', 'vfw', 'army', 'ptsd'],
+    category: 'veterans',
+    responseText:
+      "Looking for veteran empowerment services, VA benefits assistance, or military family support? Here are local veteran resources:",
+    examplePrompts: [
+      'Where can veterans get help with VA benefits?',
+      'PTSD peer counseling and service dog programs',
+      'VFW post contact details in Cumming'
+    ]
+  },
+  {
+    // 17. Animal services, pet adoption, rabies vaccines, and pet pantries triggers
+    keywords: ['animal', 'animals', 'pet', 'pets', 'dog', 'cat', 'vet', 'rabies', 'microchip', 'spay', 'neuter', 'parc', 'humane'],
+    category: 'animals',
+    responseText:
+      "Looking for pet adoptions, low-cost vaccines, microchipping, or pet food support in Forsyth County? Here are local animal services:",
+    examplePrompts: [
+      'Where can I find low-cost rabies vaccines or microchips?',
+      'Forsyth County pet adoption center hours',
+      'Lost and found pet assistance'
+    ]
+  },
+  {
+    // 18. Disability advocacy, assistive equipment, and adaptive programs triggers
+    keywords: ['disability', 'disabilities', 'disabled', 'wheelchair', 'autism', 'special needs', 'adaptive'],
+    category: 'disability',
+    responseText:
+      "Looking for disability advocacy, independent living support, or assistive equipment loans? Here are local accessibility and disability resources:",
+    examplePrompts: [
+      'Where can I borrow durable medical equipment?',
+      'Independent living skills and accessibility help',
+      'Special Olympics programs in Forsyth'
+    ]
+  },
+  {
+    // 19. Free civil legal aid, eviction defense, and courthouse self-help triggers
+    keywords: ['legal', 'lawyer', 'attorney', 'court', 'courthouse', 'divorce', 'custody', 'pro se', 'eviction defense'],
+    category: 'legal',
+    responseText:
+      "Looking for free civil legal aid, courthouse self-help packets, or housing tenant rights help? Here are legal assistance resources:",
+    examplePrompts: [
+      'Free legal help for eviction or tenant disputes',
+      'Where is the Forsyth County Law Library?',
+      'Protective orders and family law packets'
+    ]
+  },
+  {
+    // 20. Youth programs, teen mentoring, and family support triggers
+    keywords: ['youth', 'teen', 'teens', 'boys and girls', 'mentoring', 'diapers', 'parenting'],
+    category: 'youth-family',
+    responseText:
+      "Looking for youth mentoring, afterschool clubs, or family support services? Here are local youth and family organizations:",
+    examplePrompts: [
+      'Afterschool tutoring and STEM programs for kids',
+      'Support groups and parenting classes for families',
+      'Youth sports and leadership programs'
+    ]
   }
 ];
 
-// Word-boundary matching helper preventing short query terms from falsely matching larger words (e.g. 'care' vs 'car')
+// Word-boundary and typo-tolerant matching helper for route keywords
 function matchesWordBoundary(text: string, keyword: string): boolean {
-  // Apply word-boundary regular expression for short search terms 4 characters or fewer
+  // Apply strict boundary regex for short search terms 4 characters or fewer
   if (keyword.length <= 4) {
-    // Escape special regex characters in the search term safely
     const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // Construct case-insensitive boundary regex
-    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
-    // Test if target text contains the keyword as a standalone word
-    return regex.test(text);
+    return new RegExp(`\\b${escaped}\\b`, 'i').test(text);
   }
 
-  // For longer words, use standard case-insensitive substring matching
-  return text.toLowerCase().includes(keyword.toLowerCase());
+  // Match directly or via inferred category aliases (handles misspellings like "resturants")
+  if (text.toLowerCase().includes(keyword.toLowerCase())) {
+    return true;
+  }
+
+  return false;
 }
 
-// General resource relevance scoring algorithm ranking listings based on keyword occurrences
+// General resource relevance scoring algorithm powered by shared typo-tolerant search utility
 function rankResources(
   query: string,
   categoryFilter?: string
 ): ResourceItem[] {
-  // Normalize search query into lowercase and trim whitespace
-  const q = query.toLowerCase().trim();
-  // Split query into individual word tokens with length greater than 1
-  const tokens = q.split(/\s+/).filter(t => t.length > 1);
+  const inferred = inferMatchingCategories(query);
 
-  // Score each organization in the directory against the search query
+  // Score every directory listing combining shared relevance scoring with explicit category boosts
   const scored = COMMUNITY_RESOURCES.map(res => {
-    // Initialize initial relevance score at 0
-    let score = 0;
-
-    // Grant 20 bonus points if resource matches the explicit category filter
+    let score = scoreResourceMatch(res, query);
     if (categoryFilter && res.category === categoryFilter) {
-      score += 20;
+      score += 35;
     }
-
-    // Lowercase resource attributes for fast comparison
-    const nameLower = res.name.toLowerCase();
-    const tagLower = res.tagline.toLowerCase();
-    const descLower = res.description.toLowerCase();
-    const eligLower = res.eligibility.toLowerCase();
-    const phoneLower = res.phone.toLowerCase();
-
-    // Prioritize exact full-phrase matches in title and contact details
-    if (nameLower.includes(q)) score += 30;
-    if (tagLower.includes(q)) score += 15;
-    if (descLower.includes(q)) score += 10;
-    if (eligLower.includes(q)) score += 12;
-    if (phoneLower.includes(q)) score += 20;
-
-    // Match query against specific service items offered by the organization
-    for (const svc of res.keyServices || []) {
-      const sLower = svc.toLowerCase();
-      // Bonus if service contains the full query string
-      if (sLower.includes(q)) score += 15;
-
-      // Check each token against service tags using word boundaries
-      for (const token of tokens) {
-        if (matchesWordBoundary(sLower, token)) {
-          score += 6;
-        }
-      }
+    if (inferred.includes(res.category)) {
+      score += 15;
     }
-
-    // Award incremental points for individual token matches across primary fields
-    for (const token of tokens) {
-      if (matchesWordBoundary(nameLower, token)) score += 12;
-      if (matchesWordBoundary(tagLower, token)) score += 5;
-      if (matchesWordBoundary(descLower, token)) score += 3;
-      if (matchesWordBoundary(eligLower, token)) score += 5;
-    }
-
-    // Return resource item paired with computed relevance score
     return { res, score };
   });
 
-  // Filter out low-relevance results and sort descending by score
-  const rankedResources = scored
-    .filter(item => item.score >= 10)
+  // Filter out low-relevance matches, sort descending, and de-duplicate
+  return scored
+    .filter(item => item.score >= 12)
     .sort((a, b) => b.score - a.score)
-    .map(item => item.res);
-
-  // De-duplicate resources while preserving calculated relevance ranking order
-  return rankedResources.filter(
-    (resource, index, resources) =>
-      resources.findIndex(item => item.id === resource.id) === index
-  );
+    .map(item => item.res)
+    .filter(
+      (resource, index, resources) =>
+        resources.findIndex(item => item.id === resource.id) === index
+    );
 }
 
 // Specialized ranking algorithm prioritizing human food assistance and filtering out pet pantries
@@ -624,20 +667,24 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
             'You have viewed all the matching resources. Try searching for another type of assistance.';
         }
       } else {
-        // Combine follow-up questions with the prior topic so directory scoring stays relevant
-        const searchQuery =
+        // Combine follow-up questions with the prior topic and immediately autocorrect spelling
+        const rawSearchQuery =
           isFollowUp && lastTopic ? `${lastTopic} ${query}` : query;
+        const auto = autocorrectQuery(rawSearchQuery);
+        const searchQuery = auto.wasCorrected ? auto.correctedQuery : rawSearchQuery;
 
         // Run local rule-based category and keyword matching
         const result = matchDirectoryQuery(searchQuery);
 
-        responseText = result.responseText;
+        responseText = auto.wasCorrected
+          ? `Autocorrected “${rawSearchQuery}” → “${auto.correctedQuery}”:\n\n${result.responseText}`
+          : result.responseText;
         examplePrompts = result.examplePrompts || [];
         matched = result.matched || [];
 
         // Store results for subsequent pagination or follow-up filtering
         if (!isFollowUp) {
-          setLastTopic(query);
+          setLastTopic(searchQuery);
           setLastMatchedResources(matched);
           setNextResourceIndex(3);
         } else if (matched.length > 0) {
@@ -697,6 +744,28 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
           responseText: route.responseText,
           matched: matches,
           examplePrompts: route.examplePrompts
+        };
+      }
+    }
+
+    // Fall back to typo-tolerant category inference so misspelled queries still match their topic route
+    const inferredCategories = inferMatchingCategories(query);
+    if (inferredCategories.length > 0) {
+      const inferredRoute = TOPIC_ROUTES.find(r => inferredCategories.includes(r.category));
+      if (inferredRoute) {
+        const ranked = inferredRoute.useFoodRanker
+          ? rankFoodResources(query)
+          : rankResources(query, inferredRoute.category);
+
+        const matches =
+          inferredRoute.fallbackEmergency && ranked.length === 0
+            ? COMMUNITY_RESOURCES.filter(r => r.isEmergency)
+            : ranked;
+
+        return {
+          responseText: inferredRoute.responseText,
+          matched: matches,
+          examplePrompts: inferredRoute.examplePrompts
         };
       }
     }
@@ -1129,7 +1198,15 @@ export const CivicChatbot: React.FC<CivicChatbotProps> = ({
             <input
               type="text"
               value={inputMessage}
-              onChange={e => setInputMessage(e.target.value)}
+              onChange={e => {
+                const next = e.target.value;
+                if (/[\s,.;!?]$/.test(next)) {
+                  const auto = autocorrectQuery(next);
+                  setInputMessage(auto.wasCorrected ? auto.correctedQuery : next);
+                  return;
+                }
+                setInputMessage(next);
+              }}
               placeholder="What kind of help do you need?"
               className="flex-1 text-xs py-2 px-3 bg-stone-50 border border-stone-300 rounded-xl text-stone-900 placeholder:text-stone-400 focus:outline-none focus:border-amber-800 focus:bg-white transition-colors"
               aria-label="Type your message to the CivicBridge guide"

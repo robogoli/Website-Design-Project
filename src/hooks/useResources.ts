@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import { CategoryType, DistrictType } from '../types';
 // Import the comprehensive 213 verified community resources data array
 import { COMMUNITY_RESOURCES } from '../data/mockData';
+// Import shared typo-tolerant, synonym-aware relevance scorer and immediate autocorrect engine
+import { scoreResourceMatch, autocorrectQuery } from '../utils/resourceSearch';
 
 // Parse a formatted verification date label (e.g., "Verified Nov 21, 2026") into a comparable timestamp
 function parseVerificationTimestamp(verificationDate?: string): number {
@@ -14,13 +16,16 @@ function parseVerificationTimestamp(verificationDate?: string): number {
   return Number.isNaN(parsed) ? 0 : parsed;
 }
 
-// Custom hook that encapsulates directory filtering, recency sorting, resource starring, and user verification logic
+// Custom hook that encapsulates directory filtering, immediate autocorrect, recency sorting, resource starring, and verification logic
 export function useResources() {
   // Active civic category filter state ('all' displays every category)
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | 'all'>('all');
   
   // Real-time keyword text search query state entered by the user
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Optional literal query string for which the visitor explicitly chose "Undo / Search literal"
+  const [bypassedLiteralQuery, setBypassedLiteralQuery] = useState<string | null>(null);
   
   // Geographic zone filter state across Forsyth County ('all' or specific county district)
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictType>('all');
@@ -56,88 +61,82 @@ export function useResources() {
     }
   });
 
+  // Compute immediate autocorrect result for the current search text
+  const autocorrectResult = useMemo(() => autocorrectQuery(searchQuery), [searchQuery]);
+
+  // Bypass autocorrection only while the input strictly matches the query the user reverted
+  const isAutocorrectBypassed =
+    bypassedLiteralQuery !== null && bypassedLiteralQuery === searchQuery;
+
+  // Determine the effective search string applied to directory matching
+  const effectiveSearchQuery =
+    autocorrectResult.wasCorrected && !isAutocorrectBypassed
+      ? autocorrectResult.correctedQuery
+      : searchQuery;
+
   // Derived boolean flag checking whether any filter or search query is currently active
   const isFiltered = useMemo(() => {
     // True if a keyword search, category selection, district filter, or starred filter is active
     return (
-      searchQuery.trim() !== '' ||
+      effectiveSearchQuery.trim() !== '' ||
       selectedCategory !== 'all' ||
       selectedDistrict !== 'all' ||
       showStarredOnly
     );
-  }, [searchQuery, selectedCategory, selectedDistrict, showStarredOnly]);
+  }, [effectiveSearchQuery, selectedCategory, selectedDistrict, showStarredOnly]);
 
   // Memoized array of filtered and sorted resources recalculated when filters or stars change
   const filteredResources = useMemo(() => {
-    // Normalize user search query into lowercase and trim whitespace
-    const q = searchQuery.toLowerCase().trim();
+    // Normalize effective search query (autocorrected when active) into lowercase and trim whitespace
+    const q = effectiveSearchQuery.toLowerCase().trim();
 
-    // Filter the primary community resources master list against active criteria
-    const matches = COMMUNITY_RESOURCES.filter(item => {
-      // Restrict to starred items when the starred-only filter is enabled
-      if (showStarredOnly && !starredResources[item.id]) {
-        return false;
-      }
+    // Filter and score the master directory list against active category, district, star, and query criteria
+    const scoredMatches = COMMUNITY_RESOURCES
+      .filter(item => {
+        // Restrict to starred items when the starred-only filter is enabled
+        if (showStarredOnly && !starredResources[item.id]) {
+          return false;
+        }
 
-      // Filter out resources whose category does not match the active selection
-      if (selectedCategory !== 'all' && item.category !== selectedCategory) {
-        return false;
-      }
+        // Filter out resources whose category does not match the active selection
+        if (selectedCategory !== 'all' && item.category !== selectedCategory) {
+          return false;
+        }
 
-      // Filter out resources outside the selected geographic Forsyth County district
-      if (selectedDistrict !== 'all' && item.district !== selectedDistrict) {
-        return false;
-      }
+        // Filter out resources outside the selected geographic Forsyth County district
+        if (selectedDistrict !== 'all' && item.district !== selectedDistrict) {
+          return false;
+        }
 
-      // If a keyword query is provided, evaluate text matching across all relevant listing fields
-      if (q) {
-        // Match against organization name
-        const matchesName = item.name.toLowerCase().includes(q);
-        // Match against comprehensive program description
-        const matchesDesc = item.description.toLowerCase().includes(q);
-        // Match against quick summary tagline
-        const matchesTagline = item.tagline.toLowerCase().includes(q);
-        // Match against key services and offering labels
-        const matchesServices = item.keyServices.some(s => s.toLowerCase().includes(q));
-        // Match against physical street address and city
-        const matchesAddress = item.address.toLowerCase().includes(q);
-        // Match against eligibility guidelines and program requirements
-        const matchesEligibility = item.eligibility.toLowerCase().includes(q);
-        // Match against contact telephone numbers
-        const matchesPhone = item.phone.toLowerCase().includes(q);
-        // Match against spoken and supported languages
-        const matchesLanguages = item.languages.some(language =>
-          language.toLowerCase().includes(q)
-        );
+        return true;
+      })
+      .map(item => ({
+        item,
+        // Score against every listing attribute, synonym, category alias, and typo tolerance when searching
+        score: q ? scoreResourceMatch(item, q) : 1
+      }))
+      .filter(entry => !q || entry.score >= 10);
 
-        // Keep item if query appears in any of the primary searchable properties
-        return (
-          matchesName ||
-          matchesDesc ||
-          matchesTagline ||
-          matchesServices ||
-          matchesAddress ||
-          matchesEligibility ||
-          matchesPhone ||
-          matchesLanguages
-        );
-      }
-
-      // Include all resources that passed category and district filters when query is empty
-      return true;
-    });
-
-    // Sort listings by most recent verification date only when the visitor checks the option
+    // Sort by verification date when checked, or by search relevance score when typing a query
     if (sortByRecent) {
-      return [...matches].sort(
-        (a, b) =>
-          parseVerificationTimestamp(b.verificationDate) -
-          parseVerificationTimestamp(a.verificationDate)
-      );
+      return [...scoredMatches]
+        .sort((a, b) => {
+          const dateDiff =
+            parseVerificationTimestamp(b.item.verificationDate) -
+            parseVerificationTimestamp(a.item.verificationDate);
+          return dateDiff !== 0 ? dateDiff : b.score - a.score;
+        })
+        .map(entry => entry.item);
     }
 
-    return matches;
-  }, [searchQuery, selectedCategory, selectedDistrict, showStarredOnly, starredResources, sortByRecent]);
+    if (q) {
+      return [...scoredMatches]
+        .sort((a, b) => b.score - a.score)
+        .map(entry => entry.item);
+    }
+
+    return scoredMatches.map(entry => entry.item);
+  }, [effectiveSearchQuery, selectedCategory, selectedDistrict, showStarredOnly, starredResources, sortByRecent]);
 
   // Precomputed list of starred resources sorted by verification recency for quick access
   const starredList = useMemo(() => {
@@ -185,12 +184,19 @@ export function useResources() {
     });
   };
 
+  // Revert an autocorrected query back to the visitor's literal spelling without re-rewriting it
+  const bypassAutocorrect = (literalQuery: string) => {
+    setBypassedLiteralQuery(literalQuery);
+    setSearchQuery(literalQuery);
+  };
+
   // Reset all filters back to default values to view the entire countywide directory
   const resetFilters = () => {
     // Reset category dropdown / tabs back to all
     setSelectedCategory('all');
-    // Clear the search input text
+    // Clear the search input text and any literal autocorrect bypass
     setSearchQuery('');
+    setBypassedLiteralQuery(null);
     // Reset district selection back to all
     setSelectedDistrict('all');
     // Clear the starred-only filter toggle
@@ -213,6 +219,14 @@ export function useResources() {
     setSelectedCategory,
     // Current user search text
     searchQuery,
+    // Effective query after immediate autocorrection (unless bypassed)
+    effectiveSearchQuery,
+    // Detailed autocorrect metadata for inline UI banners and undo controls
+    autocorrectResult,
+    // Whether the user explicitly opted to keep their literal uncorrected spelling
+    isAutocorrectBypassed,
+    // Action reverting autocorrection to the visitor's literal spelling
+    bypassAutocorrect,
     // Setter function to update the search query
     setSearchQuery,
     // Currently selected geographic district
@@ -245,3 +259,4 @@ export function useResources() {
     toggleStarResource
   };
 }
+

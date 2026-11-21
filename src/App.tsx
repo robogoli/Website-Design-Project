@@ -10,6 +10,8 @@ import { CATEGORIES } from './data/mockData';
 // Import custom business logic hooks for directory resources and community feedback
 import { useResources } from './hooks/useResources';
 import { useFeedback } from './hooks/useFeedback';
+// Import typo-recovery category suggestions helper
+import { suggestSearchCorrections } from './utils/resourceSearch';
 
 // Import layout navigation header and footer components
 import { Navbar, TabKey } from './components/Navbar';
@@ -38,13 +40,17 @@ export function App() {
   // Navigation tab state tracking the active screen: 'resources', 'events', 'feedback', or 'about'
   const [currentTab, setCurrentTab] = useState<TabKey>('resources');
 
-  // Deconstruct resource searching, category filtering, starring, recency sort, and community checkmark controls from custom hook
+  // Deconstruct resource searching, immediate autocorrect, category filtering, starring, and community checkmark controls
   const {
     resources: filteredResources,
     allResources,
     selectedCategory,
     setSelectedCategory,
     searchQuery,
+    effectiveSearchQuery,
+    autocorrectResult,
+    isAutocorrectBypassed,
+    bypassAutocorrect,
     setSearchQuery,
     selectedDistrict,
     setSelectedDistrict,
@@ -269,9 +275,12 @@ export function App() {
         onCall={handleInitiateCall}
       />
 
-      {/* HTML5 datalist providing native instant search auto-completion */}
+      {/* HTML5 datalist providing native autocomplete across all categories and verified listings */}
       <datalist id="civic-search-suggestions">
-        {allResources.slice(0, 30).map(r => (
+        {CATEGORIES.filter(c => c.id !== 'all').map(cat => (
+          <option key={`cat-${cat.id}`} value={cat.label} />
+        ))}
+        {allResources.map(r => (
           <option key={r.id} value={r.name} />
         ))}
       </datalist>
@@ -286,12 +295,66 @@ export function App() {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onClearSearch={() => setSearchQuery('')}
+              autocorrectResult={autocorrectResult}
+              isAutocorrectBypassed={isAutocorrectBypassed}
+              onBypassAutocorrect={bypassAutocorrect}
             />
 
             {/* Filter controls section for categories and geographic zones */}
             <section className="bg-white border border-stone-200 rounded-2xl p-4 sm:p-5 shadow-2xs space-y-4" aria-label="Directory Filters">
-              {/* Category pill buttons */}
-              <div>
+              {/* Compact dropdown filters shown on smaller screens (mobile & small tablets) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:hidden">
+                <div>
+                  <label
+                    htmlFor="mobile-category-filter"
+                    className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide block mb-1.5"
+                  >
+                    Category
+                  </label>
+                  <select
+                    id="mobile-category-filter"
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value as typeof selectedCategory)}
+                    className="form-control py-2 text-xs font-semibold bg-stone-50"
+                  >
+                    {CATEGORIES.map((cat) => {
+                      const count =
+                        cat.id === 'all'
+                          ? allResources.length
+                          : allResources.filter(r => r.category === cat.id).length;
+                      return (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.label} ({count})
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="mobile-district-filter"
+                    className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide block mb-1.5"
+                  >
+                    District
+                  </label>
+                  <select
+                    id="mobile-district-filter"
+                    value={selectedDistrict}
+                    onChange={(e) => setSelectedDistrict(e.target.value as DistrictType)}
+                    className="form-control py-2 text-xs font-semibold bg-stone-50"
+                  >
+                    {districts.map((dist) => (
+                      <option key={dist} value={dist}>
+                        {dist === 'all' ? 'All Districts' : dist}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Category pill buttons displayed on medium and larger desktop screens */}
+              <div className="hidden md:block">
                 <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide block mb-2">
                   Browse by Category:
                 </span>
@@ -313,9 +376,9 @@ export function App() {
                 </div>
               </div>
 
-              {/* District pills, starred filter, recency sort, and reset controls */}
+              {/* District pills (desktop), starred filter, recency checkbox, and reset controls */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-stone-100">
-                <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="hidden md:flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs font-mono font-bold text-stone-700 uppercase tracking-wide mr-1">
                     District:
                   </span>
@@ -489,18 +552,39 @@ export function App() {
                     ))}
                   </div>
                 ) : (
-                  // Empty state when search keywords or starred-only filter produce no results
-                  <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-3">
-                    <p className="text-base font-semibold text-stone-800">
-                      {showStarredOnly
-                        ? 'No starred resources match your current filters.'
-                        : 'No organizations matched your current filters.'}
-                    </p>
-                    <p className="text-xs text-stone-500 max-w-sm mx-auto">
-                      {showStarredOnly
-                        ? 'Click the star icon on any resource card or modal to save your favorite local contacts here.'
-                        : 'Try searching with fewer keywords, selecting “All Districts”, or resetting your filters.'}
-                    </p>
+                  // Empty state offering clickable category corrections when a search yields no direct hits
+                  <div className="bg-white border border-stone-200 rounded-2xl p-8 text-center space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-base font-semibold text-stone-800">
+                        {showStarredOnly
+                          ? 'No starred resources match your current filters.'
+                          : 'No organizations matched your current filters.'}
+                      </p>
+                      <p className="text-xs text-stone-500 max-w-md mx-auto">
+                        {showStarredOnly
+                          ? 'Click the star icon on any resource card or modal to save your favorite local contacts here.'
+                          : 'Try broader words, select “All Districts”, or jump directly to one of these categories:'}
+                      </p>
+                    </div>
+
+                    {!showStarredOnly && effectiveSearchQuery.trim() !== '' && (
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        {suggestSearchCorrections(effectiveSearchQuery).map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => {
+                              setSearchQuery('');
+                              setSelectedCategory(cat.id);
+                            }}
+                            className="px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition-colors cursor-pointer"
+                          >
+                            Browse {cat.label} &rarr;
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       onClick={resetFilters}
